@@ -4,6 +4,9 @@
 /Profile.bas
 /Rim_Formulas.md
 /RIM_VBA.txt
-/utils
 /zPrint.bas
+**/__pycache__/
+**/*.pyc
+.venv/
+
 /__pycache__

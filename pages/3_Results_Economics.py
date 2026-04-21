@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import streamlit as st
 
 from utils.charts import gross_margin_and_ryegrass_chart, income_breakdown_chart, weed_cost_chart

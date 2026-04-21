@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os, sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import streamlit as st
 
 from utils.export import tables_to_excel_bytes

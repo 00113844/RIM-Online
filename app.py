@@ -1,5 +1,13 @@
 from __future__ import annotations
 
+import os
+import sys
+
+# Ensure the project root is on sys.path (needed on some Streamlit Cloud configurations)
+_ROOT = os.path.dirname(os.path.abspath(__file__))
+if _ROOT not in sys.path:
+    sys.path.insert(0, _ROOT)
+
 import streamlit as st
 
 from utils.session import init_state
