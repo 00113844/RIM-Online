@@ -25,12 +25,17 @@ def _annuity_from_cashflows(cashflows: list[float], discount_rate: float) -> flo
 def simulate_strategy(profile: dict, prices: dict, options: dict, strategy_rows: list[dict]) -> dict:
     seed_bank = float(profile.get("seed_bank_start", 20.0))
     previous_crop = None
+    previous_spring_option = None
     last_mouldboard_year = None
+    mouldboard_ever_used = False
 
-    rate_nominal = float(profile.get("interest_rate_pct", 6.0)) / 100.0
-    inflation = float(profile.get("inflation_rate_pct", 2.5)) / 100.0
-    tax = float(profile.get("tax_rate_pct", 30.0)) / 100.0
-    real_after_tax_rate = ((1.0 + rate_nominal) / max(1.0 + inflation, 1e-9) - 1.0) * (1.0 - tax)
+    rate_nominal = float(profile.get("interest_rate_pct", 8.0)) / 100.0
+    # Support split inflation rates; fall back to single rate for backward compat.
+    inflation_input = float(profile.get("inflation_input_costs_pct", profile.get("inflation_rate_pct", 3.0))) / 100.0
+    inflation_prices = float(profile.get("inflation_crop_prices_pct", profile.get("inflation_rate_pct", 1.0))) / 100.0
+    tax = float(profile.get("tax_rate_pct", 21.0)) / 100.0
+    avg_inflation = (inflation_input + inflation_prices) / 2.0
+    real_after_tax_rate = ((1.0 + rate_nominal) / max(1.0 + avg_inflation, 1e-9) - 1.0) * (1.0 - tax)
 
     repayments = machinery_repayment_per_ha(
         prices=prices,
@@ -54,6 +59,7 @@ def simulate_strategy(profile: dict, prices: dict, options: dict, strategy_rows:
 
         if decision.get("pre_tillage") == "Mouldboard plough":
             last_mouldboard_year = year
+            mouldboard_ever_used = True
 
         y = compute_actual_yield(
             decision=decision,
@@ -61,6 +67,8 @@ def simulate_strategy(profile: dict, prices: dict, options: dict, strategy_rows:
             options=options,
             previous_crop=previous_crop,
             ryegrass_plants=survivors,
+            mouldboard_used_previously=mouldboard_ever_used,
+            previous_spring_option=previous_spring_option,
         )
 
         new_seed = seed_production(
@@ -84,7 +92,7 @@ def simulate_strategy(profile: dict, prices: dict, options: dict, strategy_rows:
             prices=prices,
             stocking_dse=y["stocking_dse"],
         )
-        costs = compute_costs(decision, prices, options, machinery_cost)
+        costs = compute_costs(decision, prices, options, machinery_cost, previous_crop=previous_crop)
 
         gross_margin = revenue["total_revenue"] - costs["total_cost"]
 
@@ -111,6 +119,7 @@ def simulate_strategy(profile: dict, prices: dict, options: dict, strategy_rows:
 
         seed_bank = seed_bank_end
         previous_crop = decision.get("crop", "Wheat")
+        previous_spring_option = decision.get("spring_option", "None")
 
     df = pd.DataFrame(rows)
     annuity = _annuity_from_cashflows(df["gross_margin"].tolist(), real_after_tax_rate)

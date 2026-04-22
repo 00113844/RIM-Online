@@ -59,14 +59,17 @@ def seed_production(
     spring_option: str,
 ) -> float:
     fecundity = float(options.get("fecundity_base", 12.0))
+    # Multiplier reflects fraction of seeds that set after spring management.
+    # Green/Brown manuring = 0: all plants incorporated before seed set.
+    # Swathing/Topping reduce seed set but don't eliminate it entirely.
     spring_multiplier = {
         "None": 1.0,
-        "Green manuring": 0.10,
-        "Brown manuring": 0.12,
-        "Mowing": 0.15,
-        "Hay & Silage": 0.20,
-        "Topping": 0.55,
-        "Swathing": 0.60,
+        "Green manuring": 0.0,
+        "Brown manuring": 0.0,
+        "Mowing": 0.05,
+        "Hay & Silage": 0.10,
+        "Topping": 0.25,
+        "Swathing": 0.30,
     }.get(spring_option, 1.0)
 
     competition_effect = 1.0 - crop_competition_strength(crop)

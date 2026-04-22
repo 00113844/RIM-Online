@@ -11,13 +11,15 @@ def _is_legume(crop: str) -> bool:
     return crop in {"Legume crop", "Sub-Clover pasture", "Cadiz pasture"}
 
 
-def rotation_factor(current_crop: str, previous_crop: str | None, options: dict) -> float:
+def rotation_factor(current_crop: str, previous_crop: str | None, options: dict, green_manured: bool = False) -> float:
     factors = options.get("rotation_factor", {})
     if previous_crop is None:
         return float(factors.get("default", 1.0))
 
     if _is_cereal(current_crop) and _is_legume(previous_crop):
-        return float(factors.get("cereal_after_legume", 1.10))
+        if green_manured:
+            return float(factors.get("cereal_after_green_legume", 1.30))
+        return float(factors.get("cereal_after_legume", 1.20))
     if _is_cereal(current_crop) and previous_crop == "Canola":
         return float(factors.get("cereal_after_canola", 1.05))
     if current_crop == "Canola" and _is_legume(previous_crop):
@@ -41,19 +43,52 @@ def compute_actual_yield(
     options: dict,
     previous_crop: str | None,
     ryegrass_plants: float,
+    mouldboard_used_previously: bool = False,
+    previous_spring_option: str | None = None,
 ) -> dict:
     crop = decision.get("crop", "Wheat")
     base_yield = float(profile.get("base_yields", {}).get(crop, 0.0))
 
-    timing_factor = float(options.get("timing_factor", {}).get(decision.get("seeding_timing", "Dry"), 1.0))
+    # Crop-specific timing factors — canola is more sensitive to delayed seeding
+    timing = decision.get("seeding_timing", "Dry")
+    if crop == "Canola":
+        timing_factor = {
+            "Dry": 1.00,
+            "Wet": 1.02,
+            "Delayed (1-2 wks)": 0.92,
+            "+Delayed (3 wks)": 0.82,
+        }.get(timing, float(options.get("timing_factor", {}).get(timing, 1.0)))
+    else:
+        timing_factor = float(options.get("timing_factor", {}).get(timing, 1.0))
+
     rate_factor = float(options.get("seeding_rate_factor", {}).get(decision.get("seeding_rate", "Standard"), 1.0))
-    spring_factor = float(options.get("spring_yield_factor", {}).get(decision.get("spring_option", "None"), 1.0))
-    rot_factor = rotation_factor(crop, previous_crop, options)
+
+    # Crop-specific spring yield factor — swathing benefits canola (no penalty)
+    spring_option = decision.get("spring_option", "None")
+    spring_yield_factors = options.get("spring_yield_factor", {})
+    if isinstance(spring_yield_factors.get("Swathing"), dict):
+        spring_factor = float(spring_yield_factors.get("Swathing", {}).get(crop, 1.0))
+    else:
+        # Canola benefits from swathing (even ripening) — no yield penalty
+        if spring_option == "Swathing" and crop == "Canola":
+            spring_factor = 1.0
+        else:
+            spring_factor = float(spring_yield_factors.get(spring_option, 1.0))
+
+    # Determine if previous crop was green-manured legume
+    green_manured = (
+        previous_spring_option in ("Green manuring",)
+        and _is_legume(previous_crop or "")
+    )
+    rot_factor = rotation_factor(crop, previous_crop, options, green_manured)
+
+    # Mouldboard permanent yield benefit (15%) — persists indefinitely after use
+    mouldboard_factor = float(options.get("rotation_factor", {}).get("mouldboard_benefit", 1.15)) if mouldboard_used_previously else 1.0
 
     seeding_tech_factor = 0.99 if decision.get("seeding_technique") == "Full-cut (wide points)" else 1.0
     penalty = yield_penalty_from_ryegrass(crop, ryegrass_plants, options)
 
-    potential_yield = base_yield * timing_factor * rate_factor * rot_factor
+    potential_yield = base_yield * timing_factor * rate_factor * rot_factor * mouldboard_factor
     actual_yield = potential_yield * seeding_tech_factor * spring_factor * (1.0 - penalty)
 
     stocking_rate = options.get("stocking_rate", {})

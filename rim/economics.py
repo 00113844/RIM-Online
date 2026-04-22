@@ -54,7 +54,7 @@ def compute_revenue(decision: dict, yield_t_ha: float, profile: dict, prices: di
     }
 
 
-def compute_costs(decision: dict, prices: dict, options: dict, machinery_cost_per_ha: float) -> dict:
+def compute_costs(decision: dict, prices: dict, options: dict, machinery_cost_per_ha: float, previous_crop: str | None = None) -> dict:
     base_cost = (
         float(prices.get("cost_no_till", 0.0))
         + float(prices.get("cost_fertiliser", 0.0))
@@ -73,8 +73,10 @@ def compute_costs(decision: dict, prices: dict, options: dict, machinery_cost_pe
     kd = decision.get("knockdown", "None")
     knockdown_passes = {"None": 0.0, "Single knock-down": 1.0, "Double knock-down": 2.0}.get(kd, 0.0)
     herb_passes = knockdown_passes
-    herb_passes += 1.0 if decision.get("pre_emergent") == "Yes" else 0.0
-    herb_passes += 1.0 if decision.get("post_emergent") == "Yes" else 0.0
+    if decision.get("pre_emergent") not in ("No", "None", "", None):
+        herb_passes += 1.0
+    if decision.get("post_emergent") not in ("No", "None", "", None):
+        herb_passes += 1.0
     herbicide_cost = herb_passes * spray_pass_cost
 
     spring_cost = float(options.get("costs", {}).get("spring", {}).get(decision.get("spring_option", "None"), 0.0))
@@ -82,6 +84,23 @@ def compute_costs(decision: dict, prices: dict, options: dict, machinery_cost_pe
 
     weed_control_cost = herbicide_cost + spring_cost + harvest_cost + machinery_cost_per_ha
     total = base_cost + weed_control_cost
+
+    # Mouldboard contractor cost: 150 $/ha when used
+    if decision.get("pre_tillage") == "Mouldboard plough":
+        total += 150.0
+
+    # Fertiliser saving (N benefit) in the season following a legume break
+    _FERT_SAVING = {"Canola": 150.0, "Wheat": 110.0, "Barley": 110.0}
+    if previous_crop is not None:
+        from rim.yields import _is_legume  # local import avoids circular deps
+        if _is_legume(previous_crop):
+            crop = decision.get("crop", "")
+            total -= float(_FERT_SAVING.get(crop, 0.0))
+
+    # Harvester operating cost (~21.94 $/ha) for all grain crops
+    pasture_crops = {"Volunteer pasture", "Sub-Clover pasture", "Cadiz pasture"}
+    if decision.get("crop", "") not in pasture_crops:
+        total += 21.94
 
     return {
         "base_cost": base_cost,
