@@ -10,3 +10,9 @@
 .venv/
 
 /__pycache__
+
+# Data files — not for version control
+*.json
+*.xlsx
+*.xlsm
+*.xls
