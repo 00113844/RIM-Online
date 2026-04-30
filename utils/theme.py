@@ -9,6 +9,9 @@ UWA Primary Brand Colours
 """
 from __future__ import annotations
 
+import base64
+import pathlib
+
 import streamlit as st
 
 # ── Colour tokens ──────────────────────────────────────────────────────────────
@@ -429,7 +432,7 @@ def uwa_footer() -> None:
 
 
 def uwa_sidebar_logo() -> None:
-    """Render a compact UWA-branded sidebar header."""
+    """Render a compact UWA-branded sidebar header and AHRI logo at the bottom."""
     st.sidebar.markdown(
         f"""
         <div style="
@@ -463,3 +466,27 @@ def uwa_sidebar_logo() -> None:
         """,
         unsafe_allow_html=True,
     )
+
+    # AHRI logo pinned to the bottom of the sidebar
+    _logo_path = pathlib.Path(__file__).parent.parent / "AHRI_logo.jpg"
+    if _logo_path.exists():
+        _b64 = base64.b64encode(_logo_path.read_bytes()).decode()
+        st.sidebar.markdown(
+            f"""
+            <div style="
+              position:fixed;
+              bottom:0;
+              left:0;
+              width:var(--sidebar-width, 244px);
+              background:rgba(0,48,135,0.97);
+              padding:0.75rem 0.5rem;
+              text-align:center;
+              border-top:2px solid {UWA_GOLD};
+              z-index:1000;">
+              <img src="data:image/jpeg;base64,{_b64}"
+                   style="width:90px;height:auto;"
+                   alt="AHRI Logo">
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
