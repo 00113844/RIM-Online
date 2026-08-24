@@ -213,3 +213,17 @@ SURVIVAL_ROW_68_SOURCES = (19, 20)
 # Excel's own inputs before Calcs!C7:C27 itself is ported (block 2).
 ACTIVATION_ROWS = tuple(range(7, 50))
 SURVIVAL_ROWS = tuple(sorted(set(SURVIVAL_SOURCE) | {68}))
+
+# +Options per-crop parameter columns: AG=Wheat, AH=Barley, AI=Canola, AJ=Legume.
+OPTIONS_WHEAT_COL = 33   # AG
+OPTIONS_BARLEY_COL = 34  # AH
+OPTIONS_CANOLA_COL = 35  # AI
+OPTIONS_LEGUME_COL = 36  # AJ
+
+# --- Stage multipliers: Calcs!C99 and C164:C170 ----------------------------
+# Combine the survival factors into the seven per-stage multipliers that
+# Bio results!D3:D20 applies. C99 (normal-harvest seed removal) folds into C170.
+MULTIPLIER_ROWS = (99, 164, 165, 166, 167, 168, 169, 170)
+# Calcs!P35:P39 -- how many of the three post-emergent slots hold each product.
+POST_EM_USE_COUNT_ROWS = (35, 36, 37, 38, 39)
+POST_EM_USE_COUNT_COL = 16  # P

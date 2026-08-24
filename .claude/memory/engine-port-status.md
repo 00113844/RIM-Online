@@ -12,7 +12,8 @@ Tracks the formula-level port of RIM-2013b into `rim/`. Update this whenever a b
 | 1 | Crop / rotation coding | `Calcs` rows 184-189 | **ported** -- `rim/rotation.py`, `tests/test_rotation_codes.py` |
 | 2 | Option activation | `Calcs!C7:C49` | not started -- needs the product vocabulary first |
 | 3 | Stage survival factors | `Calcs` rows 55-97 (`HLOOKUP` into `N54:T97`) | **ported** -- `rim/survival.py`, `tests/test_survival_factors.py` |
-| 4 | Seasonal population model | `Bio results!D3:D20` | not started |
+| 3b | Stage multipliers | `Calcs!C99`, `C164:C170` | **ported** -- `rim/stage_multipliers.py` |
+| 4 | Seasonal population model | `Bio results!D3:D20` | not started -- needs `Calcs!C151:C160` (germination) too |
 | 5 | Seed set and competition | `Bio results!D17`, `D23:D39`, `Calcs!C177` | not started |
 | 6 | Yield | `Bio results!D38:D50` | not started |
 | 7 | Economics | `Eco results!E3:E59` | not started |
@@ -59,3 +60,21 @@ no gap between the knockdown and seeding, so Excel suppresses the knockdown rath
 double-count the same cohort against the seeding operation; only Delayed/+Delayed sowing (or an
 ungrazed pasture, via `D66`) opens it. This is why the saved workbook selects Glyphosate in
 years 1 and 9 yet `Calcs!C55` never fires.
+
+Block 3b notes (`Calcs!C99`, `C164:C170`): these fold block 3's per-option factors into the seven
+per-stage multipliers `Bio results!D3:D20` actually applies. Two traps:
+
+- **Zero and blank are the same to Excel's SUM.** `Calcs!C165` tests `SUM(C19:C22)=0`. Those cells
+  hold crop codes and wheat's code *is* 0, so the sum is 0 both when nothing is selected and when
+  the crop is wheat. Reproduce by summing numerically, not by counting non-blank cells. This looks
+  like a workbook bug; it is faithfully preserved and pinned by a test.
+- **Post-emergents apply per slot, not per product.** `Calcs!C168` raises each product's factor to
+  the count in `Calcs!P35:P39` -- how many of the three slots name it -- so listing Topik twice
+  takes survival from 0.1 to 0.01. A single-slot Python model cannot express this, which is one
+  concrete reason the old engine could not converge.
+
+Constants are generated into `data/calcs_stage_constants.json` by `tools/extract_params.py`.
+
+Next (block 4) needs `Calcs!C151:C155` (germination fractions per cohort, switched by
+`2.Strategy!D66`, tickle `C16`/`C17` and full-cut `C18`) and `C159`/`C160` (tickle), plus
+`+Options!AG96`/`AG124` for the starting seed bank and `AG129`/`AG130` for seed losses.

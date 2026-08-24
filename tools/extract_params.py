@@ -92,12 +92,63 @@ def extract_survival_table() -> dict[str, Any]:
     }
 
 
+def extract_stage_constants() -> dict[str, Any]:
+    """The scalars Calcs!C99 and C164:C170 fold into the stage multipliers."""
+    wb = wr.load()
+    options_ws = wb[cm.SHEET_OPTIONS]
+    calcs_ws = wb[cm.SHEET_CALCS]
+
+    def opt(row: int) -> float:
+        return float(options_ws.cell(row, cm.OPTIONS_WHEAT_COL).value)
+
+    return {
+        "_source": _source_header({
+            "options": "+Options!AG126:AG145",
+            "calcs": "Calcs!N167 (= '+Options'!H18)",
+        }),
+        "pre_em_survival_floor": {
+            "value": float(calcs_ws.cell(167, 14).value),
+            "cell": "Calcs!N167",
+            "label": str(calcs_ws.cell(167, 2).value or ""),
+            "used_by": "Calcs!C167, added when a knock-down accompanies a pre-emergent",
+        },
+        "pre_em_extra_control": {
+            "value": opt(128), "cell": "+Options!AG128",
+            "used_by": "Calcs!C167, as (1 - value)",
+        },
+        "normal_harvest_seed_removal": {
+            "value": opt(134), "cell": "+Options!AG134",
+            "used_by": "Calcs!C99, as (1 - value) when no spring or harvest option is chosen",
+        },
+        "tickle_control": {
+            "value": opt(126), "cell": "+Options!AG126",
+            "used_by": "Calcs!C159/C160, as (1 - value)",
+        },
+        "seed_loss_pre_harvest": {
+            "value": opt(129), "cell": "+Options!AG129",
+            "used_by": "Bio results!D16, as (1 - value)",
+        },
+        "seed_loss_over_summer": {
+            "value": opt(130), "cell": "+Options!AG130",
+            "used_by": "Bio results!D20, as (1 - value)",
+        },
+    }
+
+
+def _write(name: str, payload: dict[str, Any], summary: str) -> None:
+    target = DATA_DIR / name
+    target.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    print(f"Wrote {target.relative_to(wr.REPO_ROOT)}  ({summary})")
+
+
 def main() -> int:
     DATA_DIR.mkdir(exist_ok=True)
-    target = DATA_DIR / "calcs_survival_table.json"
-    payload = extract_survival_table()
-    target.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
-    print(f"Wrote {target.relative_to(wr.REPO_ROOT)}  ({len(payload['options'])} options)")
+
+    table = extract_survival_table()
+    _write("calcs_survival_table.json", table, f"{len(table['options'])} options")
+
+    constants = extract_stage_constants()
+    _write("calcs_stage_constants.json", constants, f"{len(constants) - 1} constants")
     return 0
 
 

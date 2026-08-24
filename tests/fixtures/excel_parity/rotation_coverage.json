@@ -5,7 +5,7 @@
   "source": {
     "workbook": "RIM-2013b",
     "file": "Ryegrass-RIM-\u2013-DOWNLOAD-NOW.xlsm",
-    "captured_utc": "2026-08-24T08:32:01+00:00",
+    "captured_utc": "2026-08-24T08:40:21+00:00",
     "method": "Excel COM recalculation of scenarios/rotation_coverage.json (CalculateFullRebuild, Value2 reads, macros force-disabled)",
     "ranges": {
       "strategy": "2.Strategy!D4:M19",
@@ -1851,6 +1851,119 @@
         "97": 1.0
       }
     ],
+    "stage_multipliers": [
+      {
+        "year": 1,
+        "99": 0.95,
+        "164": 0.6,
+        "165": 1.0,
+        "166": 1.0,
+        "167": 0.95,
+        "168": 1.0,
+        "169": 1.0,
+        "170": 0.95
+      },
+      {
+        "year": 2,
+        "99": 0.95,
+        "164": 0.6,
+        "165": 1.0,
+        "166": 1.0,
+        "167": 0.95,
+        "168": 1.0,
+        "169": 1.0,
+        "170": 0.95
+      },
+      {
+        "year": 3,
+        "99": 0.95,
+        "164": 0.6,
+        "165": 1.0,
+        "166": 1.0,
+        "167": 0.95,
+        "168": 1.0,
+        "169": 1.0,
+        "170": 0.95
+      },
+      {
+        "year": 4,
+        "99": 0.95,
+        "164": 0.6,
+        "165": 1.0,
+        "166": 1.0,
+        "167": 0.95,
+        "168": 1.0,
+        "169": 1.0,
+        "170": 0.95
+      },
+      {
+        "year": 5,
+        "99": 1.0,
+        "164": 1.0,
+        "165": 1.0,
+        "166": 1.0,
+        "167": 0.95,
+        "168": 1.0,
+        "169": 1.0,
+        "170": 1.0
+      },
+      {
+        "year": 6,
+        "99": 1.0,
+        "164": 1.0,
+        "165": 1.0,
+        "166": 1.0,
+        "167": 0.95,
+        "168": 1.0,
+        "169": 1.0,
+        "170": 1.0
+      },
+      {
+        "year": 7,
+        "99": 1.0,
+        "164": 1.0,
+        "165": 1.0,
+        "166": 1.0,
+        "167": 0.95,
+        "168": 1.0,
+        "169": 1.0,
+        "170": 1.0
+      },
+      {
+        "year": 8,
+        "99": 1.0,
+        "164": 0.6,
+        "165": 1.0,
+        "166": 1.0,
+        "167": 0.95,
+        "168": 1.0,
+        "169": 1.0,
+        "170": 1.0
+      },
+      {
+        "year": 9,
+        "99": 0.95,
+        "164": 0.6,
+        "165": 1.0,
+        "166": 1.0,
+        "167": 0.95,
+        "168": 1.0,
+        "169": 1.0,
+        "170": 0.95
+      },
+      {
+        "year": 10,
+        "99": 0.95,
+        "164": 0.6,
+        "165": 1.0,
+        "166": 1.0,
+        "167": 0.95,
+        "168": 1.0,
+        "169": 1.0,
+        "170": 0.95
+      }
+    ],
+    "multipliers_note": "Calcs!C99 and C164:C170. Asserted by tests/test_stage_multipliers.py against rim.stage_multipliers.",
     "survival_note": "Calcs rows 55-97. Asserted by tests/test_survival_factors.py against rim.survival.",
     "rotation_note": "Calcs rows 184-189 for years 1..10. Asserted by tests/test_rotation_codes.py against rim.rotation.",
     "note": "Full within-season truth table: 6 plant stages and 10 seed-bank quantities per year. Not asserted yet -- this is the target for the staged population port (Bio results!D3:D20).",

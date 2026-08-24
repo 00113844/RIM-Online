@@ -158,6 +158,7 @@ def read_outputs(wb: Any) -> dict[str, Any]:
 
     activation = []
     survival = []
+    multipliers = []
     for year in range(1, cm.N_YEARS + 1):
         col = cm.year_col(year, cm.FIRST_COL_CALCS)
         activation.append(
@@ -165,6 +166,9 @@ def read_outputs(wb: Any) -> dict[str, Any]:
         )
         survival.append(
             {"year": year, **{str(r): calcs_ws.Cells(r, col).Value2 for r in cm.SURVIVAL_ROWS}}
+        )
+        multipliers.append(
+            {"year": year, **{str(r): calcs_ws.Cells(r, col).Value2 for r in cm.MULTIPLIER_ROWS}}
         )
 
     history = {}
@@ -179,6 +183,7 @@ def read_outputs(wb: Any) -> dict[str, Any]:
         "rotation": rotation,
         "activation": activation,
         "survival": survival,
+        "multipliers": multipliers,
         "history": history,
         "average_gross_margin": eco_ws.Cells(avg_row, avg_col).Value2,
     }

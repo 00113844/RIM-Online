@@ -184,3 +184,15 @@ def read_survival_factors(wb: openpyxl.Workbook) -> list[dict[str, Any]]:
             {"year": year, **{str(row): _num(ws.cell(row, col).value) for row in cm.SURVIVAL_ROWS}}
         )
     return years
+
+
+def read_stage_multipliers(wb: openpyxl.Workbook) -> list[dict[str, Any]]:
+    """Read Calcs!C99 and C164:C170 (per year) -- the stage multipliers."""
+    ws = wb[cm.SHEET_CALCS]
+    years = []
+    for year in range(1, cm.N_YEARS + 1):
+        col = cm.year_col(year, cm.FIRST_COL_CALCS)
+        years.append(
+            {"year": year, **{str(row): _num(ws.cell(row, col).value) for row in cm.MULTIPLIER_ROWS}}
+        )
+    return years

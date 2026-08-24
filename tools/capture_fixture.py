@@ -60,6 +60,7 @@ def build_fixture(name: str | None = None) -> tuple[str, dict[str, Any]]:
         rotation=wr.read_rotation_codes(wb),
         activation=wr.read_activation(wb),
         survival=wr.read_survival_factors(wb),
+        multipliers=wr.read_stage_multipliers(wb),
         history=wr.read_history(wb),
         method="openpyxl cached values from the workbook's saved state "
                "(exact floats; no recalculation, no rounding)",
@@ -82,6 +83,7 @@ def build_fixture_from_scenario(scenario_path: Path, name: str | None = None) ->
         rotation=outputs["rotation"],
         activation=outputs["activation"],
         survival=outputs["survival"],
+        multipliers=outputs["multipliers"],
         history=outputs["history"],
         method=f"Excel COM recalculation of scenarios/{scenario_path.name} "
                "(CalculateFullRebuild, Value2 reads, macros force-disabled)",
@@ -98,6 +100,7 @@ def assemble(
     rotation: list[dict[str, Any]],
     activation: list[dict[str, Any]],
     survival: list[dict[str, Any]],
+    multipliers: list[dict[str, Any]],
     history: dict[str, str],
     method: str,
 ) -> dict[str, Any]:
@@ -187,6 +190,10 @@ def assemble(
                                "active, blank where it is not. Block 2's output; "
                                "used as input by tests/test_survival_factors.py.",
             "survival_factors": survival,
+            "stage_multipliers": multipliers,
+            "multipliers_note": "Calcs!C99 and C164:C170. Asserted by "
+                                "tests/test_stage_multipliers.py against "
+                                "rim.stage_multipliers.",
             "survival_note": "Calcs rows 55-97. Asserted by "
                              "tests/test_survival_factors.py against rim.survival.",
             "rotation_note": "Calcs rows 184-189 for years 1..10. Asserted by "
