@@ -8,7 +8,7 @@ Affected files: `rim/defaults.py`, `rim/ryegrass.py`, `rim/yields.py`, `rim/engi
 
 ## Summary
 
-25 parameter/logic mismatches were identified between the original VBA/Excel model and the initial Python port. All have been corrected. Each item below documents the source reference, the old value, the corrected value, and the affected file.
+25 parameter/logic mismatches were identified between the original VBA/Excel model and the initial Python port. The parameter-level items below have been corrected. Confirmed structural differences remain and are listed separately for parity work.
 
 ---
 
@@ -86,7 +86,48 @@ Affected files: `rim/defaults.py`, `rim/ryegrass.py`, `rim/yields.py`, `rim/engi
 
 These items are noted for future development but are outside the Phase 1 scope:
 
+- **Measured default-strategy mismatch:** With the workbook's Year 1 selections (`Wheat`, `Wet`, `Glyphosate`, `Triflur+Tria`, `Topik`, `No-till`, `Standard`, `Narr+B.`), recalculated Excel reports gross margin **$22.45/ha**, herbicide cost **$43.00/ha**, mechanical cost **$15.29/ha**, and mature ryegrass **52.60 plants/m2**. Python, supplied the same labels, reports **$282.14/ha**, **$26.44/ha**, and **16.00 plants/m2**. This is diagnostic evidence, not an approved parity fixture, because the Python input schema cannot represent the Excel decisions faithfully.
+- **Option vocabulary and UI contract:** Excel uses product-specific knock-down, pre-emergent, post-emergent, and harvest labels (for example `Glyphosate`, `Triflur+Tria`, `Topik`, and `Narr+B.`). `rim/options.py` and the Streamlit strategy editor expose generic `Single knock-down`/`Yes`/`Standard` values instead, so the default workbook strategy cannot be entered without translation. The active Excel profile stores wheat values at `1.Profile!E16/H16` for Glyphosate ($18/ha, 95%), `E20/H20` for Triflur+Triallate ($22/ha, 80%), and `E26/H26` for Topik ($5/ha, 90%).
+- **Control timing:** A label-only adapter would still be incorrect. `Calcs!C7:C27` activates product selections, with `Calcs!C23:C27` checking all three post-emergent slots. `Calcs!C75:C83` converts active options to stage-specific survival factors through `HLOOKUP`; `Bio results!D24:D33` applies those factors through the seasonal plant model. The Python engine's one combined annual control fraction cannot reproduce this ordering.
+- **Within-season model:** Excel `TabSum` exposes six ryegrass-plant stages and nine seed-bank stages per year. The Python engine currently calculates one annual germination/control/seed-return cycle, so its annual results cannot yet establish period-level parity.
+- **Herbicide decision model:** The Excel strategy grid has three separate post-emergent herbicide slots. Python has one `post_emergent` decision, so it cannot represent combinations or their product-specific effects.
+- **Input ownership:** `data/defaults.json` is not read at runtime and contains pre-audit defaults. `rim/defaults.py` is the active default source until the JSON artifact is retired or generated from it.
 - **Herbicide cost by product**: Current model uses cost-per-spray-pass; named herbicide product pricing (glyphosate, trifluralin, etc.) not yet itemised.
 - **Per-crop seed/establishment cost dict**: Currently uses flat `cost_seed` + `cost_no_till`; crop-specific drill/fertiliser mix costs could improve precision.
 - **Seasonal rainfall modifier**: No rainfall/water-limited yield adjustment implemented (model assumes average season).
 - **Resistance evolution**: Herbicide resistance factor currently not advancing year-on-year within a strategy (static control fractions).
+
+---
+
+## Status update, 2026-08-24 — this audit tuned the wrong structure
+
+The 25 items above are real improvements to a model that does not share Excel's structure. They
+should be read as history, not as specification. Parity is now measured directly; see
+`.claude/memory/measured-parity-gap.md` for the baseline and `HANDOVER.md` for the port order.
+
+**Measured, not estimated.** Two approved fixtures are captured from the workbook and both fail:
+
+- `susceptible_2022_lorf` (the workbook's own saved strategy): Excel average GM 84.875 $/ha/yr.
+  Year 1 gross margin Excel 22.449 vs Python 270.755. Ryegrass is 0.28x Excel in year 1 but
+  0.01x by year 8 — the error changes sign and magnitude across the run, so it is structural.
+- `continuous_wheat_no_control`: Excel lets ryegrass escape to ~18,763 plants/m² with gross
+  margin settling at −240.91 $/ha. Python settles at +13.78 $/ha. Python has no saturation
+  behaviour and no catastrophic-loss regime.
+
+**New defect this exposed.** With no herbicides selected, Excel charges 0.00 $/ha of weed
+control; Python charges 10.441 $/ha every year regardless. Isolated in
+`tools/parity_report.py` output for `continuous_wheat_no_control`.
+
+**Items above with no traceable Excel formula.** These were inferred rather than cited, and the
+tests asserting them in `tests/test_simulation.py` should be deleted or re-derived when the port
+reaches the relevant block, not preserved:
+
+- #14 mouldboard permanent yield benefit, 1.15x
+- #8 / #13 `cereal_after_legume` 1.20 and #15 `cereal_after_green_legume` 1.30
+- #22 fertiliser saving after legume, flat −110 / −150 $/ha
+- #21 harvester operating cost, +21.94 $/ha
+- #20 mouldboard contractor cost, +150 $/ha
+
+**Superseded by the port.** Items #7a/#7b, #11a/#11b, #12, #16, #17, #18a and #19 all concern
+control fractions, fecundity multipliers and timing factors that the staged model
+(`Bio results!D3:D20`, `Calcs!C75:C83`) replaces wholesale.
