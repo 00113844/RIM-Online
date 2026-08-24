@@ -29,3 +29,7 @@ data/defaults.json
 
 # Agent scaffolding: memory is shared, local settings are not.
 .claude/settings.local.json
+
+# Quarto/preview renders of memory notes are build output, not memory.
+.claude/memory/*.html
+.claude/memory/*_files/
