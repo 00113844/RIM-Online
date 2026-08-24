@@ -14,8 +14,8 @@ Tracks the formula-level port of RIM-2013b into `rim/`. Update this whenever a b
 | 3 | Stage survival factors | `Calcs` rows 55-97 (`HLOOKUP` into `N54:T97`) | **ported** -- `rim/survival.py`, `tests/test_survival_factors.py` |
 | 3b | Stage multipliers | `Calcs!C99`, `C164:C170` | **ported** -- `rim/stage_multipliers.py` |
 | 4 | Seasonal population model | `Bio results!D3:D8`, `D11:D16` | **ported** -- `rim/population.py`, `tests/test_population.py` |
-| 5 | Seed set and competition | `Bio results!D17:D20`, `Calcs!C174:C177` | not started -- closes the year and chains the seed bank |
-| 6 | Yield | `Bio results!D38:D50` | not started |
+| 5 | Seed set and competition | `Bio results!D17:D20`, `Calcs!C174:C177` | **ported** -- `rim/seed_set.py`, `tests/test_seed_set.py` |
+| 6 | Yield | `Bio results!D23:D50` | not started -- next |
 | 7 | Economics | `Eco results!E3:E59` | not started |
 
 Everything not marked ported is the original independent reimplementation and should be
@@ -126,3 +126,25 @@ Corrected earlier mislabel: `+Options!AG126` is **plough** seed burial, not tick
 
 `tests/chain.py` composes blocks 1-4 over a fixture; new block tests should use it rather than
 re-deriving the chain.
+
+Block 5 notes (`Bio results!D17:D20`, `Calcs!C174:C177`): closes the year.
+
+- `C174:C177` re-run the plant cascade but weight each newly emerged cohort by how competitive it
+  actually is (`+Options!AG142:AI145`; for dry/wet sowing 1, 0.3, 0.1, 0.02). `C177` is the
+  *effective* density and it, not the raw plant count, drives seed set. Later sowing raises the
+  later weights, because those cohorts emerge nearer the crop.
+- `D17 = max_seed / (density_constant + C177 + crop_competitiveness * plant_density) * C177/D7`.
+  The crop term is why a high seeding rate suppresses seed set. Note D17 is **not** monotone in
+  C177 when D7 is held fixed -- the `C177/D7` factor converts weighted plants to plants standing
+  at spraying time. Two phytotoxicity discounts follow (`Calcs!P48` herbicides, `P49` spring
+  sprays).
+- `D20` applies harvest weed-seed control to the **newly set seed only**: seed already shed never
+  enters the header.
+
+**BIOLOGICAL PARITY REACHED.** `rim/calcs.py` composes blocks 1-5 and `simulate_years()` runs the
+full ten years from the strategy grid alone, chaining only the seed bank (`Bio results!E11=D20`).
+Every cell of `TabSum` matches Excel to floating-point noise -- 640 comparisons, worst relative
+error 5.9e-16. `tests/test_full_biology.py` holds that line.
+
+Still to port before `rim/engine.py` can be rewired and the whole-model parity fixtures move:
+yield (`Bio results!D23:D50`) and economics (`Eco results!E3:E59`).

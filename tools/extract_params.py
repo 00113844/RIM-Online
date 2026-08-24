@@ -250,6 +250,59 @@ def extract_germination() -> dict[str, Any]:
     }
 
 
+def extract_seed_set() -> dict[str, Any]:
+    """+Options parameters behind Bio results!D17:D20 and Calcs!C174:C177.
+
+    Seed production per plant falls as the stand gets denser: it is
+    ``max_seed / (density_constant + weighted_ryegrass + crop_competition)``.
+    The crop's contribution is its competitiveness times its plant density,
+    which is higher at a high seeding rate -- that is how a thicker crop
+    suppresses ryegrass seed set.
+    """
+    wb = wr.load()
+    ws = wb[cm.SHEET_OPTIONS]
+    crop_cols = {
+        "0": cm.OPTIONS_WHEAT_COL,
+        "1": cm.OPTIONS_BARLEY_COL,
+        "2": cm.OPTIONS_CANOLA_COL,
+        "3": cm.OPTIONS_LEGUME_COL,
+    }
+
+    def by_crop(row: int) -> dict[str, float]:
+        return {code: _cell(ws, row, col) for code, col in crop_cols.items()}
+
+    def cohort_weights(column: int) -> list[float]:
+        return [_cell(ws, row, column) for row in range(142, 146)]
+
+    return {
+        "_source": _source_header({
+            "crop": "+Options!AG59:AJ60 (plant density), AG87:AJ87 (competitiveness)",
+            "seed": "+Options!AG133 (max seed), AG135 (density constant), AS182 (pasture)",
+            "phytotoxicity": "+Options!AG131 (herbicides), AG132 (spring sprays)",
+            "cohort_weights": "+Options!AG142:AI145, by time of sowing",
+        }),
+        "max_seed_per_m2": _cell(ws, 133, cm.OPTIONS_WHEAT_COL),
+        "density_constant": _cell(ws, 135, cm.OPTIONS_WHEAT_COL),
+        "pasture_competition": _cell(ws, 182, 45),
+        "crop_competitiveness": by_crop(87),
+        "plant_density_standard": by_crop(59),
+        "plant_density_high": by_crop(60),
+        "phytotoxicity_herbicides": {
+            "value": _cell(ws, 131, cm.OPTIONS_WHEAT_COL), "cell": "+Options!AG131",
+            "used_by": "Bio results!D17, as (1 - value) when Calcs!P48 > 0",
+        },
+        "phytotoxicity_spring_sprays": {
+            "value": _cell(ws, 132, cm.OPTIONS_WHEAT_COL), "cell": "+Options!AG132",
+            "used_by": "Bio results!D17, as (1 - value) when Calcs!P49 > 0",
+        },
+        "cohort_competitiveness": {
+            "dry_or_wet": cohort_weights(cm.OPTIONS_WHEAT_COL),
+            "delayed": cohort_weights(cm.OPTIONS_BARLEY_COL),
+            "plus_delayed": cohort_weights(cm.OPTIONS_CANOLA_COL),
+        },
+    }
+
+
 def _write(name: str, payload: dict[str, Any], summary: str) -> None:
     target = DATA_DIR / name
     target.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -271,6 +324,9 @@ def main() -> int:
     germination = extract_germination()
     _write("germination.json", germination,
            f"{germination['cohorts']} cohorts x 6 columns")
+
+    seed_set = extract_seed_set()
+    _write("seed_set.json", seed_set, "seed production and competition parameters")
 
     vocabulary = extract_strategy_vocabulary()
     _write("strategy_vocabulary.json", vocabulary,

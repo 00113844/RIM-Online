@@ -32,7 +32,7 @@ RELATIVE_TOLERANCE = 1e-9
 @pytest.mark.parametrize("fixture_path", fixtures(), ids=lambda p: p.stem)
 def test_season_matches_tabsum(fixture_path: Path) -> None:
     for year in walk(fixture_path):
-        rows = year.season.as_rows()
+        rows = year.result.season.as_rows()
         for caption, row in TABSUM_ROWS.items():
             expected = year.tabsum[caption]
             if expected is None:
