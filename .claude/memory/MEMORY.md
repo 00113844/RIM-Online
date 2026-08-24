@@ -9,3 +9,4 @@ Durable facts a fresh session needs. One line per entry; the detail lives in the
 - [Defaults are hand-transcribed](defaults-are-hand-transcribed.md) — data/defaults.json is dead; rim/defaults.py is unverified.
 - [The 25-item audit tuned the wrong structure](audit-tuned-wrong-structure.md) — why INCONSISTENCIES.md fixes are mostly moot.
 - [Measured parity gap](measured-parity-gap.md) — the baseline numbers, so you can tell whether later work converges.
+- [Outstanding work](../../TASKS.md) — the backlog in dependency order; product vocabulary blocks most of it.

@@ -6,7 +6,7 @@ RIM Online is a Streamlit/Python reimplementation of the RIM-2013b Excel/VBA bio
 The Excel workbook is the behavioural source of truth. Agent rules live in [`CLAUDE.md`](CLAUDE.md);
 durable project facts live in [`.claude/memory/`](.claude/memory/MEMORY.md).
 
-See [`ARCHITECTURE.md`](ARCHITECTURE.md) for how the model works.
+See [`ARCHITECTURE.md`](ARCHITECTURE.md) for how the model works, and [`TASKS.md`](TASKS.md) for what is outstanding.
 
 ## Current State
 

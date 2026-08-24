@@ -102,6 +102,7 @@ streamlit run app.py                                    # manual UI check
 
 ## Documentation
 
+[`TASKS.md`](TASKS.md) is the backlog: what is outstanding, in dependency order.
 [`ARCHITECTURE.md`](ARCHITECTURE.md) explains how the software works and why -- the workbook's
 ten-column shape, the five-cohort season model, the block chain, and the parity harness. Read it
 before changing anything in `rim/`.
