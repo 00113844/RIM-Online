@@ -6,56 +6,63 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import streamlit as st
 
 from utils.charts import gross_margin_and_ryegrass_chart, income_breakdown_chart, weed_cost_chart
-from utils.session import ensure_current_results, init_state
-from utils.theme import inject_uwa_theme, uwa_page_header, uwa_footer, uwa_sidebar_logo
+from utils.results_view import comparison_note, scale_toggle, views
+from utils.session import init_state
+from utils.theme import (
+    inject_uwa_theme, metric_row, section, uwa_footer, uwa_page_header, uwa_sidebar_logo,
+)
 
+st.set_page_config(page_title="Economics | RIM Online", page_icon="🌾", layout="wide")
 
 init_state()
 inject_uwa_theme()
 uwa_sidebar_logo()
 
 uwa_page_header(
-    title="Step 3 — Economics & Summary",
-    subtitle="Gross margin, weed control costs and income breakdown",
-    icon="💰",
+    title="Step 3 — Economics",
+    subtitle="What the decade earned, what the weed control cost, and where the income came from.",
 )
 
-st.session_state.results_scale_mode = st.radio(
-    "Scale mode",
-    ["Auto", "Fixed"],
-    index=0 if st.session_state.results_scale_mode == "Auto" else 1,
-    horizontal=True,
+comparison_note()
+panels = views()
+
+for label, result in panels:
+    summary = result["summary"]
+    if len(panels) > 1:
+        section(label)
+    metric_row([
+        {"label": "Average gross margin", "value": f"{summary['avg_gross_margin']:,.0f}",
+         "unit": "$/ha/yr", "accent": "margin"},
+        {"label": "Nominal annuity", "value": f"{summary['nominal_annuity']:,.0f}",
+         "unit": "$/ha/yr", "accent": "margin", "note": "After tax, inflation and interest"},
+        {"label": "Best year", "value": f"{summary['max_gross_margin']:,.0f}",
+         "unit": "$/ha", "accent": "margin"},
+        {"label": "Worst year", "value": f"{summary['min_gross_margin']:,.0f}",
+         "unit": "$/ha", "accent": "rye"},
+        {"label": "Weed control", "value": f"{summary['avg_weed_control_cost']:,.0f}",
+         "unit": "$/ha/yr", "accent": "rye", "note": "Average yearly spend"},
+    ])
+
+section("Year by year")
+fixed = scale_toggle()
+
+margin_tab, cost_tab, income_tab = st.tabs(
+    ["Margin and ryegrass", "Weed control cost", "Income sources"]
 )
-fixed = st.session_state.results_scale_mode == "Fixed"
+for tab, builder in (
+    (margin_tab, gross_margin_and_ryegrass_chart),
+    (cost_tab, weed_cost_chart),
+    (income_tab, income_breakdown_chart),
+):
+    with tab:
+        columns = st.columns(len(panels))
+        for column, (label, result) in zip(columns, panels):
+            with column:
+                if len(panels) > 1:
+                    st.caption(label)
+                st.plotly_chart(
+                    builder(result["yearly"], fixed_scale=fixed),
+                    use_container_width=True,
+                )
 
-current = ensure_current_results()
-a = st.session_state.results_A
-b = st.session_state.results_B
-
-if a is not None and b is not None:
-    st.subheader("Comparison: Strategy A vs Strategy B")
-    ca, cb = st.columns(2)
-    with ca:
-        st.plotly_chart(gross_margin_and_ryegrass_chart(a["yearly"], "Strategy A", fixed_scale=fixed), use_container_width=True)
-        st.plotly_chart(weed_cost_chart(a["yearly"], "Weed Control Cost - A", fixed_scale=fixed), use_container_width=True)
-        st.plotly_chart(income_breakdown_chart(a["yearly"], "Income Breakdown - A", fixed_scale=fixed), use_container_width=True)
-        st.metric("Nominal annuity A", f"${a['summary']['nominal_annuity']:.1f}/ha")
-    with cb:
-        st.plotly_chart(gross_margin_and_ryegrass_chart(b["yearly"], "Strategy B", fixed_scale=fixed), use_container_width=True)
-        st.plotly_chart(weed_cost_chart(b["yearly"], "Weed Control Cost - B", fixed_scale=fixed), use_container_width=True)
-        st.plotly_chart(income_breakdown_chart(b["yearly"], "Income Breakdown - B", fixed_scale=fixed), use_container_width=True)
-        st.metric("Nominal annuity B", f"${b['summary']['nominal_annuity']:.1f}/ha")
-else:
-    st.info("Compare slots A and B are not both set. Showing current strategy.")
-    st.plotly_chart(gross_margin_and_ryegrass_chart(current["yearly"], "Current Strategy", fixed_scale=fixed), use_container_width=True)
-    c1, c2 = st.columns(2)
-    with c1:
-        st.plotly_chart(weed_cost_chart(current["yearly"], "Weed Control Cost", fixed_scale=fixed), use_container_width=True)
-    with c2:
-        st.plotly_chart(income_breakdown_chart(current["yearly"], "Income Breakdown", fixed_scale=fixed), use_container_width=True)
-
-metrics = current["summary"]
-m1, m2, m3 = st.columns(3)
-m1.metric("Average gross margin", f"${metrics['avg_gross_margin']:.1f}/ha")
-m2.metric("Nominal annuity", f"${metrics['nominal_annuity']:.1f}/ha")
-m3.metric("Average weed control cost", f"${metrics['avg_weed_control_cost']:.1f}/ha")
+uwa_footer()

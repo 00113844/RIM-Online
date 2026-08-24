@@ -27,114 +27,172 @@ from utils.session import (
     reset_strategy_current,
     save_strategy_slot,
 )
+from utils.theme import (
+    inject_uwa_theme,
+    metric_row,
+    seedbank_spine,
+    section,
+    uwa_footer,
+    uwa_page_header,
+    uwa_sidebar_logo,
+)
 
-
-from utils.theme import inject_uwa_theme, uwa_page_header, uwa_footer, uwa_sidebar_logo
+st.set_page_config(page_title="Strategy | RIM Online", page_icon="🌾", layout="wide")
 
 init_state()
 inject_uwa_theme()
 uwa_sidebar_logo()
 
 uwa_page_header(
-    title="Step 2 — Strategy Builder",
-    subtitle="Define year-by-year management actions for up to 10 years",
-    icon="📋",
+    title="Step 2 — Strategy builder",
+    subtitle="Set what happens in each of the next ten years, and watch the seed bank respond.",
 )
 
-left, right = st.columns([2, 1])
-with left:
-    st.session_state.strategy_scale_mode = st.radio(
-        "Scale mode",
-        ["Auto", "Fixed"],
-        index=0 if st.session_state.strategy_scale_mode == "Auto" else 1,
-        horizontal=True,
-    )
-with right:
-    st.session_state.strategy_graph_mode = st.selectbox(
-        "Graph visibility",
-        options=[0, 1, 2],
-        format_func=lambda x: {0: "Hide graphs", 1: "Show first", 2: "Show all"}[x],
-        index=int(st.session_state.strategy_graph_mode),
-    )
-
-slot_cols = st.columns(7)
-with slot_cols[0]:
-    if st.button("Load S0"):
-        if load_strategy_slot(0):
-            st.success("Loaded default strategy")
-            st.rerun()
-for slot in range(1, 7):
-    with slot_cols[slot]:
-        if st.button(f"Save S{slot}"):
-            save_strategy_slot(slot)
-            st.success(f"Saved S{slot}")
-        if st.button(f"Load S{slot}"):
-            if load_strategy_slot(slot):
-                st.success(f"Loaded S{slot}")
-                st.rerun()
-            else:
-                st.warning("Empty")
-
-action_cols = st.columns(4)
-with action_cols[0]:
-    if st.button("Reset Current Strategy"):
-        reset_strategy_current()
-        st.rerun()
-with action_cols[1]:
-    if st.button("Compare A"):
-        freeze_results("A")
-        st.success("Current results frozen to A")
-with action_cols[2]:
-    if st.button("Compare B"):
-        freeze_results("B")
-        st.success("Current results frozen to B")
-with action_cols[3]:
-    if st.button("Clear A/B"):
-        st.session_state.results_A = None
-        st.session_state.results_B = None
-        st.success("A/B comparison cleared")
-
+# ── Compute first: the numbers frame everything below them ────────────────────
 strategy_df = pd.DataFrame(st.session_state.strategy_current)
+result = compute_current_results()
+yearly = result["yearly"]
+summary = result["summary"]
+
+seedbank_spine(
+    years=yearly["year"].tolist(),
+    crops=yearly["crop"].tolist(),
+    seed_bank=yearly["seed_bank_end"].tolist(),
+)
+
+metric_row([
+    {"label": "Average gross margin", "value": f"{summary['avg_gross_margin']:,.0f}",
+     "unit": "$/ha/yr", "accent": "margin", "note": "Mean across the ten years"},
+    {"label": "Nominal annuity", "value": f"{summary['nominal_annuity']:,.0f}",
+     "unit": "$/ha/yr", "accent": "margin", "note": "After tax, inflation and interest"},
+    {"label": "Weed control", "value": f"{summary['avg_weed_control_cost']:,.0f}",
+     "unit": "$/ha/yr", "accent": "rye", "note": "Average yearly spend"},
+    {"label": "Seed bank at year 10", "value": f"{summary['ending_seed_bank']:,.0f}",
+     "unit": "seeds/m²", "accent": "rye", "note": "What the next decade inherits"},
+])
+
+# ── The editor ────────────────────────────────────────────────────────────────
+section("Year-by-year plan")
+
+st.caption(
+    "Sown, system, rate and tillage set how the crop goes in. Knock-down, pre and "
+    "post are the herbicides. Spring, grazing and harvest decide how much seed "
+    "makes it back to the soil."
+)
 
 edited = st.data_editor(
     strategy_df,
     use_container_width=True,
     hide_index=True,
     num_rows="fixed",
+    height=420,
+    column_order=[
+        "year", "crop",
+        "seeding_timing", "seeding_technique", "seeding_rate", "pre_tillage",
+        "knockdown", "pre_emergent", "post_emergent",
+        "spring_option", "grazing_intensity", "harvest_option",
+    ],
     column_config={
-        "year": st.column_config.NumberColumn("Year", min_value=1, max_value=50, step=1),
-        "crop": st.column_config.SelectboxColumn("Crop/Pasture", options=CROP_OPTIONS),
-        "seeding_timing": st.column_config.SelectboxColumn("Seeding timing", options=SEEDING_TIMING_OPTIONS),
-        "seeding_technique": st.column_config.SelectboxColumn("Seeding technique", options=SEEDING_TECHNIQUE_OPTIONS),
-        "seeding_rate": st.column_config.SelectboxColumn("Seeding rate", options=SEEDING_RATE_OPTIONS),
-        "pre_tillage": st.column_config.SelectboxColumn("Pre-tillage", options=PRE_TILLAGE_OPTIONS),
+        "year": st.column_config.NumberColumn("Yr", width="small", disabled=True),
+        "crop": st.column_config.SelectboxColumn("Crop", options=CROP_OPTIONS, width="small"),
+        # Establishment
+        "seeding_timing": st.column_config.SelectboxColumn("Sown", options=SEEDING_TIMING_OPTIONS),
+        "seeding_technique": st.column_config.SelectboxColumn("System", options=SEEDING_TECHNIQUE_OPTIONS),
+        "seeding_rate": st.column_config.SelectboxColumn("Rate", options=SEEDING_RATE_OPTIONS, width="small"),
+        "pre_tillage": st.column_config.SelectboxColumn("Tillage", options=PRE_TILLAGE_OPTIONS),
+        # Weed control
         "knockdown": st.column_config.SelectboxColumn("Knock-down", options=KNOCKDOWN_OPTIONS),
-        "pre_emergent": st.column_config.SelectboxColumn("Pre-emergent", options=YES_NO_OPTIONS),
-        "post_emergent": st.column_config.SelectboxColumn("Post-emergent", options=YES_NO_OPTIONS),
-        "spring_option": st.column_config.SelectboxColumn("Spring option", options=SPRING_OPTIONS),
-        "grazing_intensity": st.column_config.SelectboxColumn("Grazing", options=GRAZING_OPTIONS),
-        "harvest_option": st.column_config.SelectboxColumn("Harvest option", options=HARVEST_OPTIONS),
+        "pre_emergent": st.column_config.SelectboxColumn("Pre", options=YES_NO_OPTIONS, width="small"),
+        "post_emergent": st.column_config.SelectboxColumn("Post", options=YES_NO_OPTIONS, width="small"),
+        # Spring and harvest
+        "spring_option": st.column_config.SelectboxColumn("Spring", options=SPRING_OPTIONS),
+        "grazing_intensity": st.column_config.SelectboxColumn("Grazing", options=GRAZING_OPTIONS, width="small"),
+        "harvest_option": st.column_config.SelectboxColumn("Harvest", options=HARVEST_OPTIONS, width="small"),
     },
     key="strategy_editor",
 )
-
 st.session_state.strategy_current = edited.to_dict("records")
-result = compute_current_results()
-yearly = result["yearly"]
-summary = result["summary"]
 
-mx1, mx2, mx3, mx4 = st.columns(4)
-mx1.metric("Average gross margin", f"${summary['avg_gross_margin']:.1f}/ha")
-mx2.metric("Nominal annuity", f"${summary['nominal_annuity']:.1f}/ha")
-mx3.metric("Average weed control cost", f"${summary['avg_weed_control_cost']:.1f}/ha")
-mx4.metric("Ending seed bank", f"{summary['ending_seed_bank']:.1f} seeds/m²")
+# ── Saving and comparing: one row, not thirteen buttons ───────────────────────
+tools_left, tools_right = st.columns([3, 2])
 
+with tools_left:
+    slot_col, load_col, save_col, reset_col = st.columns([2, 1, 1, 1.2])
+    with slot_col:
+        slot = st.selectbox(
+            "Strategy slot",
+            options=list(range(7)),
+            format_func=lambda s: "Default strategy" if s == 0 else f"Slot {s}",
+            key="strategy_slot_pick",
+        )
+    with load_col:
+        st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
+        if st.button("Load", use_container_width=True):
+            if load_strategy_slot(slot):
+                st.toast(f"Loaded {'default strategy' if slot == 0 else f'slot {slot}'}")
+                st.rerun()
+            else:
+                st.toast(f"Slot {slot} is empty — save a strategy to it first")
+    with save_col:
+        st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
+        if st.button("Save", use_container_width=True, disabled=slot == 0):
+            save_strategy_slot(slot)
+            st.toast(f"Saved to slot {slot}")
+    with reset_col:
+        st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
+        if st.button("Clear plan", use_container_width=True):
+            reset_strategy_current()
+            st.rerun()
+
+with tools_right:
+    a_col, b_col, clear_col = st.columns(3)
+    held_a = st.session_state.get("results_A") is not None
+    held_b = st.session_state.get("results_B") is not None
+    with a_col:
+        st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
+        if st.button("Hold as A" if not held_a else "Replace A", use_container_width=True):
+            freeze_results("A")
+            st.toast("Held current results as A")
+    with b_col:
+        st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
+        if st.button("Hold as B" if not held_b else "Replace B", use_container_width=True):
+            freeze_results("B")
+            st.toast("Held current results as B")
+    with clear_col:
+        st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
+        if st.button("Release", use_container_width=True, disabled=not (held_a or held_b)):
+            st.session_state.results_A = None
+            st.session_state.results_B = None
+            st.rerun()
+
+held = ", ".join(name for name, ok in (("A", held_a), ("B", held_b)) if ok)
+st.caption(
+    f"Holding {held} for side-by-side comparison on the results pages."
+    if held else
+    "Hold two strategies as A and B to compare them on the results pages."
+)
+
+# ── Charts ────────────────────────────────────────────────────────────────────
+section("How the decade plays out")
+
+fixed = st.session_state.get("strategy_scale_mode") == "Fixed"
+scale_col, _ = st.columns([1, 3])
+with scale_col:
+    st.session_state.strategy_scale_mode = st.radio(
+        "Chart scale",
+        ["Auto", "Fixed"],
+        index=1 if fixed else 0,
+        horizontal=True,
+        help="Fixed uses the same axis limits as the Excel workbook, so runs can be compared by eye.",
+    )
 fixed = st.session_state.strategy_scale_mode == "Fixed"
-if st.session_state.strategy_graph_mode >= 1:
-    st.plotly_chart(gross_margin_and_ryegrass_chart(yearly, "Gross Margin and Ryegrass", fixed_scale=fixed), use_container_width=True)
-if st.session_state.strategy_graph_mode >= 2:
-    c1, c2 = st.columns(2)
-    with c1:
-        st.plotly_chart(weed_cost_chart(yearly, "Weed Control Cost", fixed_scale=fixed), use_container_width=True)
-    with c2:
-        st.plotly_chart(income_breakdown_chart(yearly, "Income Breakdown", fixed_scale=fixed), use_container_width=True)
+
+margin_tab, cost_tab, income_tab = st.tabs(["Margin and ryegrass", "Weed control cost", "Income sources"])
+with margin_tab:
+    st.plotly_chart(gross_margin_and_ryegrass_chart(yearly, fixed_scale=fixed), use_container_width=True)
+with cost_tab:
+    st.plotly_chart(weed_cost_chart(yearly, fixed_scale=fixed), use_container_width=True)
+with income_tab:
+    st.plotly_chart(income_breakdown_chart(yearly, fixed_scale=fixed), use_container_width=True)
+
+uwa_footer()

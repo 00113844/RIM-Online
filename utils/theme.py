@@ -1,11 +1,20 @@
-"""
-Shared UWA brand theme injector for all Streamlit pages.
+"""Shared visual system for RIM Online.
 
-UWA Primary Brand Colours
-  Navy Blue  : #003087
-  Gold       : #DAAA00
-  White      : #FFFFFF
-  Light grey : #F4F7FB
+Design direction
+----------------
+RIM exists because ryegrass seed banks *compound*. A decade of decisions either
+draws the bank down or lets it run away, and the whole tool is an argument about
+that one stock. So the interface is built around it: the seed-bank spine sits
+above the editor on every working page and never leaves the screen.
+
+Colour is semantic first, brand second. UWA navy and gold carry identity —
+sidebar, rules, logo — but they are deliberately kept out of the data. Ryegrass
+pressure is sienna (the thing you are fighting) and money is teal (deliberately
+not green, so the weed and the margin can never be confused at a glance).
+
+Type is the Archivo superfamily, using *width* rather than another weight bump
+as the display signature, with IBM Plex Mono for every number so figures always
+read as instrument output.
 """
 from __future__ import annotations
 
@@ -14,479 +23,538 @@ import pathlib
 
 import streamlit as st
 
-# ── Colour tokens ──────────────────────────────────────────────────────────────
-UWA_NAVY   = "#003087"
-UWA_NAVY_D = "#00235e"   # darker navy for hover/press
-UWA_NAVY_L = "#ccd6e8"   # light navy tint (borders, dividers)
-UWA_GOLD   = "#DAAA00"
-UWA_GOLD_L = "#f5e9a0"   # light gold tint
-UWA_WHITE  = "#FFFFFF"
-UWA_BG     = "#F4F7FB"   # page background
-UWA_BG2    = "#E8EDF5"   # card / sidebar background
-UWA_TEXT   = "#1A1A2E"
-UWA_TEXT_M = "#4A5568"   # muted text
-UWA_GREEN  = "#1B8A4E"   # success
-UWA_RED    = "#C0392B"   # error/danger
+# ── Tokens ────────────────────────────────────────────────────────────────────
+INK        = "#101A2B"   # near-black navy: text and structure
+NAVY       = "#003087"   # UWA navy: identity
+NAVY_DEEP  = "#001C50"
+GOLD       = "#DAAA00"   # UWA gold: identity accent, used as a hairline
+PAPER      = "#F4F5F2"   # warm pale grey — stubble, not cream
+CARD       = "#FFFFFF"
+LINE       = "#DFE1DB"
+MUTED      = "#5D6B7A"
+FAINT      = "#8A96A3"
 
-_CSS = """
-/* ── Google Font ──────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+RYE        = "#A8442A"   # ryegrass pressure — the threat
+RYE_SOFT   = "#E3C4B9"
+MARGIN     = "#0E6E5C"   # money — teal, never green
+MARGIN_SOFT = "#B9DBD3"
+WARN       = "#B67E00"
 
-/* ── Root variables ────────────────────────────────────────────────────── */
-:root {
-  --uwa-navy   : #003087;
-  --uwa-navy-d : #00235e;
-  --uwa-navy-l : #ccd6e8;
-  --uwa-gold   : #DAAA00;
-  --uwa-gold-l : #f5e9a0;
-  --uwa-bg     : #F4F7FB;
-  --uwa-bg2    : #E8EDF5;
-  --uwa-text   : #1A1A2E;
-  --uwa-text-m : #4A5568;
-  --uwa-green  : #1B8A4E;
-  --uwa-red    : #C0392B;
-  --radius     : 8px;
-  --shadow     : 0 2px 10px rgba(0,48,135,0.10);
-}
+# Back-compat aliases: older pages import these names.
+UWA_NAVY, UWA_NAVY_D, UWA_NAVY_L = NAVY, NAVY_DEEP, LINE
+UWA_GOLD, UWA_GOLD_L = GOLD, "#F0E3A8"
+UWA_WHITE, UWA_BG, UWA_BG2 = CARD, PAPER, "#EAECE6"
+UWA_TEXT, UWA_TEXT_M = INK, MUTED
+UWA_GREEN, UWA_RED = MARGIN, RYE
 
-/* ── Base app ───────────────────────────────────────────────────────────── */
-html, body, [class*="css"] {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
-  color: var(--uwa-text);
-}
 
-.stApp {
-  background: var(--uwa-bg) !important;
-}
+_CSS = f"""
+@import url('https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
-/* ── Sidebar ────────────────────────────────────────────────────────────── */
-[data-testid="stSidebar"] {
-  background: var(--uwa-navy) !important;
-  border-right: 3px solid var(--uwa-gold) !important;
-}
-[data-testid="stSidebar"] * {
-  color: #ffffff !important;
-}
-[data-testid="stSidebarNav"] a span {
-  color: rgba(255,255,255,0.85) !important;
-  font-size: 0.92rem;
+:root {{
+  --ink: {INK};
+  --navy: {NAVY};
+  --navy-deep: {NAVY_DEEP};
+  --gold: {GOLD};
+  --paper: {PAPER};
+  --card: {CARD};
+  --line: {LINE};
+  --muted: {MUTED};
+  --faint: {FAINT};
+  --rye: {RYE};
+  --rye-soft: {RYE_SOFT};
+  --margin: {MARGIN};
+  --margin-soft: {MARGIN_SOFT};
+  --radius: 6px;
+  --sans: 'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+}}
+
+/* ── Base ─────────────────────────────────────────────────────────────── */
+html, body, [class*="css"], .stApp {{
+  font-family: var(--sans);
+  color: var(--ink);
+}}
+.stApp {{ background: var(--paper); }}
+
+.block-container {{
+  padding-top: 3.6rem;
+  padding-bottom: 4rem;
+  max-width: 1500px;
+}}
+
+h1, h2, h3, h4 {{ font-family: var(--sans); color: var(--ink); letter-spacing: -0.01em; }}
+
+/* Numbers are instrument output, everywhere. */
+.rim-num, [data-testid="stMetricValue"] {{
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}}
+
+/* ── Sidebar ──────────────────────────────────────────────────────────── */
+[data-testid="stSidebar"] {{
+  background: var(--navy);
+  border-right: none;
+}}
+[data-testid="stSidebar"] > div:first-child {{ padding-top: 0.5rem; }}
+
+/* Nav: quiet by default, gold rule on the active page. No forced bolding. */
+[data-testid="stSidebarNav"] a {{
+  border-left: 2px solid transparent;
+  border-radius: 0;
+  padding-left: 0.85rem;
+  margin: 0.05rem 0.5rem;
+  transition: background .12s ease, border-color .12s ease;
+}}
+[data-testid="stSidebarNav"] a span {{
+  color: rgba(255,255,255,0.72);
+  font-family: var(--sans);
+  font-size: 0.88rem;
+  font-weight: 400;
+  font-stretch: 100%;
+}}
+[data-testid="stSidebarNav"] a:hover {{ background: rgba(255,255,255,0.06); }}
+[data-testid="stSidebarNav"] a:hover span {{ color: #fff; }}
+[data-testid="stSidebarNav"] a[aria-current="page"] {{
+  background: rgba(255,255,255,0.10);
+  border-left-color: var(--gold);
+}}
+[data-testid="stSidebarNav"] a[aria-current="page"] span {{
+  color: #fff;
+  font-weight: 600;
+}}
+/* Streamlit lists the entrypoint as "app"; it duplicates Welcome. */
+[data-testid="stSidebarNav"] li:first-child {{ display: none; }}
+
+[data-testid="stSidebar"] .stMarkdown p,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] .stCaption {{ color: rgba(255,255,255,0.78); }}
+
+/* ── Page header ──────────────────────────────────────────────────────── */
+.rim-head {{
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding-bottom: 0.9rem;
+  margin-bottom: 1.4rem;
+  border-bottom: 1px solid var(--line);
+  position: relative;
+}}
+.rim-head::after {{
+  content: "";
+  position: absolute;
+  left: 0; bottom: -1px;
+  width: 56px; height: 3px;
+  background: var(--gold);
+}}
+.rim-step {{
+  font-family: var(--mono);
+  font-size: 0.7rem;
   font-weight: 500;
-}
-[data-testid="stSidebarNav"] a:hover span,
-[data-testid="stSidebarNav"] .active span {
-  color: var(--uwa-gold) !important;
-  font-weight: 700;
-}
-[data-testid="stSidebar"] .stMarkdown h1,
-[data-testid="stSidebar"] .stMarkdown h2,
-[data-testid="stSidebar"] .stMarkdown h3 {
-  color: #ffffff !important;
-}
-/* Sidebar collapse button */
-[data-testid="collapsedControl"] {
-  background: var(--uwa-navy) !important;
-  color: #fff !important;
-}
-
-/* ── Top header / toolbar ───────────────────────────────────────────────── */
-[data-testid="stHeader"] {
-  background: var(--uwa-navy) !important;
-  border-bottom: 3px solid var(--uwa-gold);
-}
-
-/* ── Page titles ────────────────────────────────────────────────────────── */
-h1 {
-  color: var(--uwa-navy) !important;
-  font-weight: 700 !important;
-  font-size: 1.85rem !important;
-  border-bottom: 3px solid var(--uwa-gold);
-  padding-bottom: 0.35rem;
-  margin-bottom: 1.2rem !important;
-}
-h2 {
-  color: var(--uwa-navy) !important;
-  font-weight: 600 !important;
-  font-size: 1.35rem !important;
-}
-h3 {
-  color: var(--uwa-navy) !important;
-  font-weight: 600 !important;
-  font-size: 1.1rem !important;
-}
-
-/* ── Subheader (st.subheader) ───────────────────────────────────────────── */
-[data-testid="stMarkdownContainer"] h3 {
-  color: var(--uwa-navy) !important;
-  border-left: 4px solid var(--uwa-gold);
-  padding-left: 0.6rem;
-  font-size: 1.05rem !important;
-}
-
-/* ── Primary buttons ─────────────────────────────────────────────────────── */
-.stButton > button[kind="primary"],
-.stButton > button {
-  background: var(--uwa-navy) !important;
-  color: #ffffff !important;
-  border: none !important;
-  border-radius: var(--radius) !important;
-  font-weight: 600 !important;
-  font-size: 0.88rem !important;
-  padding: 0.45rem 1.1rem !important;
-  transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
-  box-shadow: var(--shadow) !important;
-}
-.stButton > button:hover {
-  background: var(--uwa-navy-d) !important;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(0,48,135,0.22) !important;
-}
-.stButton > button:active {
-  transform: translateY(0);
-}
-
-/* Download buttons – gold accent */
-.stDownloadButton > button {
-  background: var(--uwa-gold) !important;
-  color: var(--uwa-navy) !important;
-  font-weight: 700 !important;
-  border: none !important;
-  border-radius: var(--radius) !important;
-  padding: 0.45rem 1.1rem !important;
-}
-.stDownloadButton > button:hover {
-  background: #c29900 !important;
-  transform: translateY(-1px);
-}
-
-/* ── Metric cards ───────────────────────────────────────────────────────── */
-[data-testid="stMetric"] {
-  background: #ffffff;
-  border: 1px solid var(--uwa-navy-l);
-  border-top: 4px solid var(--uwa-navy);
-  border-radius: var(--radius);
-  padding: 1rem 1.2rem !important;
-  box-shadow: var(--shadow);
-}
-[data-testid="stMetricLabel"] {
-  color: var(--uwa-text-m) !important;
-  font-size: 0.82rem !important;
-  font-weight: 600 !important;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: var(--navy);
+}}
+.rim-title {{
+  font-size: 1.85rem;
+  font-weight: 600;
+  font-stretch: 118%;
+  line-height: 1.15;
+  margin: 0;
+  color: var(--ink);
+}}
+.rim-sub {{ font-size: 0.95rem; color: var(--muted); margin: 0; }}
+
+/* ── Section label ────────────────────────────────────────────────────── */
+.rim-section {{
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 1.6rem 0 0.55rem;
+  padding-bottom: 0.3rem;
+  border-bottom: 1px solid var(--line);
+}}
+
+/* ── Seed-bank spine: the signature element ───────────────────────────── */
+.rim-spine {{
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 10), 1fr);
+  gap: 3px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.85rem 0.9rem 0.7rem;
+  margin-bottom: 0.9rem;
+}}
+.rim-spine-cell {{
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 0.3rem;
+  min-width: 0;
+}}
+.rim-spine-bar {{
+  position: relative;
+  height: 58px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  align-items: flex-end;
+}}
+.rim-spine-fill {{
+  width: 100%;
+  border-radius: 2px 2px 0 0;
+  background: var(--rye);
+  min-height: 3px;
+  transition: height .18s ease;
+}}
+.rim-spine-meta {{
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border-top: 1px solid var(--line);
+  padding-top: 0.3rem;
+}}
+.rim-spine-yr {{
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  color: var(--faint);
+}}
+.rim-spine-crop {{
+  font-size: 0.7rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}}
+.rim-spine-val {{
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--ink);
+}}
+.rim-spine-legend {{
+  display: flex;
+  gap: 1.1rem;
+  align-items: baseline;
+  font-size: 0.74rem;
+  color: var(--muted);
+  margin: -0.4rem 0 1.1rem;
+}}
+.rim-spine-legend b {{ font-family: var(--mono); color: var(--ink); font-weight: 500; }}
+
+/* ── Metric row ───────────────────────────────────────────────────────── */
+.rim-metrics {{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 0.4rem;
+}}
+.rim-metric {{
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-top: 2px solid var(--accent, var(--navy));
+  border-radius: var(--radius);
+  padding: 0.8rem 0.95rem 0.85rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}}
+.rim-metric-label {{
+  font-size: 0.72rem;
   letter-spacing: 0.04em;
-}
-[data-testid="stMetricValue"] {
-  color: var(--uwa-navy) !important;
-  font-size: 1.6rem !important;
-  font-weight: 700 !important;
-}
+  text-transform: uppercase;
+  color: var(--faint);
+}}
+.rim-metric-value {{
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  font-size: 1.42rem;
+  font-weight: 500;
+  color: var(--ink);
+  line-height: 1.2;
+}}
+.rim-metric-unit {{ font-size: 0.8rem; color: var(--muted); font-weight: 400; }}
+.rim-metric-note {{ font-size: 0.72rem; color: var(--muted); }}
 
-/* ── Info / success / warning / error alerts ────────────────────────────── */
-.stAlert[data-baseweb="notification"] {
-  border-radius: var(--radius) !important;
-  font-size: 0.9rem;
-}
-div[data-testid="stInfo"] {
-  background: #EAF0FB !important;
-  border-left: 4px solid var(--uwa-navy) !important;
-  color: var(--uwa-navy) !important;
+/* ── Controls ─────────────────────────────────────────────────────────── */
+.stButton > button {{
+  font-family: var(--sans);
+  font-size: 0.86rem;
+  font-weight: 500;
   border-radius: var(--radius);
-}
-div[data-testid="stSuccess"] {
-  background: #E8F6EF !important;
-  border-left: 4px solid var(--uwa-green) !important;
-  border-radius: var(--radius);
-}
-div[data-testid="stWarning"] {
-  background: #FFF9E0 !important;
-  border-left: 4px solid var(--uwa-gold) !important;
-  border-radius: var(--radius);
-}
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  padding: 0.4rem 0.9rem;
+  transition: border-color .12s ease, background .12s ease;
+  box-shadow: none;
+}}
+.stButton > button:hover {{
+  border-color: var(--navy);
+  background: #fff;
+  color: var(--navy);
+}}
+.stButton > button:focus-visible {{ outline: 2px solid var(--gold); outline-offset: 1px; }}
+.stButton > button[kind="primary"] {{
+  background: var(--navy);
+  border-color: var(--navy);
+  color: #fff;
+}}
+.stButton > button[kind="primary"]:hover {{ background: var(--navy-deep); color: #fff; }}
 
-/* ── Tabs ───────────────────────────────────────────────────────────────── */
-.stTabs [data-baseweb="tab-list"] {
-  border-bottom: 2px solid var(--uwa-navy-l) !important;
-  gap: 4px;
-}
-.stTabs [data-baseweb="tab"] {
-  border-radius: var(--radius) var(--radius) 0 0 !important;
-  font-weight: 600 !important;
-  font-size: 0.88rem !important;
-  color: var(--uwa-text-m) !important;
-  padding: 0.5rem 1.1rem !important;
-  background: transparent !important;
-}
-.stTabs [data-baseweb="tab"]:hover {
-  background: var(--uwa-bg2) !important;
-  color: var(--uwa-navy) !important;
-}
-.stTabs [aria-selected="true"] {
-  background: var(--uwa-navy) !important;
-  color: #fff !important;
-  border-color: transparent !important;
-}
+[data-testid="stWidgetLabel"] label p {{
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 500;
+}}
 
-/* ── Data tables / dataframes ───────────────────────────────────────────── */
-[data-testid="stDataFrame"] table thead tr {
-  background: var(--uwa-navy) !important;
-  color: #fff !important;
-}
-[data-testid="stDataFrame"] table thead th {
-  color: #fff !important;
-  font-weight: 600 !important;
-  font-size: 0.83rem !important;
-  letter-spacing: 0.03em;
-  border: none !important;
-}
-[data-testid="stDataFrame"] table tbody tr:nth-child(even) {
-  background: var(--uwa-bg2) !important;
-}
-[data-testid="stDataFrame"] table tbody tr:hover {
-  background: var(--uwa-gold-l) !important;
-}
+/* Tabs: a rule, not a pill row. */
+.stTabs [data-baseweb="tab-list"] {{
+  gap: 1.4rem;
+  border-bottom: 1px solid var(--line);
+}}
+.stTabs [data-baseweb="tab"] {{
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--muted);
+  padding: 0.4rem 0;
+  background: transparent;
+}}
+.stTabs [aria-selected="true"] {{ color: var(--ink); }}
+.stTabs [data-baseweb="tab-highlight"] {{ background: var(--navy); }}
 
-/* ── Form fields ────────────────────────────────────────────────────────── */
-[data-baseweb="input"],
-[data-baseweb="select"],
-[data-baseweb="textarea"],
-[data-baseweb="base-input"] {
-  border-color: var(--uwa-navy-l) !important;
-  border-radius: var(--radius) !important;
-  background: #ffffff !important;
-}
-[data-baseweb="input"]:focus-within,
-[data-baseweb="select"]:focus-within {
-  border-color: var(--uwa-navy) !important;
-  box-shadow: 0 0 0 2px rgba(0,48,135,0.18) !important;
-}
-
-/* ── Expander ───────────────────────────────────────────────────────────── */
-details[data-testid="stExpander"] {
-  border: 1px solid var(--uwa-navy-l) !important;
-  border-radius: var(--radius) !important;
-  background: #ffffff;
-}
-details[data-testid="stExpander"] summary {
-  color: var(--uwa-navy) !important;
-  font-weight: 600 !important;
-}
-
-/* ── Containers with border ─────────────────────────────────────────────── */
-[data-testid="stVerticalBlockBorderWrapper"] > div {
-  border: 1px solid var(--uwa-navy-l) !important;
-  border-radius: var(--radius) !important;
-  background: #ffffff;
-  box-shadow: var(--shadow);
-}
-
-/* ── Plotly charts – rounded wrapper ─────────────────────────────────────── */
-[data-testid="stPlotlyChart"] {
+/* Data editor and tables */
+[data-testid="stDataFrame"], [data-testid="stDataEditor"] {{
+  border: 1px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
-  box-shadow: var(--shadow);
-  background: #ffffff;
-}
+}}
 
-/* ── Page-link cards ─────────────────────────────────────────────────────── */
-a[data-testid="stPageLink-NavLink"] {
-  border: 1px solid var(--uwa-navy-l) !important;
-  border-radius: var(--radius) !important;
-  background: #ffffff !important;
-  padding: 0.5rem 0.9rem !important;
-  font-weight: 600 !important;
-  color: var(--uwa-navy) !important;
-  transition: background 0.15s, transform 0.12s;
-  display: block;
-  margin-bottom: 0.5rem;
-}
-a[data-testid="stPageLink-NavLink"]:hover {
-  background: var(--uwa-bg2) !important;
-  border-color: var(--uwa-navy) !important;
-  transform: translateX(3px);
-}
-
-/* ── Custom UWA components ──────────────────────────────────────────────── */
-.uwa-page-header {
-  background: linear-gradient(135deg, var(--uwa-navy) 0%, #004dc5 100%);
-  color: #fff;
-  padding: 1.4rem 2rem;
-  border-radius: 0 0 var(--radius) var(--radius);
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  box-shadow: 0 4px 18px rgba(0,48,135,0.18);
-}
-.uwa-page-header .header-title {
-  font-size: 1.55rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  margin: 0;
-  line-height: 1.15;
-}
-.uwa-page-header .header-sub {
-  font-size: 0.88rem;
-  color: rgba(255,255,255,0.75);
-  margin: 0.2rem 0 0 0;
-}
-.uwa-gold-bar {
-  height: 4px;
-  background: var(--uwa-gold);
-  border-radius: 2px;
-  margin: 0.4rem 0 1.2rem 0;
-}
-.uwa-badge {
-  display: inline-block;
-  background: var(--uwa-gold);
-  color: var(--uwa-navy);
-  font-weight: 700;
-  font-size: 0.78rem;
-  padding: 0.2rem 0.65rem;
-  border-radius: 999px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-.uwa-section-card {
-  background: #ffffff;
-  border: 1px solid var(--uwa-navy-l);
+/* Expanders as quiet containers */
+[data-testid="stExpander"] {{
+  border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 1.2rem 1.4rem;
-  margin-bottom: 1rem;
-  box-shadow: var(--shadow);
-}
-.uwa-step-badge {
-  background: var(--uwa-navy);
-  color: #fff;
-  font-weight: 700;
-  font-size: 1rem;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 0.5rem;
-}
+  background: var(--card);
+}}
+[data-testid="stExpander"] summary {{ font-size: 0.86rem; font-weight: 500; }}
 
-/* ── Footer ─────────────────────────────────────────────────────────────── */
-footer {visibility: hidden;}
-.uwa-footer {
-  text-align: center;
-  color: var(--uwa-text-m);
+/* Alerts: flat, left-ruled */
+[data-testid="stAlert"] {{
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--navy);
+  background: var(--card);
+  color: var(--ink);
+  font-size: 0.88rem;
+}}
+
+/* ── Footer ───────────────────────────────────────────────────────────── */
+.rim-footer {{
+  margin-top: 3rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
   font-size: 0.78rem;
-  padding: 1.5rem 0 0.5rem 0;
-  border-top: 1px solid var(--uwa-navy-l);
-  margin-top: 2rem;
-}
-.uwa-footer a { color: var(--uwa-navy); text-decoration: none; }
-.uwa-footer a:hover { color: var(--uwa-gold); }
+  color: var(--faint);
+}}
+.rim-footer a {{ color: var(--muted); text-decoration: none; }}
+.rim-footer a:hover {{ color: var(--navy); text-decoration: underline; }}
 
-/* ── Scrollbar ───────────────────────────────────────────────────────────── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: var(--uwa-bg); }
-::-webkit-scrollbar-thumb { background: var(--uwa-navy-l); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--uwa-navy); }
+/* ── Sidebar brand ────────────────────────────────────────────────────── */
+.rim-brand {{
+  padding: 0.4rem 1rem 1.1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.16);
+  margin-bottom: 0.6rem;
+}}
+.rim-brand-name {{
+  font-size: 1.12rem;
+  font-weight: 600;
+  font-stretch: 118%;
+  color: #fff;
+  line-height: 1.1;
+}}
+.rim-brand-sub {{
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.6);
+  margin-top: 0.18rem;
+}}
+.rim-brand-rule {{
+  width: 34px; height: 2px;
+  background: var(--gold);
+  margin-top: 0.6rem;
+}}
+.rim-partners {{
+  padding: 1rem;
+  margin-top: 0.5rem;
+  border-top: 1px solid rgba(255,255,255,0.16);
+}}
+.rim-partners-label {{
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 0.5rem;
+}}
+
+@media (prefers-reduced-motion: reduce) {{
+  * {{ transition: none !important; animation: none !important; }}
+}}
+
+::-webkit-scrollbar {{ width: 8px; height: 8px; }}
+::-webkit-scrollbar-track {{ background: transparent; }}
+::-webkit-scrollbar-thumb {{ background: #C8CCC4; border-radius: 4px; }}
+::-webkit-scrollbar-thumb:hover {{ background: var(--muted); }}
 """
 
 
+# ── Injection ─────────────────────────────────────────────────────────────────
 def inject_uwa_theme() -> None:
-    """Inject the full UWA CSS into the current page. Call once per page."""
+    """Inject the RIM stylesheet. Call once per page, before any content."""
     st.markdown(f"<style>{_CSS}</style>", unsafe_allow_html=True)
 
 
+# ── Page furniture ────────────────────────────────────────────────────────────
 def uwa_page_header(title: str, subtitle: str = "", icon: str = "") -> None:
-    """Render a branded page header banner."""
-    icon_html = f'<span style="font-size:2rem;line-height:1">{icon}</span>' if icon else ""
+    """Page header: a step label, the title, and a gold rule.
+
+    ``icon`` is accepted for backwards compatibility and ignored — the emoji
+    banners it used to render competed with the data for attention.
+    """
+    step, _, rest = title.partition("—")
+    if rest:
+        eyebrow, heading = step.strip(), rest.strip()
+    else:
+        eyebrow, heading = "", title.strip()
+
+    eyebrow_html = f'<span class="rim-step">{eyebrow}</span>' if eyebrow else ""
+    sub_html = f'<p class="rim-sub">{subtitle}</p>' if subtitle else ""
     st.markdown(
-        f"""
-        <div class="uwa-page-header">
-          {icon_html}
-          <div>
-            <p class="header-title">{title}</p>
-            <p class="header-sub">{subtitle}</p>
-          </div>
-        </div>
-        """,
+        f'<div class="rim-head">{eyebrow_html}'
+        f'<p class="rim-title">{heading}</p>{sub_html}</div>',
         unsafe_allow_html=True,
     )
 
 
+def section(label: str) -> None:
+    """A quiet, ruled section label."""
+    st.markdown(f'<div class="rim-section">{label}</div>', unsafe_allow_html=True)
+
+
+def metric_row(items: list[dict]) -> None:
+    """A row of figures.
+
+    Each item: ``{"label", "value", "unit"?, "note"?, "accent"?}``. ``accent``
+    takes ``"rye"``, ``"margin"`` or a hex value, and colours the top rule so
+    weed pressure and money are distinguishable without reading the label.
+    """
+    accents = {"rye": RYE, "margin": MARGIN, "navy": NAVY, "gold": GOLD}
+    cells = []
+    for item in items:
+        accent = accents.get(item.get("accent", "navy"), item.get("accent", NAVY))
+        unit = f' <span class="rim-metric-unit">{item["unit"]}</span>' if item.get("unit") else ""
+        note = f'<span class="rim-metric-note">{item["note"]}</span>' if item.get("note") else ""
+        cells.append(
+            f'<div class="rim-metric" style="--accent:{accent}">'
+            f'<span class="rim-metric-label">{item["label"]}</span>'
+            f'<span class="rim-metric-value">{item["value"]}{unit}</span>'
+            f"{note}</div>"
+        )
+    st.markdown(f'<div class="rim-metrics">{"".join(cells)}</div>', unsafe_allow_html=True)
+
+
+def seedbank_spine(years, crops, seed_bank, unit: str = "seeds/m²") -> None:
+    """The seed-bank spine — one cell per year, always above the editor.
+
+    RIM is an argument about a compounding stock, so the stock stays on screen
+    while you edit. Bars are scaled to the run's own peak: the shape of the
+    decade is what matters, not the absolute height.
+    """
+    values = [max(0.0, float(v or 0.0)) for v in seed_bank]
+    peak = max(values) if values else 0.0
+    cells = []
+    for year, crop, value in zip(years, crops, values):
+        height = 0 if peak <= 0 else round(100 * value / peak)
+        # Ramp toward sienna as the bank fills; gold at the low end reads as
+        # "holding", not "safe".
+        share = 0 if peak <= 0 else value / peak
+        colour = GOLD if share < 0.25 else (WARN if share < 0.6 else RYE)
+        shown = f"{value:,.0f}" if value >= 10 else f"{value:.1f}"
+        cells.append(
+            '<div class="rim-spine-cell">'
+            f'<div class="rim-spine-bar"><div class="rim-spine-fill" '
+            f'style="height:{height}%;background:{colour}"></div></div>'
+            '<div class="rim-spine-meta">'
+            f'<span class="rim-spine-yr">YR {year}</span>'
+            f'<span class="rim-spine-crop">{crop}</span>'
+            f'<span class="rim-spine-val">{shown}</span>'
+            "</div></div>"
+        )
+
+    st.markdown(
+        f'<div class="rim-spine" style="--cols:{len(cells)}">{"".join(cells)}</div>',
+        unsafe_allow_html=True,
+    )
+    if values:
+        direction = "falling" if values[-1] < values[0] else "rising"
+        st.markdown(
+            f'<div class="rim-spine-legend">'
+            f"<span>Seed bank at the end of each year, {unit} — "
+            f"<b>{direction}</b> across the run</span>"
+            f"<span>After year 1 <b>{values[0]:,.1f}</b></span>"
+            f"<span>After year {len(values)} <b>{values[-1]:,.1f}</b></span>"
+            f"<span>Peak <b>{peak:,.1f}</b></span>"
+            "</div>",
+            unsafe_allow_html=True,
+        )
+
+
 def uwa_gold_bar() -> None:
-    """Render a thin gold accent bar."""
-    st.markdown('<div class="uwa-gold-bar"></div>', unsafe_allow_html=True)
+    st.markdown(
+        '<div style="height:3px;width:56px;background:var(--gold);margin:0.6rem 0 1rem"></div>',
+        unsafe_allow_html=True,
+    )
 
 
 def uwa_badge(text: str) -> None:
-    st.markdown(f'<span class="uwa-badge">{text}</span>', unsafe_allow_html=True)
+    st.markdown(
+        f'<span style="font-family:var(--mono);font-size:0.68rem;letter-spacing:0.08em;'
+        f'text-transform:uppercase;color:{NAVY};border:1px solid {LINE};'
+        f'border-radius:3px;padding:0.12rem 0.4rem">{text}</span>',
+        unsafe_allow_html=True,
+    )
 
 
 def uwa_footer() -> None:
     st.markdown(
-        """
-        <div class="uwa-footer">
-          RIM Online &nbsp;|&nbsp; The University of Western Australia &nbsp;|&nbsp;
-          <a href="https://www.uwa.edu.au" target="_blank">uwa.edu.au</a>
-        </div>
-        """,
+        '<div class="rim-footer">RIM Online &middot; Ryegrass Integrated Management &middot; '
+        'The University of Western Australia and AHRI &middot; '
+        '<a href="https://www.uwa.edu.au" target="_blank" rel="noopener">uwa.edu.au</a></div>',
         unsafe_allow_html=True,
     )
 
 
 def uwa_sidebar_logo() -> None:
-    """Render a compact UWA-branded sidebar header and AHRI logo at the bottom."""
+    """Sidebar brand block, and the AHRI mark in the partner slot below the nav."""
     st.sidebar.markdown(
-        f"""
-        <div style="
-          text-align:center;
-          padding:1.2rem 0.5rem 1rem;
-          border-bottom: 2px solid {UWA_GOLD};
-          margin-bottom:1rem;">
-          <div style="font-size:2.2rem;line-height:1;">🌾</div>
-          <div style="
-            font-weight:800;
-            font-size:1.15rem;
-            color:#ffffff;
-            letter-spacing:-0.01em;
-            margin-top:0.4rem;">RIM Online</div>
-          <div style="
-            font-size:0.73rem;
-            color:rgba(255,255,255,0.65);
-            margin-top:0.2rem;">Ryegrass Integrated Management</div>
-          <div style="
-            display:inline-block;
-            background:{UWA_GOLD};
-            color:{UWA_NAVY};
-            font-size:0.68rem;
-            font-weight:700;
-            padding:0.15rem 0.55rem;
-            border-radius:999px;
-            margin-top:0.5rem;
-            text-transform:uppercase;
-            letter-spacing:0.06em;">UWA</div>
-        </div>
-        """,
+        '<div class="rim-brand">'
+        '<div class="rim-brand-name">RIM Online</div>'
+        '<div class="rim-brand-sub">Ryegrass Integrated Management</div>'
+        '<div class="rim-brand-rule"></div>'
+        "</div>",
         unsafe_allow_html=True,
     )
 
-    # AHRI logo pinned to the bottom of the sidebar
-    _logo_path = pathlib.Path(__file__).parent.parent / "AHRI_logo.jpg"
-    if _logo_path.exists():
-        _b64 = base64.b64encode(_logo_path.read_bytes()).decode()
+    logo = pathlib.Path(__file__).parent.parent / "AHRI_logo.jpg"
+    if logo.exists():
+        encoded = base64.b64encode(logo.read_bytes()).decode()
         st.sidebar.markdown(
-            f"""
-            <div style="
-              position:fixed;
-              bottom:0;
-              left:0;
-              width:var(--sidebar-width, 244px);
-              background:rgba(0,48,135,0.97);
-              padding:0.75rem 0.5rem;
-              text-align:center;
-              border-top:2px solid {UWA_GOLD};
-              z-index:1000;">
-              <img src="data:image/jpeg;base64,{_b64}"
-                   style="width:90px;height:auto;"
-                   alt="AHRI Logo">
-            </div>
-            """,
+            '<div class="rim-partners">'
+            '<div class="rim-partners-label">Developed with</div>'
+            f'<img src="data:image/jpeg;base64,{encoded}" alt="AHRI" '
+            'style="width:82px;height:auto;border-radius:3px">'
+            "</div>",
             unsafe_allow_html=True,
         )
