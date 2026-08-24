@@ -417,6 +417,77 @@ div[data-testid="stSelectbox"] div[aria-disabled="true"] div {{ color: #B08276; 
   color: #97624F;
 }}
 
+/* ── The gate: results are withheld until the plan makes sense ────────── */
+.rim-gate {{
+  background: #FCF6F4;
+  border: 1px solid #E4C9C1;
+  border-left: 3px solid var(--rye);
+  border-radius: var(--radius);
+  padding: 0.95rem 1.15rem 1rem;
+  margin: 0.4rem 0 0.9rem;
+}}
+.rim-gate-quiet {{ background: var(--card); }}
+.rim-gate-head {{
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--ink);
+}}
+.rim-gate-count {{
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #fff;
+  background: var(--rye);
+  border-radius: 3px;
+  min-width: 1.5rem;
+  text-align: center;
+  padding: 0.1rem 0.35rem;
+}}
+.rim-gate-lede {{
+  margin: 0.4rem 0 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+  max-width: 60ch;
+}}
+
+.rim-problems {{
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+}}
+.rim-problem {{
+  display: grid;
+  grid-template-columns: 8.5rem 1fr;
+  gap: 0.9rem;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.7rem 0.9rem;
+}}
+.rim-problem-when {{
+  font-family: var(--mono);
+  font-size: 0.74rem;
+  color: var(--rye);
+  padding-top: 0.1rem;
+}}
+.rim-problem-body {{ display: flex; flex-direction: column; gap: 0.18rem; min-width: 0; }}
+.rim-problem-what {{ font-size: 0.9rem; color: var(--ink); }}
+.rim-problem-why {{ font-size: 0.82rem; color: var(--muted); }}
+.rim-problem-fix {{ font-size: 0.82rem; color: var(--margin); }}
+.rim-problem-src {{
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--faint);
+  margin-top: 0.1rem;
+}}
+@media (max-width: 640px) {{
+  .rim-problem {{ grid-template-columns: 1fr; gap: 0.3rem; }}
+}}
+
 /* ── Footer ───────────────────────────────────────────────────────────── */
 .rim-footer {{
   margin-top: 3rem;

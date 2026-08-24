@@ -7,6 +7,7 @@ import streamlit as st
 
 from utils.export import tables_to_excel_bytes
 from utils.session import ensure_current_results, init_state
+from utils.validation import held_results_notice, problems
 from utils.theme import (
     inject_uwa_theme,
     section,
@@ -73,6 +74,12 @@ def show(frame) -> None:
         column_config=column_config(frame),
     )
 
+
+found = problems(st.session_state.strategy_current)
+if found and st.session_state.get("results_A") is None:
+    held_results_notice(found)
+    uwa_footer()
+    st.stop()
 
 current = ensure_current_results()
 a = st.session_state.get("results_A")

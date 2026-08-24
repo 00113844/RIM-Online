@@ -11,6 +11,7 @@ from typing import Any
 import streamlit as st
 
 from utils.session import ensure_current_results
+from utils.validation import held_results_notice, problems
 
 
 def scale_toggle(key: str = "results_scale_mode") -> bool:
@@ -33,12 +34,21 @@ def scale_toggle(key: str = "results_scale_mode") -> bool:
 def views() -> list[tuple[str, dict[str, Any]]]:
     """What to render: A and B when both are held, otherwise the current plan.
 
-    Returns a list of ``(label, result)``. Never empty.
+    Held strategies were valid when they were held, so they always show. The
+    current plan only shows once it is consistent — otherwise the page stops
+    with a notice, because numbers from a plan the model half-ignores answer a
+    different question from the one asked.
     """
     a = st.session_state.get("results_A")
     b = st.session_state.get("results_B")
     if a is not None and b is not None:
         return [("Strategy A", a), ("Strategy B", b)]
+
+    found = problems(st.session_state.strategy_current)
+    if found:
+        held_results_notice(found)
+        st.stop()
+
     return [("Current plan", ensure_current_results())]
 
 

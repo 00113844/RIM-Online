@@ -27,11 +27,11 @@ from utils.session import (
     reset_strategy_current,
     save_strategy_slot,
 )
-from utils.applicability import neutralise, summarise
+from utils.applicability import neutralise
+from utils.validation import problem_panel, problems
 from utils.year_editor import year_editor
 from utils.save_load import save_load_controls
 from utils.theme import (
-    ghost_notices,
     inject_uwa_theme,
     metric_row,
     seedbank_spine,
@@ -52,28 +52,37 @@ uwa_page_header(
     subtitle="Set what happens in each of the next ten years, and watch the seed bank respond.",
 )
 
-# ── Compute first: the numbers frame everything below them ────────────────────
+# ── The plan is checked before anything is computed ───────────────────────────
 strategy_df = pd.DataFrame(st.session_state.strategy_current)
-result = compute_current_results()
-yearly = result["yearly"]
-summary = result["summary"]
+found = problems(st.session_state.strategy_current)
 
-seedbank_spine(
-    years=yearly["year"].tolist(),
-    crops=yearly["crop"].tolist(),
-    seed_bank=yearly["seed_bank_end"].tolist(),
-)
+if problem_panel(found, on_fix_key="fix_all_top"):
+    st.session_state.strategy_current = neutralise(st.session_state.strategy_current)[0]
+    st.session_state.results_current = None
+    st.rerun()
 
-metric_row([
-    {"label": "Average gross margin", "value": f"{summary['avg_gross_margin']:,.0f}",
-     "unit": "$/ha/yr", "accent": "margin", "note": "Mean across the ten years"},
-    {"label": "Nominal annuity", "value": f"{summary['nominal_annuity']:,.0f}",
-     "unit": "$/ha/yr", "accent": "margin", "note": "After tax, inflation and interest"},
-    {"label": "Weed control", "value": f"{summary['avg_weed_control_cost']:,.0f}",
-     "unit": "$/ha/yr", "accent": "rye", "note": "Average yearly spend"},
-    {"label": "Seed bank at year 10", "value": f"{summary['ending_seed_bank']:,.0f}",
-     "unit": "seeds/m²", "accent": "rye", "note": "What the next decade inherits"},
-])
+result = None
+if not found:
+    result = compute_current_results()
+    yearly = result["yearly"]
+    summary = result["summary"]
+
+    seedbank_spine(
+        years=yearly["year"].tolist(),
+        crops=yearly["crop"].tolist(),
+        seed_bank=yearly["seed_bank_end"].tolist(),
+    )
+
+    metric_row([
+        {"label": "Average gross margin", "value": f"{summary['avg_gross_margin']:,.0f}",
+         "unit": "$/ha/yr", "accent": "margin", "note": "Mean across the ten years"},
+        {"label": "Nominal annuity", "value": f"{summary['nominal_annuity']:,.0f}",
+         "unit": "$/ha/yr", "accent": "margin", "note": "After tax, inflation and interest"},
+        {"label": "Weed control", "value": f"{summary['avg_weed_control_cost']:,.0f}",
+         "unit": "$/ha/yr", "accent": "rye", "note": "Average yearly spend"},
+        {"label": "Seed bank at year 10", "value": f"{summary['ending_seed_bank']:,.0f}",
+         "unit": "seeds/m²", "accent": "rye", "note": "What the next decade inherits"},
+    ])
 
 # ── The editor ────────────────────────────────────────────────────────────────
 section("Year-by-year plan")
@@ -115,16 +124,10 @@ edited = st.data_editor(
     },
     key="strategy_editor",
 )
-# The grid cannot disable one cell, so anything impossible it still holds is
-# cleared here — the plan never sits in a state the model would silently ignore.
-cleaned, cleared = neutralise(edited.to_dict("records"))
-st.session_state.strategy_current = cleaned
+st.session_state.strategy_current = edited.to_dict("records")
 
-if cleared:
-    st.caption(summarise(cleared))
-    ghost_notices(cleared)
-
-with st.expander("Edit one year, with the impossible choices switched off"):
+with st.expander("Edit one year, with the impossible choices switched off",
+                 expanded=bool(found)):
     st.caption(
         "The grid is quicker for bulk edits but cannot grey out a single cell. "
         "Here each control is switched off when the model cannot act on it, so "
@@ -172,12 +175,14 @@ with tools_right:
     held_b = st.session_state.get("results_B") is not None
     with a_col:
         st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
-        if st.button("Hold as A" if not held_a else "Replace A", use_container_width=True):
+        if st.button("Hold as A" if not held_a else "Replace A",
+                     use_container_width=True, disabled=bool(found)):
             freeze_results("A")
             st.toast("Held current results as A")
     with b_col:
         st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
-        if st.button("Hold as B" if not held_b else "Replace B", use_container_width=True):
+        if st.button("Hold as B" if not held_b else "Replace B",
+                     use_container_width=True, disabled=bool(found)):
             freeze_results("B")
             st.toast("Held current results as B")
     with clear_col:
@@ -188,16 +193,23 @@ with tools_right:
             st.rerun()
 
 held = ", ".join(name for name, ok in (("A", held_a), ("B", held_b)) if ok)
-st.caption(
-    f"Holding {held} for side-by-side comparison on the results pages."
-    if held else
-    "Hold two strategies as A and B to compare them on the results pages."
-)
+if found:
+    st.caption("Resolve the plan above before holding it for comparison.")
+else:
+    st.caption(
+        f"Holding {held} for side-by-side comparison on the results pages."
+        if held else
+        "Hold two strategies as A and B to compare them on the results pages."
+    )
 
 with st.expander("Keep this work"):
     save_load_controls("strategy")
 
 # ── Charts ────────────────────────────────────────────────────────────────────
+if result is None:
+    uwa_footer()
+    st.stop()
+
 section("How the decade plays out")
 
 fixed = st.session_state.get("strategy_scale_mode") == "Fixed"
