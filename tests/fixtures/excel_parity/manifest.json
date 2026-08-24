@@ -4,6 +4,7 @@
   "scenarios": [
     "continuous_wheat_no_control.json",
     "rotation_coverage.json",
+    "survival_coverage.json",
     "susceptible_2022_lorf.json"
   ]
 }

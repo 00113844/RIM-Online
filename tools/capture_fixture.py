@@ -58,6 +58,8 @@ def build_fixture(name: str | None = None) -> tuple[str, dict[str, Any]]:
         tabsum=wr.read_tabsum(wb),
         ecosum_and_average=wr.read_ecosum(wb),
         rotation=wr.read_rotation_codes(wb),
+        activation=wr.read_activation(wb),
+        survival=wr.read_survival_factors(wb),
         history=wr.read_history(wb),
         method="openpyxl cached values from the workbook's saved state "
                "(exact floats; no recalculation, no rounding)",
@@ -78,6 +80,8 @@ def build_fixture_from_scenario(scenario_path: Path, name: str | None = None) ->
         tabsum=outputs["tabsum"],
         ecosum_and_average=(outputs["ecosum"], outputs["average_gross_margin"]),
         rotation=outputs["rotation"],
+        activation=outputs["activation"],
+        survival=outputs["survival"],
         history=outputs["history"],
         method=f"Excel COM recalculation of scenarios/{scenario_path.name} "
                "(CalculateFullRebuild, Value2 reads, macros force-disabled)",
@@ -92,6 +96,8 @@ def assemble(
     tabsum: list[dict[str, Any]],
     ecosum_and_average: tuple[list[dict[str, Any]], float | None],
     rotation: list[dict[str, Any]],
+    activation: list[dict[str, Any]],
+    survival: list[dict[str, Any]],
     history: dict[str, str],
     method: str,
 ) -> dict[str, Any]:
@@ -176,6 +182,13 @@ def assemble(
         },
         "reference": {
             "rotation_codes": rotation,
+            "activation": activation,
+            "activation_note": "Calcs!C7:C49 -- the crop code where an option is "
+                               "active, blank where it is not. Block 2's output; "
+                               "used as input by tests/test_survival_factors.py.",
+            "survival_factors": survival,
+            "survival_note": "Calcs rows 55-97. Asserted by "
+                             "tests/test_survival_factors.py against rim.survival.",
             "rotation_note": "Calcs rows 184-189 for years 1..10. Asserted by "
                              "tests/test_rotation_codes.py against rim.rotation.",
             "note": "Full within-season truth table: 6 plant stages and 10 "

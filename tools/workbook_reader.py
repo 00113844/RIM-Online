@@ -139,3 +139,48 @@ def read_history(wb: openpyxl.Workbook) -> dict[str, str]:
         value = wb[sheet].cell(row, col).value
         out[field] = str(value).strip().lower() if value else "w"
     return out
+
+
+def _raw(value: Any) -> Any:
+    """Preserve the blank/number distinction the Calcs block depends on.
+
+    An activation cell holds the crop code when the option is chosen and an
+    empty string when it is not, and every downstream formula tests
+    ``<> ""`` rather than a numeric value.
+    """
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value.strip() or None
+    if isinstance(value, bool):
+        return None
+    return float(value)
+
+
+def read_activation(wb: openpyxl.Workbook) -> list[dict[str, Any]]:
+    """Read Calcs!C7:C49 (per year) -- which control options are active.
+
+    A cell holds the crop code when its option is selected, blank otherwise.
+    This is block 2's output; capturing it lets block 3 be ported and tested
+    against Excel's own inputs first.
+    """
+    ws = wb[cm.SHEET_CALCS]
+    years = []
+    for year in range(1, cm.N_YEARS + 1):
+        col = cm.year_col(year, cm.FIRST_COL_CALCS)
+        years.append(
+            {"year": year, **{str(row): _raw(ws.cell(row, col).value) for row in cm.ACTIVATION_ROWS}}
+        )
+    return years
+
+
+def read_survival_factors(wb: openpyxl.Workbook) -> list[dict[str, Any]]:
+    """Read Calcs!C55:C97 (per year) -- the stage survival factors."""
+    ws = wb[cm.SHEET_CALCS]
+    years = []
+    for year in range(1, cm.N_YEARS + 1):
+        col = cm.year_col(year, cm.FIRST_COL_CALCS)
+        years.append(
+            {"year": year, **{str(row): _num(ws.cell(row, col).value) for row in cm.SURVIVAL_ROWS}}
+        )
+    return years

@@ -23,5 +23,10 @@ weed control; Python charges 10.441 $/ha every year regardless.
 **Why:** These numbers are the baseline. A later change that improves one field while
 widening another is not progress, and without a recorded starting point that is easy to miss.
 
+Blocks 1 and 3 are now ported and match Excel exactly (integer codes and survival factors have
+no tolerance), but the whole-model figures above are unchanged, because nothing yet consumes
+them -- `rim/engine.py` still runs its own annual cycle. Expect the headline numbers to stay put
+until block 4 replaces the population model.
+
 **How to apply:** Re-run `tools/parity_report.py` after each ported block and compare against
 these figures. See [[engine-port-status]] and [[parity-fixture-protocol]].

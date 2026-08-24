@@ -147,6 +147,26 @@ def read_outputs(wb: Any) -> dict[str, Any]:
             {"year": year, **{n: calcs_ws.Cells(r, col).Value2 for n, r in cm.ROTATION_ROWS.items()}}
         )
 
+    def _raw(value: Any) -> Any:
+        # Activation cells hold the crop code when set and an empty string when
+        # not; every downstream formula tests <> "" rather than a number.
+        if value is None or value == "":
+            return None
+        if isinstance(value, str):
+            return value.strip() or None
+        return float(value)
+
+    activation = []
+    survival = []
+    for year in range(1, cm.N_YEARS + 1):
+        col = cm.year_col(year, cm.FIRST_COL_CALCS)
+        activation.append(
+            {"year": year, **{str(r): _raw(calcs_ws.Cells(r, col).Value2) for r in cm.ACTIVATION_ROWS}}
+        )
+        survival.append(
+            {"year": year, **{str(r): calcs_ws.Cells(r, col).Value2 for r in cm.SURVIVAL_ROWS}}
+        )
+
     history = {}
     for field, (sheet, row, col) in cm.HISTORY_CELLS.items():
         value = wb.Sheets(sheet).Cells(row, col).Value2
@@ -157,6 +177,8 @@ def read_outputs(wb: Any) -> dict[str, Any]:
         "tabsum": tabsum,
         "ecosum": ecosum,
         "rotation": rotation,
+        "activation": activation,
+        "survival": survival,
         "history": history,
         "average_gross_margin": eco_ws.Cells(avg_row, avg_col).Value2,
     }

@@ -173,3 +173,43 @@ OPTIONS_CROP_COL: dict[int, int] = {0: 33, 1: 34, 2: 35, 3: 36}  # AG AH AI AJ
 HISTORY_CODE: dict[str, int] = {
     "w": 0, "b": 1, "c": 2, "l": 3, "v": 4, "s": 5, "z": 6,
 }
+
+# --- Survival factor block: Calcs C55:C97 <- N54:T97 -----------------------
+# Row 54 is the crop-code header (0..6 across columns N..T). Rows 55-97 are the
+# control options; column A holds the HLOOKUP offset (always row - 54) and
+# column B the label. The table value is the *control* fraction; the workbook
+# stores 1 - value as the survival factor.
+SURVIVAL_TABLE_RANGE = "Calcs!N54:T97"
+SURVIVAL_HEADER_ROW = 54
+SURVIVAL_FIRST_ROW = 55
+SURVIVAL_LAST_ROW = 97
+SURVIVAL_CROP_COLS = tuple(range(14, 21))  # N..T = crop codes 0..6
+
+# Rows 68-70 (seeding timing) are not crop-indexed. Header row 67 labels
+# column P "No-till" and column Q "Full cut".
+SURVIVAL_NO_TILL_COL = 16   # P
+SURVIVAL_FULL_CUT_COL = 17  # Q
+SURVIVAL_SEEDING_ROWS = (68, 69, 70)
+
+# Which activation cell (Calcs C7:C49) feeds which survival factor row.
+# Deliberately explicit: the mapping is not a uniform offset -- note 78 <- 31
+# and 79 <- 30 are transposed relative to their neighbours.
+SURVIVAL_SOURCE: dict[int, int] = {
+    55: 7, 56: 8, 57: 9,                      # knock-down / double-knock
+    58: 10, 59: 11, 60: 12, 61: 13, 62: 14,   # pre-emergent
+    65: 17,                                   # mouldboard plough
+    69: 21, 70: 22,                           # seeding timing (see SURVIVAL_SEEDING_ROWS)
+    71: 23, 72: 24, 73: 25, 74: 26, 75: 27,   # post-emergent
+    78: 31, 79: 30, 80: 32, 81: 33, 82: 34,   # spring options
+    83: 35, 84: 36, 85: 37, 86: 38,
+    87: 39, 88: 40,                           # swathing
+    89: 41, 90: 42, 91: 43, 92: 44, 93: 45,   # harvest
+    94: 46, 95: 47, 96: 48, 97: 49,
+}
+# Calcs!C68 is the one row fed by two activation cells: C19 or C20.
+SURVIVAL_ROW_68_SOURCES = (19, 20)
+
+# The full activation block, captured so the survival port can be tested with
+# Excel's own inputs before Calcs!C7:C27 itself is ported (block 2).
+ACTIVATION_ROWS = tuple(range(7, 50))
+SURVIVAL_ROWS = tuple(sorted(set(SURVIVAL_SOURCE) | {68}))

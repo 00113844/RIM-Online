@@ -10,8 +10,8 @@ Tracks the formula-level port of RIM-2013b into `rim/`. Update this whenever a b
 | # | Block | Excel range | Status |
 | --- | --- | --- | --- |
 | 1 | Crop / rotation coding | `Calcs` rows 184-189 | **ported** -- `rim/rotation.py`, `tests/test_rotation_codes.py` |
-| 2 | Option activation | `Calcs!C7:C27` | not started |
-| 3 | Stage survival factors | `Calcs!C75:C83` (`HLOOKUP` into `$N$54:$T$98`) | not started |
+| 2 | Option activation | `Calcs!C7:C49` | not started -- needs the product vocabulary first |
+| 3 | Stage survival factors | `Calcs` rows 55-97 (`HLOOKUP` into `N54:T97`) | **ported** -- `rim/survival.py`, `tests/test_survival_factors.py` |
 | 4 | Seasonal population model | `Bio results!D3:D20` | not started |
 | 5 | Seed set and competition | `Bio results!D17`, `D23:D39`, `Calcs!C177` | not started |
 | 6 | Yield | `Bio results!D38:D50` | not started |
@@ -34,3 +34,28 @@ backed and which is invented. Both look equally confident.
 
 **How to apply:** Port in the order above (each block depends on the ones before it). Run
 `tools/parity_report.py` after each and commit with the `Sheet!Cell` range cited.
+
+Block 3 notes: the block is `Calcs` rows 55-97, wider than the `C75:C83` the early audit named.
+Three things make it work:
+
+- **The activation cell holds the crop code.** `Calcs!C7:C49` write the year's crop code (0..6)
+  where an option is selected and leave the cell blank otherwise, so one cell says both *whether*
+  an option applies and *which column* of `N54:T97` to read.
+- **Offset == table row.** Column `A` holds the `HLOOKUP` offset, always `row - 54`, so option
+  row `r`'s control fraction is in table row `r`. The block and the table are aligned.
+- **Blank means no effect.** Excel coerces an empty lookup to 0, giving survival 1. Options that
+  do not apply to a crop are blank, not zero.
+
+Exceptions: rows 68-70 (seeding timing) are not crop-indexed -- they read columns `P`/`Q`, which
+row 67 labels No-till / Full cut, selected by `Calcs!C18`. Row 68 is fed by two activation cells
+(`C19` or `C20`). The `SOURCE` map is not a uniform offset: `78 <- 31` and `79 <- 30` are
+transposed.
+
+The control table is now generated, not typed: `tools/extract_params.py` writes
+`data/calcs_survival_table.json` with a `_source` header. This is the first piece of Part 2.
+
+**Finding for block 2:** `2.Strategy!D65` gates the knock-down. With Dry or Wet sowing there is
+no gap between the knockdown and seeding, so Excel suppresses the knockdown rather than
+double-count the same cohort against the seeding operation; only Delayed/+Delayed sowing (or an
+ungrazed pasture, via `D66`) opens it. This is why the saved workbook selects Glyphosate in
+years 1 and 9 yet `Calcs!C55` never fires.
