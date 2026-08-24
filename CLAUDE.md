@@ -100,6 +100,12 @@ streamlit run app.py                                    # manual UI check
 - Record unresolved Excel-vs-Python differences in `INCONSISTENCIES.md`. That file is an
   audit log, not a claim of parity.
 
+## Documentation
+
+[`ARCHITECTURE.md`](ARCHITECTURE.md) explains how the software works and why -- the workbook's
+ten-column shape, the five-cohort season model, the block chain, and the parity harness. Read it
+before changing anything in `rim/`.
+
 ## Memory
 
 Durable project facts live in `.claude/memory/`, indexed by `.claude/memory/MEMORY.md`.
