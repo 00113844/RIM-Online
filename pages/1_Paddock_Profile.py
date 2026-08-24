@@ -12,6 +12,7 @@ from utils.session import (
     reset_profile_bundle,
     save_profile_slot,
 )
+from utils.save_load import save_load_controls
 from utils.theme import (
     inject_uwa_theme,
     metric_row,
@@ -69,9 +70,12 @@ with clear_col:
         st.session_state.confirm_clear_profile = True
 
 st.caption(
-    "Slots keep a full profile — paddock details, prices and options together. "
-    "Saved slots are not affected by Reset all."
+    "Slots keep a full profile — paddock details, prices and options together — "
+    "for this browser session only. Reset all does not touch them."
 )
+
+with st.expander("Keep this work"):
+    save_load_controls("profile")
 
 if st.session_state.get("confirm_clear_profile"):
     st.warning(

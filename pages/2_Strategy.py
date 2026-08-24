@@ -27,7 +27,10 @@ from utils.session import (
     reset_strategy_current,
     save_strategy_slot,
 )
+from utils.applicability import ineffective_choices, summarise
+from utils.save_load import save_load_controls
 from utils.theme import (
+    ghost_notices,
     inject_uwa_theme,
     metric_row,
     seedbank_spine,
@@ -113,6 +116,11 @@ edited = st.data_editor(
 )
 st.session_state.strategy_current = edited.to_dict("records")
 
+findings = ineffective_choices(st.session_state.strategy_current)
+if findings:
+    st.caption(summarise(findings) + " The workbook gates these out of the calculation.")
+    ghost_notices(findings)
+
 # ── Saving and comparing: one row, not thirteen buttons ───────────────────────
 tools_left, tools_right = st.columns([3, 2])
 
@@ -171,6 +179,9 @@ st.caption(
     if held else
     "Hold two strategies as A and B to compare them on the results pages."
 )
+
+with st.expander("Keep this work"):
+    save_load_controls("strategy")
 
 # ── Charts ────────────────────────────────────────────────────────────────────
 section("How the decade plays out")

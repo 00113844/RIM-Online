@@ -305,6 +305,24 @@ h1, h2, h3, h4 {{ font-family: var(--sans); color: var(--ink); letter-spacing: -
 }}
 .stButton > button[kind="primary"]:hover {{ background: var(--navy-deep); color: #fff; }}
 
+/* Disabled: ghost, with a reddish cast so "you cannot do this" reads at a
+   glance rather than looking like a rendering artefact. Applies to any control
+   the app switches off, not just buttons. */
+.stButton > button:disabled,
+.stDownloadButton > button:disabled,
+.stButton > button[disabled] {{
+  background: #FBF4F2;
+  border-color: #E4C9C1;
+  border-style: dashed;
+  color: #B08276;
+  cursor: not-allowed;
+  opacity: 1;
+}}
+.stButton > button:disabled:hover {{
+  background: #FBF4F2;
+  border-color: #E4C9C1;
+  color: #B08276;
+}}
 [data-testid="stWidgetLabel"] label p {{
   font-size: 0.78rem;
   color: var(--muted);
@@ -349,6 +367,31 @@ h1, h2, h3, h4 {{ font-family: var(--sans); color: var(--ink); letter-spacing: -
   background: var(--card);
   color: var(--ink);
   font-size: 0.88rem;
+}}
+
+/* ── "No effect" notices ─────────────────────────────────────────────── */
+.rim-ghosts {{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0.2rem;
+}}
+.rim-ghost {{
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: #B08276;
+  background: #FBF4F2;
+  border: 1px dashed #E4C9C1;
+  border-radius: var(--radius);
+  padding: 0.2rem 0.55rem;
+}}
+.rim-ghost b {{
+  font-family: var(--mono);
+  font-weight: 500;
+  font-size: 0.72rem;
+  color: #97624F;
 }}
 
 /* ── Footer ───────────────────────────────────────────────────────────── */
@@ -558,3 +601,34 @@ def uwa_sidebar_logo() -> None:
             "</div>",
             unsafe_allow_html=True,
         )
+
+
+def ghost_notices(findings: list[dict]) -> None:
+    """Render choices the model ignores as ghosted, reddish chips.
+
+    Selecting an option the workbook gates out looks identical on screen to one
+    that worked. These say plainly which ones did nothing, and cite the cell
+    that decided it. Identical findings are grouped so a decision repeated
+    across the run reads as one problem, not ten.
+    """
+    if not findings:
+        return
+
+    grouped: dict[tuple, list[int]] = {}
+    for item in findings:
+        key = (item["field"], str(item["choice"]), item["reason"], item["source"])
+        grouped.setdefault(key, []).append(item["year"])
+
+    chips = []
+    for (field, choice, reason, source), years in grouped.items():
+        if len(years) == 1:
+            when = f"YR {years[0]}"
+        elif len(years) >= 8:
+            when = f"{len(years)} YRS"
+        else:
+            when = "YR " + ",".join(str(y) for y in sorted(years))
+        chips.append(
+            '<span class="rim-ghost" title="Excel source: '
+            f'{source}"><b>{when}</b>{field}: {choice} — {reason}</span>'
+        )
+    st.markdown(f'<div class="rim-ghosts">{"".join(chips)}</div>', unsafe_allow_html=True)
