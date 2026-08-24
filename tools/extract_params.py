@@ -135,6 +135,41 @@ def extract_stage_constants() -> dict[str, Any]:
     }
 
 
+def extract_strategy_vocabulary() -> dict[str, Any]:
+    """The dropdown labels Calcs!C7:C49 compare the strategy grid against.
+
+    The activation formulas never hard-code a label -- they compare a strategy
+    cell to a list cell (``'2.Strategy'!$D$78``, ``$P$89`` and so on). Extracting
+    those cells keeps the port keyed to the workbook rather than to a
+    transcription of it.
+
+    ``1.Profile!C16:C32`` holds the products the paddock profile has configured;
+    a herbicide activates only when its profile slot is non-blank.
+    """
+    wb = wr.load()
+    strategy_ws = wb[cm.SHEET_STRATEGY]
+    profile_ws = wb[cm.SHEET_PROFILE]
+
+    def text(ws, row: int, col: int) -> str | None:
+        value = ws.cell(row, col).value
+        return str(value).strip() or None if value is not None else None
+
+    categories = {f"D{row}": text(strategy_ws, row, 4) for row in range(70, 121)}
+    products = {f"P{row}": text(strategy_ws, row, 16) for row in range(70, 96)}
+    profile = {f"C{row}": text(profile_ws, row, 3) for row in range(14, 36)}
+
+    return {
+        "_source": _source_header({
+            "categories": "2.Strategy!D70:D120",
+            "products": "2.Strategy!P70:P95",
+            "profile_products": "1.Profile!C14:C35",
+        }),
+        "categories": {k: v for k, v in categories.items() if v},
+        "products": {k: v for k, v in products.items() if v},
+        "profile_products": {k: v for k, v in profile.items() if v},
+    }
+
+
 def _write(name: str, payload: dict[str, Any], summary: str) -> None:
     target = DATA_DIR / name
     target.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -149,6 +184,12 @@ def main() -> int:
 
     constants = extract_stage_constants()
     _write("calcs_stage_constants.json", constants, f"{len(constants) - 1} constants")
+
+    vocabulary = extract_strategy_vocabulary()
+    _write("strategy_vocabulary.json", vocabulary,
+           f"{len(vocabulary['categories'])} categories, "
+           f"{len(vocabulary['products'])} products, "
+           f"{len(vocabulary['profile_products'])} profile slots")
     return 0
 
 

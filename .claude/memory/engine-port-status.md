@@ -10,7 +10,7 @@ Tracks the formula-level port of RIM-2013b into `rim/`. Update this whenever a b
 | # | Block | Excel range | Status |
 | --- | --- | --- | --- |
 | 1 | Crop / rotation coding | `Calcs` rows 184-189 | **ported** -- `rim/rotation.py`, `tests/test_rotation_codes.py` |
-| 2 | Option activation | `Calcs!C7:C49` | not started -- needs the product vocabulary first |
+| 2 | Option activation | `Calcs!C7:C49` | **ported** -- `rim/activation.py`, `tests/test_activation.py` |
 | 3 | Stage survival factors | `Calcs` rows 55-97 (`HLOOKUP` into `N54:T97`) | **ported** -- `rim/survival.py`, `tests/test_survival_factors.py` |
 | 3b | Stage multipliers | `Calcs!C99`, `C164:C170` | **ported** -- `rim/stage_multipliers.py` |
 | 4 | Seasonal population model | `Bio results!D3:D20` | not started -- needs `Calcs!C151:C160` (germination) too |
@@ -78,3 +78,29 @@ Constants are generated into `data/calcs_stage_constants.json` by `tools/extract
 Next (block 4) needs `Calcs!C151:C155` (germination fractions per cohort, switched by
 `2.Strategy!D66`, tickle `C16`/`C17` and full-cut `C18`) and `C159`/`C160` (tickle), plus
 `+Options!AG96`/`AG124` for the starting seed bank and `AG129`/`AG130` for seed losses.
+
+Block 2 notes (`Calcs!C7:C49`): every cell has the shape
+`IF(AND(<label matches>, <profile stocks it>, <gate open>), E$184, "")`. It writes the **crop
+code**, not a boolean -- that is what lets one cell key the control-table column in block 3.
+
+Two gates on `2.Strategy` rows 65/66, both needing the previous two years' crop codes (so block 2
+depends on block 1):
+
+- `D66` "is the paddock sown?" -- any crop, plus the first year of a clover or Cadiz phase
+  (`Calcs!P46`/`P47`). Suppresses seeding and herbicide options on regenerating pasture.
+- `D65` "does the knock-down get its own effect?" -- closed for dry/wet sowing, because there is
+  no gap before seeding and the knockdown would kill the cohort seeding already accounts for.
+
+`Calcs!C20` (wet sowing) is not a label match but the residual: active when dry, delayed and
++delayed are all blank.
+
+Reproduced workbook quirk: `Calcs!C11` activates Propyzamide but tests `1.Profile!C22`, which is
+Sakura's slot, not `C21`. Invisible while both are stocked, which they are by default. Pinned in
+`rim/activation.py` as `PROFILE_SLOT_QUIRK`.
+
+Labels are generated into `data/strategy_vocabulary.json`, so the port compares against the
+workbook's own dropdown cells rather than transcribed strings.
+
+**Blocks 1, 2, 3 and 3b now chain end to end.** `tests/test_activation.py::test_full_chain_from_
+strategy_grid` runs strategy grid -> rotation -> activation -> survival -> multipliers using no
+Excel intermediates, and matches `Calcs!C99`/`C164:C170` across all four fixtures.
