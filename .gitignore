@@ -16,3 +16,20 @@
 *.xlsx
 *.xlsm
 *.xls
+# Generated workbook parameters, captured parity fixtures and the scenario
+# definitions that produce them are tracked, despite the blanket *.json above.
+!data/*.json
+!tests/fixtures/excel_parity/*.json
+!scenarios/*.json
+
+# ...except the pre-audit defaults, which are dead code. rim/defaults.py is the
+# runtime source until tools/extract_params.py generates data/ from the workbook.
+# See .claude/memory/defaults-are-hand-transcribed.md
+data/defaults.json
+
+# Agent scaffolding: memory is shared, local settings are not.
+.claude/settings.local.json
+
+# Quarto/preview renders of memory notes are build output, not memory.
+.claude/memory/*.html
+.claude/memory/*_files/

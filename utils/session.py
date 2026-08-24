@@ -138,3 +138,64 @@ def freeze_results(slot: str) -> None:
         st.session_state.results_A = deepcopy(result)
     if slot == "B":
         st.session_state.results_B = deepcopy(result)
+
+
+# ── Saving to a file ──────────────────────────────────────────────────────────
+# Slots live in st.session_state, which is per browser session and held in the
+# server's memory: closing the tab or restarting the server loses them. These
+# helpers are the only way to keep work beyond a session.
+
+SAVE_FORMAT_VERSION = 1
+
+
+def export_bundle() -> dict:
+    """Everything needed to restore this session's work, as plain JSON."""
+    return {
+        "format": "rim-online-save",
+        "version": SAVE_FORMAT_VERSION,
+        "profile": deepcopy(st.session_state.profile_current),
+        "prices": deepcopy(st.session_state.prices_current),
+        "options": deepcopy(st.session_state.options_current),
+        "strategy": deepcopy(st.session_state.strategy_current),
+        "profile_slots": deepcopy(st.session_state.profile_slots),
+        "strategy_slots": deepcopy(st.session_state.strategy_slots),
+    }
+
+
+def export_bytes() -> bytes:
+    import json
+    return json.dumps(export_bundle(), indent=2, default=str).encode("utf-8")
+
+
+def import_bundle(data: dict) -> tuple[bool, str]:
+    """Restore a saved file. Returns (ok, message) for the caller to show."""
+    if not isinstance(data, dict) or data.get("format") != "rim-online-save":
+        return False, "That is not a RIM Online save file."
+    if int(data.get("version", 0)) > SAVE_FORMAT_VERSION:
+        return False, (
+            f"That file was written by a newer version of RIM Online "
+            f"(format {data['version']}, this build reads {SAVE_FORMAT_VERSION})."
+        )
+
+    for key in ("profile", "prices", "options", "strategy"):
+        if key not in data:
+            return False, f"The file is missing its {key} section."
+
+    st.session_state.profile_current = deepcopy(data["profile"])
+    st.session_state.prices_current = deepcopy(data["prices"])
+    st.session_state.options_current = deepcopy(data["options"])
+    st.session_state.strategy_current = deepcopy(data["strategy"])
+
+    # Slot keys come back from JSON as strings.
+    if isinstance(data.get("profile_slots"), dict):
+        st.session_state.profile_slots = {
+            int(k): v for k, v in data["profile_slots"].items()
+        }
+    if isinstance(data.get("strategy_slots"), dict):
+        st.session_state.strategy_slots = {
+            int(k): v for k, v in data["strategy_slots"].items()
+        }
+
+    st.session_state.results_current = None
+    years = len(st.session_state.strategy_current)
+    return True, f"Loaded a {years}-year strategy and its paddock profile."

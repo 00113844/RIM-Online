@@ -499,53 +499,63 @@ app.py
 
 ---
 
-## 9. Phased Implementation Plan
+## 9. Delivery Status and Plan
 
-### Phase 1 — Core Engine
-- [ ] Port all default parameters from Excel to `defaults.json`
-- [ ] Implement `engine.py`: 7-period simulation loop
-- [ ] Implement `seed_bank.py`: dormancy, mortality, germination cohorts
-- [ ] Implement `ryegrass.py`: plant counts, control rates, seed production
-- [ ] Implement `yields.py`: base yield × competition × rotation + management penalties
-- [ ] Implement `economics.py`: gross margin, costs, nominal annuity (PMT)
-- [ ] Unit tests against known RIM Excel outputs
+### What Has Been Accomplished
 
-### Phase 2 — Paddock Profile UI
-- [ ] `1_Paddock_Profile.py`: all paddock inputs
-- [ ] `+Prices` section (expander): grain prices, machinery costs, HWSC repayments
-- [ ] `+Options` section (expander): ryegrass and yield parameters
-- [ ] Profile save/load (4 slots + default) using `st.session_state`
-- [ ] Ryegrass preset buttons (Low / Medium / High)
-- [ ] Profile completeness validation indicator
+| Area | Evidence | Status |
+|---|---|---|
+| Source analysis | `RIM_VBA.txt`, exported VBA modules, `Rim_Formulas.md`, and extracted-information JSON files are retained in the repository. | Available |
+| Core simulation | `rim/engine.py`, `seed_bank.py`, `ryegrass.py`, `yields.py`, and `economics.py` simulate annual economics and population outcomes. | Implemented, requires parity evidence |
+| Excel-default corrections | `INCONSISTENCIES.md` records 25 corrected defaults/formulas against Excel source material. | Audited once |
+| Python regression coverage | `tests/test_simulation.py` checks execution, plausibility, and selected formula rules. | Implemented |
+| Streamlit application | Profile, strategy, results, export, contact, chart, session, and theme modules exist. | Implemented, UI acceptance review pending |
+| Excel parity evidence | No versioned workbook-captured input/output scenarios existed before this roadmap update. | Not yet established |
 
-### Phase 3 — Strategy Builder UI
-- [ ] `2_Strategy.py`: 10-year grid with all per-year dropdowns
-- [ ] Real-time recalculation on every widget change
-- [ ] Dual-axis gross margin + ryegrass line chart (Plotly)
-- [ ] Weed control costs bar chart
-- [ ] Income breakdown stacked bar chart
-- [ ] Auto / Fixed scale toggle
-- [ ] Strategy save/load (6 slots + default)
-- [ ] Compare A / Compare B / Clear both
+### Governing Workflow
 
-### Phase 4 — Results Pages
-- [ ] `3_Results_Economics.py`: A vs B gross margins, weed costs, income breakdown
-- [ ] `3_Results_Yields.py`: yield penalties from ryegrass and rotation
-- [ ] `3_Results_Population.py`: plants/m² and seed bank dual-axis charts, A vs B
-- [ ] `3_Results_Tables.py`: raw data tables with `st.dataframe`
-- [ ] Scale toggles on all results charts
+1. Treat the workbook and extracted formula/VBA artefacts as the source of truth.
+2. Describe a change in terms of an Excel cell/formula, VBA procedure, or extracted field before changing Python.
+3. Capture a representative input/output scenario from a recalculated Excel workbook.
+4. Add its inputs and expected output values to `tests/fixtures/excel_parity/`, including workbook version, cells/ranges, units, and tolerances.
+5. Make the smallest Python change needed for that case, then run the parity test and the full Python test suite.
+6. Record any intentional difference or unresolved formula in `INCONSISTENCIES.md`.
 
-### Phase 5 — Export & Help
-- [ ] `4_Export.py`: select pages, download PDF and Excel
-- [ ] Help expanders on each page
-- [ ] Credits / Info page
-- [ ] Tutorial / guided mode toggle
+Project-level agent rules implementing this workflow are in `.github/copilot-instructions.md`.
 
-### Phase 6 — Polish & Deployment
-- [ ] Responsive layout (sidebar for profile, main area for strategy/results)
-- [ ] Green RIM colour scheme (primary: `#008A3E`)
-- [ ] Session persistence: option to download/upload profile as JSON
-- [ ] Deployment to Streamlit Community Cloud or internal server
+### Phase 0 — Establish an Oracle (next milestone)
+
+- [x] Create the parity-fixture test harness and manifest.
+- [x] Verify that the local Excel 16.0 COM automation interface can open and recalculate the workbook read-only with macros disabled.
+- [x] Identify the workbook output ranges: `EcoSum`, `PopSum`, and `TabSum` for the current strategy; `EcoA`/`EcoB`, `PopA`/`PopB`, and `TabA`/`TabB` for comparisons.
+- [x] Capture a diagnostic default-strategy comparison. It confirms that product-specific Excel labels do not yet map to the Python decision schema, so it is not a passing parity case.
+- [ ] Map the workbook input cells and strategy-grid rows into the fixture schema using a controlled one-year scenario.
+- [ ] Capture default profile and a one-year wheat baseline: exact profile/prices/options/strategy inputs plus `gross_margin`, `yield_t_ha`, plants, seed bank, control fraction, and new seed values.
+- [ ] Capture targeted scenarios for each high-risk branch: mouldboard timing, cereal after legume, green/brown manuring, pasture grazing, and every HWSC option.
+- [ ] Capture a ten-year mixed strategy, including all summary outputs and source cell/range references.
+- [ ] Set field-specific tolerances only where Excel display rounding or known implementation granularity requires them; otherwise use exact values.
+
+### Phase 1 — Reach Calculation Parity
+
+- [ ] Model Excel product labels, costs, and all three post-emergent slots as structured decisions. Use a translation layer only at the UI/import boundary, not as a substitute for staged calculations.
+- [ ] Port the staged control sequence represented by `Calcs!C7:C27`, `Calcs!C75:C83`, and `Bio results!D24:D33`; capture each stage in the public yearly result only after preserving the existing result contract.
+- [ ] Port remaining calculation details from the Excel seven-period model rather than approximating them annually.
+- [ ] Replace flat establishment and herbicide costs with Excel crop/product-level inputs where source fixtures expose a difference.
+- [ ] Verify machine capital values, repayment rate, and annuity calculation against captured Excel outputs.
+- [ ] Resolve or explicitly document every remaining item in `INCONSISTENCIES.md`.
+- [ ] Require all captured parity fixtures to pass before changing default assumptions.
+
+### Phase 2 — Verify the User Workflow
+
+- [ ] Reconcile profile and strategy controls with the Excel sheet mapping and allowed option labels.
+- [ ] Verify compare A/B, profile/strategy save-load, exports, and chart fields against workbook behaviour.
+- [ ] Add focused UI checks for essential Streamlit workflows after calculation parity is established.
+
+### Phase 3 — Release Readiness
+
+- [ ] Add a documented, reproducible Excel fixture-capture procedure for maintainers.
+- [ ] Add CI to run `pytest -q` on every change.
+- [ ] Complete responsive, accessibility, export, and deployment acceptance checks.
 
 ---
 

@@ -12,54 +12,83 @@ from utils.session import (
     reset_profile_bundle,
     save_profile_slot,
 )
-from utils.theme import inject_uwa_theme, uwa_page_header, uwa_footer, uwa_sidebar_logo
+from utils.save_load import save_load_controls
+from utils.theme import (
+    inject_uwa_theme,
+    metric_row,
+    section,
+    uwa_footer,
+    uwa_page_header,
+    uwa_sidebar_logo,
+)
 
+
+st.set_page_config(page_title="Paddock profile | RIM Online", page_icon="🌾", layout="wide")
 
 init_state()
 inject_uwa_theme()
 uwa_sidebar_logo()
 
 uwa_page_header(
-    title="Step 1 — Paddock Profile",
-    subtitle="Define farm details, yields, prices and rotation shares",
-    icon="🌱",
+    title="Step 1 — Paddock profile",
+    subtitle="Describe the paddock once: yields, prices and the parameters every "
+             "strategy is measured against.",
 )
 
-c1, c2, c3, c4 = st.columns(4)
-for i, col in enumerate([c1, c2, c3, c4], start=1):
-    with col:
-        st.write(f"Profile Slot {i}")
-        if st.button(f"Save {i}", key=f"save_profile_{i}"):
-            save_profile_slot(i)
-            st.success(f"Saved to slot {i}")
-        if st.button(f"Load {i}", key=f"load_profile_{i}"):
-            if load_profile_slot(i):
-                st.success(f"Loaded slot {i}")
-                st.rerun()
-            else:
-                st.warning("Slot is empty")
+slot_col, load_col, save_col, reset_col, clear_col, _ = st.columns([2, 1, 1, 1.3, 1.5, 3])
+_spacer = '<div style="height:1.62rem"></div>'
 
-control_cols = st.columns(3)
-with control_cols[0]:
-    if st.button("Reset To Defaults"):
+with slot_col:
+    profile_slot = st.selectbox(
+        "Profile slot",
+        options=[1, 2, 3, 4],
+        format_func=lambda s: f"Slot {s}",
+        key="profile_slot_pick",
+    )
+with load_col:
+    st.markdown(_spacer, unsafe_allow_html=True)
+    if st.button("Load", use_container_width=True):
+        if load_profile_slot(profile_slot):
+            st.toast(f"Loaded slot {profile_slot}")
+            st.rerun()
+        else:
+            st.toast(f"Slot {profile_slot} is empty — save a profile to it first")
+with save_col:
+    st.markdown(_spacer, unsafe_allow_html=True)
+    if st.button("Save", use_container_width=True):
+        save_profile_slot(profile_slot)
+        st.toast(f"Saved to slot {profile_slot}")
+with reset_col:
+    st.markdown(_spacer, unsafe_allow_html=True)
+    if st.button("Reset all", use_container_width=True):
         reset_profile_bundle()
-        st.success("Profile, Prices and Options reset")
+        st.toast("Profile, prices and options reset to defaults")
         st.rerun()
-with control_cols[1]:
-    if st.button("Clear Current Profile"):
+with clear_col:
+    st.markdown(_spacer, unsafe_allow_html=True)
+    if st.button("Clear names", use_container_width=True):
         st.session_state.confirm_clear_profile = True
-with control_cols[2]:
-    st.page_link("pages/2_Strategy.py", label="Next: Strategy")
+
+st.caption(
+    "Slots keep a full profile — paddock details, prices and options together — "
+    "for this browser session only. Reset all does not touch them."
+)
+
+with st.expander("Keep this work"):
+    save_load_controls("profile")
 
 if st.session_state.get("confirm_clear_profile"):
-    st.warning("Confirm clear current profile? Saved slots are not changed.")
-    if st.button("Confirm Clear"):
+    st.warning(
+        "Clear the farm and paddock names and reset the starting seed bank? "
+        "Your saved slots are not touched."
+    )
+    if st.button("Clear names", key="confirm_clear_profile_btn", type="primary"):
         p = st.session_state.profile_current
         p["farm_name"] = ""
         p["paddock_name"] = ""
         p["seed_bank_start"] = 20
         st.session_state.confirm_clear_profile = False
-        st.success("Current profile cleared")
+        st.toast("Names cleared")
         st.rerun()
 
 p = st.session_state.profile_current
@@ -67,7 +96,7 @@ prices = st.session_state.prices_current
 options = st.session_state.options_current
 
 with st.form("profile_form"):
-    st.subheader("Core Paddock Parameters")
+    section("Core paddock parameters")
     col_a, col_b, col_c = st.columns(3)
     farm_name = col_a.text_input("Farm name", value=p["farm_name"])
     paddock_name = col_b.text_input("Paddock name", value=p["paddock_name"])
@@ -116,7 +145,7 @@ if submitted_profile:
     st.success("Core profile updated")
 
 with st.form("prices_form"):
-    st.subheader("More Prices")
+    section("Prices")
     cp1, cp2, cp3, cp4 = st.columns(4)
     prices["Wheat"] = cp1.number_input("Wheat price ($/t)", min_value=0.0, value=float(prices["Wheat"]), step=5.0)
     prices["Barley"] = cp2.number_input("Barley price ($/t)", min_value=0.0, value=float(prices["Barley"]), step=5.0)
@@ -134,7 +163,7 @@ if submit_prices:
     st.success("Prices updated")
 
 with st.form("options_form"):
-    st.subheader("More Options")
+    section("Options")
     co1, co2, co3 = st.columns(3)
     options["germination_rate"]["default"] = co1.slider("Germination no-till", 0.50, 0.95, float(options["germination_rate"]["default"]), 0.01)
     options["germination_rate"]["tickle"] = co2.slider("Germination with tickle", 0.50, 0.99, float(options["germination_rate"]["tickle"]), 0.01)
@@ -148,14 +177,35 @@ with st.form("options_form"):
 if submit_options:
     st.success("Options updated")
 
-scores = profile_completeness()
-col_m1, col_m2, col_m3 = st.columns(3)
-col_m1.metric("Profile fields", f"{scores['profile']} / 9", delta="Target >= 7")
-col_m2.metric("Prices fields", f"{scores['prices']}", delta="Target >= 10")
-col_m3.metric("Options fields", f"{scores['options']}", delta="Target >= 8")
+section("Is this profile ready?")
 
-rotation_sum = p["rotation_shares"]["cereal"] + p["rotation_shares"]["canola"] + p["rotation_shares"]["legume"]
+scores = profile_completeness()
+rotation_sum = (
+    p["rotation_shares"]["cereal"]
+    + p["rotation_shares"]["canola"]
+    + p["rotation_shares"]["legume"]
+)
+
+targets = (("Paddock", scores["profile"], 7), ("Prices", scores["prices"], 10),
+           ("Options", scores["options"], 8))
+metric_row([
+    {"label": f"{name} fields set", "value": f"{filled}",
+     "unit": f"of {target} needed",
+     "accent": "margin" if filled >= target else "rye",
+     "note": "Ready" if filled >= target else f"{target - filled} still to fill in"}
+    for name, filled, target in targets
+] + [
+    {"label": "Rotation shares", "value": f"{rotation_sum:.2f}",
+     "accent": "margin" if rotation_sum >= 1.0 else "rye",
+     "note": "Adds to 1.00" if rotation_sum >= 1.0 else "Should add to at least 1.00"},
+])
+
 if rotation_sum < 1.0:
-    st.warning("Rotation shares sum is below 1.0. Consider adjusting crop proportions.")
-else:
-    st.success("Rotation shares look valid.")
+    st.warning(
+        f"Cereal, canola and legume shares add to {rotation_sum:.2f}. "
+        "Raise them to at least 1.00 so the rotation accounts for the whole paddock."
+    )
+
+st.page_link("pages/2_Strategy.py", label="Continue to the strategy builder")
+
+uwa_footer()

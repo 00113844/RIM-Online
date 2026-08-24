@@ -1,0 +1,9 @@
+# Developer-only dependencies. NOT required to run the deployed Streamlit app.
+-r requirements.txt
+
+pytest>=8.0.0
+
+# Excel COM automation for the parity oracle (tools/excel_oracle.py).
+# Windows + Microsoft Excel only. Fixtures are committed, so this is needed
+# only to regenerate them.
+pywin32>=306 ; sys_platform == "win32"
