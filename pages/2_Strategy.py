@@ -27,7 +27,8 @@ from utils.session import (
     reset_strategy_current,
     save_strategy_slot,
 )
-from utils.applicability import ineffective_choices, summarise
+from utils.applicability import neutralise, summarise
+from utils.year_editor import year_editor
 from utils.save_load import save_load_controls
 from utils.theme import (
     ghost_notices,
@@ -114,12 +115,25 @@ edited = st.data_editor(
     },
     key="strategy_editor",
 )
-st.session_state.strategy_current = edited.to_dict("records")
+# The grid cannot disable one cell, so anything impossible it still holds is
+# cleared here — the plan never sits in a state the model would silently ignore.
+cleaned, cleared = neutralise(edited.to_dict("records"))
+st.session_state.strategy_current = cleaned
 
-findings = ineffective_choices(st.session_state.strategy_current)
-if findings:
-    st.caption(summarise(findings) + " The workbook gates these out of the calculation.")
-    ghost_notices(findings)
+if cleared:
+    st.caption(summarise(cleared))
+    ghost_notices(cleared)
+
+with st.expander("Edit one year, with the impossible choices switched off"):
+    st.caption(
+        "The grid is quicker for bulk edits but cannot grey out a single cell. "
+        "Here each control is switched off when the model cannot act on it, so "
+        "the choice is not available in the first place."
+    )
+    revised = year_editor(st.session_state.strategy_current, key="yr")
+    if revised != st.session_state.strategy_current:
+        st.session_state.strategy_current = revised
+        st.rerun()
 
 # ── Saving and comparing: one row, not thirteen buttons ───────────────────────
 tools_left, tools_right = st.columns([3, 2])

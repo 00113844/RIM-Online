@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from utils.applicability import ineffective_choices, summarise
+from utils.applicability import gates, ineffective_choices, neutralise, summarise
 
 TABLE8 = Path(__file__).resolve().parents[1] / "data" / "calcs_table8.json"
 
@@ -62,7 +62,7 @@ def test_grazing_a_crop_does_nothing() -> None:
     findings = ineffective_choices([_year(crop="Canola", grazing_intensity="Standard")])
 
     assert "Grazing" in _fields(findings)
-    assert "no livestock income" in findings[0]["reason"]
+    assert "livestock income" in findings[0]["reason"]
 
 
 def test_grazing_a_pasture_is_fine() -> None:
@@ -89,11 +89,15 @@ def test_knockdown_is_gated_by_dry_or_wet_sowing() -> None:
 
 def test_unsown_pasture_ignores_seeding_and_pre_emergent() -> None:
     """2.Strategy!D66 — volunteer pasture regenerates, it is never sown."""
-    findings = ineffective_choices(
-        [_year(crop="Volunteer pasture", pre_emergent="Yes", seeding_rate="High")]
-    )
+    plan = [_year(crop="Volunteer pasture", pre_emergent="Yes", seeding_rate="High")]
 
-    assert {"Pre-emergent", "Sowing rate", "Sowing system"} <= _fields(findings)
+    # All four seeding-related decisions are gated, so the editor disables them.
+    blocked = gates(plan)[0]
+    assert {"pre_emergent", "seeding_technique", "seeding_rate", "seeding_timing"} <= set(blocked)
+
+    # Only the pre-emergent is *cleared*: a sowing system has no meaningful
+    # "off" value, so it is left alone and simply never read.
+    assert _fields(ineffective_choices(plan)) == {"Pre-emergent"}
 
 
 def test_first_year_of_clover_is_sown_so_pre_emergent_counts() -> None:
@@ -142,4 +146,32 @@ def test_summary_counts_distinct_problems_not_rows() -> None:
     """The same mistake repeated for ten years is one problem, not ten."""
     plan = [_year(year=n, knockdown="Single knock-down") for n in range(1, 11)]
 
-    assert summarise(ineffective_choices(plan)).startswith("One choice below has")
+    assert summarise(ineffective_choices(plan)).startswith("One choice was cleared")
+
+
+def test_neutralise_leaves_no_impossible_value_behind() -> None:
+    """The grid cannot disable a cell, so the plan is cleaned after every edit."""
+    plan = [
+        _year(year=1, crop="Canola", grazing_intensity="Standard"),
+        _year(year=2, crop="Volunteer pasture", harvest_option="HSD", pre_emergent="Yes"),
+    ]
+
+    cleaned, changes = neutralise(plan)
+
+    assert cleaned[0]["grazing_intensity"] == "None"
+    assert cleaned[1]["harvest_option"] == "Standard"
+    assert cleaned[1]["pre_emergent"] == "No"
+    assert len(changes) == 3
+    # Running it again finds nothing left to clear.
+    assert neutralise(cleaned)[1] == []
+
+
+def test_neutralise_leaves_valid_choices_alone() -> None:
+    plan = [_year(crop="Sub-Clover pasture", grazing_intensity="High",
+                  seeding_timing="Delayed (1-2 wks)", knockdown="Double knock-down")]
+
+    cleaned, changes = neutralise(plan)
+
+    assert changes == []
+    assert cleaned[0]["grazing_intensity"] == "High"
+    assert cleaned[0]["knockdown"] == "Double knock-down"

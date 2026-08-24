@@ -323,6 +323,29 @@ h1, h2, h3, h4 {{ font-family: var(--sans); color: var(--ink); letter-spacing: -
   border-color: #E4C9C1;
   color: #B08276;
 }}
+/* A disabled select is a statement, not a rendering artefact. */
+[data-baseweb="select"][aria-disabled="true"],
+.stSelectbox [data-baseweb="select"][disabled],
+div[data-testid="stSelectbox"] div[aria-disabled="true"] {{
+  background: #FBF4F2;
+  border-color: #E4C9C1;
+  border-style: dashed;
+  color: #B08276;
+  cursor: not-allowed;
+}}
+div[data-testid="stSelectbox"] div[aria-disabled="true"] div {{ color: #B08276; }}
+
+.rim-blocked {{
+  font-size: 0.73rem;
+  line-height: 1.35;
+  color: #97624F;
+  background: #FBF4F2;
+  border-left: 2px solid #E4C9C1;
+  border-radius: 0 3px 3px 0;
+  padding: 0.3rem 0.5rem;
+  margin-top: 0.3rem;
+}}
+
 [data-testid="stWidgetLabel"] label p {{
   font-size: 0.78rem;
   color: var(--muted);
