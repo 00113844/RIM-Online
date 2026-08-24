@@ -130,6 +130,30 @@ NAMED_RANGES = {
     "Profile_Xb": "1.Profile!C28:J36",
 }
 
+# --- Rotation coding cascade: Calcs rows 184-189 ---------------------------
+# Five stacked rows turn the enterprise labels into the VLOOKUP key that
+# Table 8 (Calcs!C193:M291) is indexed by. Columns run C, D = paddock history
+# (2 years ago, 1 year ago), then E..N = simulation years 1..10 -- note this is
+# two columns further right than the other Calcs blocks.
+FIRST_COL_ROTATION = 5  # E
+ROTATION_HISTORY_COLS = {"two_years_ago": 3, "one_year_ago": 4}  # C, D
+
+ROTATION_ROWS: dict[str, int] = {
+    "crop_code": 184,          # enterprise label -> 0..6
+    "phase_code": 185,         # pasture phase year within a run
+    "pasture_carry": 186,      # carries a finished pasture phase forward
+    "barley_code": 187,        # barley-specific offset
+    "break_since_canola": 188, # years since the last canola
+    "rotation_key": 189,       # the Table 8 VLOOKUP key
+}
+
+# Paddock history: the enterprise grown before the simulation starts, as
+# single letters (w/b/c/l/v/s/z). Literal input cells, no formula.
+HISTORY_CELLS = {"one_year_ago": ("Calcs", 181, 14), "two_years_ago": ("Calcs", 182, 14)}
+
+# Table 8: enterprise code -> weed-free yield, ryegrass control, stocking rates.
+TABLE8_RANGE = "Calcs!C193:M291"
+
 # --- Crop coding: Calcs!E184 ----------------------------------------------
 CROP_CODE: dict[str, int] = {
     "Wheat": 0,
@@ -143,3 +167,9 @@ CROP_CODE: dict[str, int] = {
 
 # +Options per-crop parameter columns (AG/AH/AI/AJ), keyed by crop code.
 OPTIONS_CROP_COL: dict[int, int] = {0: 33, 1: 34, 2: 35, 3: 36}  # AG AH AI AJ
+
+# Calcs!C184/D184 code the paddock history from single letters rather than the
+# full enterprise names used for the simulation years.
+HISTORY_CODE: dict[str, int] = {
+    "w": 0, "b": 1, "c": 2, "l": 3, "v": 4, "s": 5, "z": 6,
+}

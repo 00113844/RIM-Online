@@ -57,6 +57,8 @@ def build_fixture(name: str | None = None) -> tuple[str, dict[str, Any]]:
         excel_strategy=wr.read_strategy(wb),
         tabsum=wr.read_tabsum(wb),
         ecosum_and_average=wr.read_ecosum(wb),
+        rotation=wr.read_rotation_codes(wb),
+        history=wr.read_history(wb),
         method="openpyxl cached values from the workbook's saved state "
                "(exact floats; no recalculation, no rounding)",
     )
@@ -75,6 +77,8 @@ def build_fixture_from_scenario(scenario_path: Path, name: str | None = None) ->
         excel_strategy=doc["strategy"],
         tabsum=outputs["tabsum"],
         ecosum_and_average=(outputs["ecosum"], outputs["average_gross_margin"]),
+        rotation=outputs["rotation"],
+        history=outputs["history"],
         method=f"Excel COM recalculation of scenarios/{scenario_path.name} "
                "(CalculateFullRebuild, Value2 reads, macros force-disabled)",
     )
@@ -87,6 +91,8 @@ def assemble(
     excel_strategy: list[dict[str, Any]],
     tabsum: list[dict[str, Any]],
     ecosum_and_average: tuple[list[dict[str, Any]], float | None],
+    rotation: list[dict[str, Any]],
+    history: dict[str, str],
     method: str,
 ) -> dict[str, Any]:
     """Build the fixture document from Excel-sourced outputs.
@@ -154,7 +160,7 @@ def assemble(
                     "See .claude/memory/defaults-are-hand-transcribed.md",
         },
         "inputs": {
-            "excel": {"strategy": excel_strategy},
+            "excel": {"strategy": excel_strategy, "history": history},
             "profile": profile,
             "prices": copy.deepcopy(DEFAULT_PRICES),
             "options": copy.deepcopy(DEFAULT_OPTIONS),
@@ -169,6 +175,9 @@ def assemble(
             },
         },
         "reference": {
+            "rotation_codes": rotation,
+            "rotation_note": "Calcs rows 184-189 for years 1..10. Asserted by "
+                             "tests/test_rotation_codes.py against rim.rotation.",
             "note": "Full within-season truth table: 6 plant stages and 10 "
                     "seed-bank quantities per year. Not asserted yet -- this is "
                     "the target for the staged population port (Bio results!D3:D20).",

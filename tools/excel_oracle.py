@@ -139,10 +139,25 @@ def read_outputs(wb: Any) -> dict[str, Any]:
             {"year": year, **{n: eco_ws.Cells(r, col).Value2 for n, r in cm.ECOSUM_ROWS.items()}}
         )
 
+    calcs_ws = wb.Sheets(cm.SHEET_CALCS)
+    rotation = []
+    for year in range(1, cm.N_YEARS + 1):
+        col = cm.year_col(year, cm.FIRST_COL_ROTATION)
+        rotation.append(
+            {"year": year, **{n: calcs_ws.Cells(r, col).Value2 for n, r in cm.ROTATION_ROWS.items()}}
+        )
+
+    history = {}
+    for field, (sheet, row, col) in cm.HISTORY_CELLS.items():
+        value = wb.Sheets(sheet).Cells(row, col).Value2
+        history[field] = str(value).strip().lower() if value else "w"
+
     _, avg_row, avg_col = cm.ECOSUM_AVERAGE_GM
     return {
         "tabsum": tabsum,
         "ecosum": ecosum,
+        "rotation": rotation,
+        "history": history,
         "average_gross_margin": eco_ws.Cells(avg_row, avg_col).Value2,
     }
 

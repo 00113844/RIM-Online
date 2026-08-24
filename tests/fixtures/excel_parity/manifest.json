@@ -3,6 +3,7 @@
   "source_workbook": "RIM-2013b",
   "scenarios": [
     "continuous_wheat_no_control.json",
+    "rotation_coverage.json",
     "susceptible_2022_lorf.json"
   ]
 }

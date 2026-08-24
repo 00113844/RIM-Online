@@ -5,7 +5,7 @@
   "source": {
     "workbook": "RIM-2013b",
     "file": "Ryegrass-RIM-\u2013-DOWNLOAD-NOW.xlsm",
-    "captured_utc": "2026-08-24T08:06:51+00:00",
+    "captured_utc": "2026-08-24T08:19:38+00:00",
     "method": "Excel COM recalculation of scenarios/continuous_wheat_no_control.json (CalculateFullRebuild, Value2 reads, macros force-disabled)",
     "ranges": {
       "strategy": "2.Strategy!D4:M19",
@@ -226,7 +226,11 @@
           "harvest_crops": null,
           "harvest_others": null
         }
-      ]
+      ],
+      "history": {
+        "one_year_ago": "w",
+        "two_years_ago": "w"
+      }
     },
     "profile": {
       "farm_name": "",
@@ -890,6 +894,99 @@
     }
   },
   "reference": {
+    "rotation_codes": [
+      {
+        "year": 1,
+        "crop_code": 0.0,
+        "phase_code": 0.0,
+        "pasture_carry": 0.0,
+        "barley_code": 0.0,
+        "break_since_canola": 3.0,
+        "rotation_key": 0.0
+      },
+      {
+        "year": 2,
+        "crop_code": 0.0,
+        "phase_code": 0.0,
+        "pasture_carry": 0.0,
+        "barley_code": 0.0,
+        "break_since_canola": 3.0,
+        "rotation_key": 0.0
+      },
+      {
+        "year": 3,
+        "crop_code": 0.0,
+        "phase_code": 0.0,
+        "pasture_carry": 0.0,
+        "barley_code": 0.0,
+        "break_since_canola": 3.0,
+        "rotation_key": 0.0
+      },
+      {
+        "year": 4,
+        "crop_code": 0.0,
+        "phase_code": 0.0,
+        "pasture_carry": 0.0,
+        "barley_code": 0.0,
+        "break_since_canola": 3.0,
+        "rotation_key": 0.0
+      },
+      {
+        "year": 5,
+        "crop_code": 0.0,
+        "phase_code": 0.0,
+        "pasture_carry": 0.0,
+        "barley_code": 0.0,
+        "break_since_canola": 3.0,
+        "rotation_key": 0.0
+      },
+      {
+        "year": 6,
+        "crop_code": 0.0,
+        "phase_code": 0.0,
+        "pasture_carry": 0.0,
+        "barley_code": 0.0,
+        "break_since_canola": 3.0,
+        "rotation_key": 0.0
+      },
+      {
+        "year": 7,
+        "crop_code": 0.0,
+        "phase_code": 0.0,
+        "pasture_carry": 0.0,
+        "barley_code": 0.0,
+        "break_since_canola": 3.0,
+        "rotation_key": 0.0
+      },
+      {
+        "year": 8,
+        "crop_code": 0.0,
+        "phase_code": 0.0,
+        "pasture_carry": 0.0,
+        "barley_code": 0.0,
+        "break_since_canola": 3.0,
+        "rotation_key": 0.0
+      },
+      {
+        "year": 9,
+        "crop_code": 0.0,
+        "phase_code": 0.0,
+        "pasture_carry": 0.0,
+        "barley_code": 0.0,
+        "break_since_canola": 3.0,
+        "rotation_key": 0.0
+      },
+      {
+        "year": 10,
+        "crop_code": 0.0,
+        "phase_code": 0.0,
+        "pasture_carry": 0.0,
+        "barley_code": 0.0,
+        "break_since_canola": 3.0,
+        "rotation_key": 0.0
+      }
+    ],
+    "rotation_note": "Calcs rows 184-189 for years 1..10. Asserted by tests/test_rotation_codes.py against rim.rotation.",
     "note": "Full within-season truth table: 6 plant stages and 10 seed-bank quantities per year. Not asserted yet -- this is the target for the staged population port (Bio results!D3:D20).",
     "tabsum": [
       {

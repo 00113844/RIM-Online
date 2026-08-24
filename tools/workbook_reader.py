@@ -114,3 +114,28 @@ def read_profile_scenario_name(wb: openpyxl.Workbook) -> str:
     """The active profile label, e.g. 'Susceptible, 2022-LoRF' (2.Strategy!J1)."""
     value = wb[cm.SHEET_STRATEGY].cell(1, 10).value
     return str(value).strip() if value else "unnamed"
+
+
+def read_rotation_codes(wb: openpyxl.Workbook) -> list[dict[str, Any]]:
+    """Read the Calcs rows 184-189 rotation cascade for years 1..10.
+
+    This is the workbook's own answer for the coding block, and therefore the
+    test oracle for rim/rotation.py.
+    """
+    ws = wb[cm.SHEET_CALCS]
+    years = []
+    for year in range(1, cm.N_YEARS + 1):
+        col = cm.year_col(year, cm.FIRST_COL_ROTATION)
+        years.append(
+            {"year": year, **{name: _num(ws.cell(row, col).value) for name, row in cm.ROTATION_ROWS.items()}}
+        )
+    return years
+
+
+def read_history(wb: openpyxl.Workbook) -> dict[str, str]:
+    """Read the paddock history letters from Calcs!N181/N182."""
+    out = {}
+    for field, (sheet, row, col) in cm.HISTORY_CELLS.items():
+        value = wb[sheet].cell(row, col).value
+        out[field] = str(value).strip().lower() if value else "w"
+    return out
