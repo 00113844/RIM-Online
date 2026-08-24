@@ -3,7 +3,7 @@
     "generated_by": "tools/extract_params.py",
     "workbook": "RIM-2013b",
     "file": "Ryegrass-RIM-\u2013-DOWNLOAD-NOW.xlsm",
-    "generated_utc": "2026-08-24T08:47:12+00:00",
+    "generated_utc": "2026-08-24T08:52:19+00:00",
     "ranges": {
       "options": "+Options!AG126:AG145",
       "calcs": "Calcs!N167 (= '+Options'!H18)"
@@ -26,10 +26,10 @@
     "cell": "+Options!AG134",
     "used_by": "Calcs!C99, as (1 - value) when no spring or harvest option is chosen"
   },
-  "tickle_control": {
+  "plough_seed_burial": {
     "value": 0.95,
     "cell": "+Options!AG126",
-    "used_by": "Calcs!C159/C160, as (1 - value)"
+    "used_by": "Calcs!C159/C160, as (1 - value). Gated on Calcs!C17 (plough), not on tickle."
   },
   "seed_loss_pre_harvest": {
     "value": 0.2,

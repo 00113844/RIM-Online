@@ -227,3 +227,16 @@ MULTIPLIER_ROWS = (99, 164, 165, 166, 167, 168, 169, 170)
 # Calcs!P35:P39 -- how many of the three post-emergent slots hold each product.
 POST_EM_USE_COUNT_ROWS = (35, 36, 37, 38, 39)
 POST_EM_USE_COUNT_COL = 16  # P
+
+# --- Table 8: Calcs!C193:M291, keyed by the rotation key (Calcs row 189) ----
+TABLE8_FIRST_ROW = 193
+TABLE8_LAST_ROW = 291
+TABLE8_KEY_COL = 3  # C
+
+# --- Germination: +Options -------------------------------------------------
+# Five cohorts germinate through the season. Regenerating pasture uses rows
+# 105-109 (AG = no tickle, AI = tickled); a sown paddock uses rows 115-119
+# across all four tickle x establishment combinations.
+GERMINATION_COHORTS = 5
+GERMINATION_PASTURE_ROW = 105
+GERMINATION_SOWN_ROW = 115

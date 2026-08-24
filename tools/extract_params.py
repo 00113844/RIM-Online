@@ -120,9 +120,10 @@ def extract_stage_constants() -> dict[str, Any]:
             "value": opt(134), "cell": "+Options!AG134",
             "used_by": "Calcs!C99, as (1 - value) when no spring or harvest option is chosen",
         },
-        "tickle_control": {
+        "plough_seed_burial": {
             "value": opt(126), "cell": "+Options!AG126",
-            "used_by": "Calcs!C159/C160, as (1 - value)",
+            "used_by": "Calcs!C159/C160, as (1 - value). Gated on Calcs!C17 "
+                       "(plough), not on tickle.",
         },
         "seed_loss_pre_harvest": {
             "value": opt(129), "cell": "+Options!AG129",
@@ -170,6 +171,85 @@ def extract_strategy_vocabulary() -> dict[str, Any]:
     }
 
 
+def extract_table8() -> dict[str, Any]:
+    """Calcs!C193:M291 -- Table 8, keyed by the rotation key from Calcs row 189.
+
+    Column C holds the enterprise code; the VLOOKUP column indices used
+    elsewhere are 1-based from there, so ``column_3`` is E, ``column_5`` is G
+    and so on. Only the columns the model actually reads are named.
+    """
+    wb = wr.load()
+    ws = wb[cm.SHEET_CALCS]
+
+    rows: dict[str, Any] = {}
+    for row in range(cm.TABLE8_FIRST_ROW, cm.TABLE8_LAST_ROW + 1):
+        key = ws.cell(row, cm.TABLE8_KEY_COL).value
+        if not isinstance(key, (int, float)) or isinstance(key, bool):
+            continue
+        rows[str(int(key))] = {
+            "row": row,
+            "label": str(ws.cell(row, 4).value or "").strip(),
+            "weed_free_yield": _cell(ws, row, 5),
+            "ryegrass_control_standard_grazing": _cell(ws, row, 7),
+            "ryegrass_control_high_grazing": _cell(ws, row, 8),
+            "stocking_standard": _cell(ws, row, 9),
+            "stocking_high": _cell(ws, row, 10),
+            "stocking_standard_if_hay": _cell(ws, row, 11),
+            "stocking_high_if_hay": _cell(ws, row, 12),
+            "nitrogen_saving": _cell(ws, row, 13),
+        }
+
+    return {
+        "_source": _source_header({"table": cm.TABLE8_RANGE}),
+        "note": "Keyed by Calcs row 189 (the rotation key). Column names follow "
+                "the captions in Calcs row 193.",
+        "by_key": rows,
+    }
+
+
+def extract_germination() -> dict[str, Any]:
+    """+Options germination fractions -- the inputs to Calcs!C151:C155.
+
+    Five cohorts germinate through the season. Which column applies depends on
+    whether the paddock is sown, whether it was tickled or ploughed, and whether
+    the establishment system is full-cut, exactly as Calcs!C151 selects it.
+    """
+    wb = wr.load()
+    ws = wb[cm.SHEET_OPTIONS]
+
+    def col(first_row: int, column: int) -> list[float]:
+        return [_cell(ws, first_row + n, column) for n in range(cm.GERMINATION_COHORTS)]
+
+    return {
+        "_source": _source_header({
+            "regenerating": "+Options!AG105:AI109 (row 104 header: no tickle / + tickle)",
+            "sown": "+Options!AG115:AJ119 (row 113/114 headers: tickle x establishment)",
+            "starting_seed_bank": "+Options!AG96 * +Options!AG124",
+        }),
+        "cohorts": cm.GERMINATION_COHORTS,
+        "regenerating": {
+            "no_tickle": col(cm.GERMINATION_PASTURE_ROW, cm.OPTIONS_WHEAT_COL),
+            "tickle": col(cm.GERMINATION_PASTURE_ROW, cm.OPTIONS_CANOLA_COL),
+        },
+        "sown": {
+            "no_tickle_no_till": col(cm.GERMINATION_SOWN_ROW, cm.OPTIONS_WHEAT_COL),
+            "no_tickle_full_cut": col(cm.GERMINATION_SOWN_ROW, cm.OPTIONS_BARLEY_COL),
+            "tickle_no_till": col(cm.GERMINATION_SOWN_ROW, cm.OPTIONS_CANOLA_COL),
+            "tickle_full_cut": col(cm.GERMINATION_SOWN_ROW, cm.OPTIONS_LEGUME_COL),
+        },
+        "starting_seed_bank": {
+            "value": _cell(ws, 96, cm.OPTIONS_WHEAT_COL) * _cell(ws, 124, cm.OPTIONS_WHEAT_COL),
+            "cells": "+Options!AG96 * +Options!AG124",
+            "used_by": "Bio results!D11, the year-1 seed bank only",
+        },
+        "plough_seed_burial": {
+            "value": _cell(ws, 126, cm.OPTIONS_WHEAT_COL),
+            "cell": "+Options!AG126",
+            "used_by": "Calcs!C159/C160, as (1 - value) when the paddock was ploughed",
+        },
+    }
+
+
 def _write(name: str, payload: dict[str, Any], summary: str) -> None:
     target = DATA_DIR / name
     target.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -184,6 +264,13 @@ def main() -> int:
 
     constants = extract_stage_constants()
     _write("calcs_stage_constants.json", constants, f"{len(constants) - 1} constants")
+
+    table8 = extract_table8()
+    _write("calcs_table8.json", table8, f"{len(table8['by_key'])} enterprise keys")
+
+    germination = extract_germination()
+    _write("germination.json", germination,
+           f"{germination['cohorts']} cohorts x 6 columns")
 
     vocabulary = extract_strategy_vocabulary()
     _write("strategy_vocabulary.json", vocabulary,

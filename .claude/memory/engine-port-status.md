@@ -13,8 +13,8 @@ Tracks the formula-level port of RIM-2013b into `rim/`. Update this whenever a b
 | 2 | Option activation | `Calcs!C7:C49` | **ported** -- `rim/activation.py`, `tests/test_activation.py` |
 | 3 | Stage survival factors | `Calcs` rows 55-97 (`HLOOKUP` into `N54:T97`) | **ported** -- `rim/survival.py`, `tests/test_survival_factors.py` |
 | 3b | Stage multipliers | `Calcs!C99`, `C164:C170` | **ported** -- `rim/stage_multipliers.py` |
-| 4 | Seasonal population model | `Bio results!D3:D20` | not started -- needs `Calcs!C151:C160` (germination) too |
-| 5 | Seed set and competition | `Bio results!D17`, `D23:D39`, `Calcs!C177` | not started |
+| 4 | Seasonal population model | `Bio results!D3:D8`, `D11:D16` | **ported** -- `rim/population.py`, `tests/test_population.py` |
+| 5 | Seed set and competition | `Bio results!D17:D20`, `Calcs!C174:C177` | not started -- closes the year and chains the seed bank |
 | 6 | Yield | `Bio results!D38:D50` | not started |
 | 7 | Economics | `Eco results!E3:E59` | not started |
 
@@ -104,3 +104,25 @@ workbook's own dropdown cells rather than transcribed strings.
 **Blocks 1, 2, 3 and 3b now chain end to end.** `tests/test_activation.py::test_full_chain_from_
 strategy_grid` runs strategy grid -> rotation -> activation -> survival -> multipliers using no
 Excel intermediates, and matches `Calcs!C99`/`C164:C170` across all four fixtures.
+
+Block 4 notes (`Bio results!D3:D8`, `D11:D16`): two interleaved cascades. Ryegrass emerges in
+**five cohorts**, and each control catches only what has emerged by the time it is applied -- the
+thing the original annual-cycle engine could not represent at all.
+
+- Seed bank (rows 11-16) is drawn down cohort by cohort: `D12 = D11*(1-g1)`, etc.
+- Plants (rows 3-8) carry survivors through each control and add the next cohort.
+- **Rows 4-6 are asymmetric**: established plants take the stage multiplier (`C164`/`C165`/`C166`)
+  while each newly emerged cohort takes `C167` instead, because a pre-emergent is still active in
+  the soil when they come up. Easy to miss and it changes everything.
+
+Germination fractions (`Calcs!C151:C155`) pick one of six `+Options` columns by sown/regenerating
+x tickle-or-plough x no-till/full-cut. Ploughing also buries seed at exactly one cohort boundary
+(`C159` without +delayed sowing, `C160` with it). Grazing removes ryegrass before seed set via
+`C314 = 1 - C311 - C313`, keyed on the rotation key into Table 8, and is cancelled by any fodder
+or manuring option (`C322`/`C324`).
+
+Corrected earlier mislabel: `+Options!AG126` is **plough** seed burial, not tickle control --
+`Calcs!C159/C160` gate it on `Calcs!C17`. Renamed in `data/calcs_stage_constants.json`.
+
+`tests/chain.py` composes blocks 1-4 over a fixture; new block tests should use it rather than
+re-deriving the chain.
