@@ -60,16 +60,26 @@ def year_editor(rows: list[dict], key: str = "year_editor") -> list[dict]:
     if not rows:
         return rows
 
-    labels = [
-        f"Year {row.get('year', n + 1)} — {row.get('crop', 'Wheat')}"
-        for n, row in enumerate(rows)
-    ]
+    # The label is deliberately just the year, with no crop in it. Deriving it
+    # from the plan made the label list change between runs, and Streamlit then
+    # matched the selection by its formatted string rather than by index — the
+    # stored value turned from 3 into "Year 4 - Wheat" and the whole editor
+    # reset. The crop is shown in its own control immediately below anyway.
+    years = [int(row.get("year", n + 1)) for n, row in enumerate(rows)]
+
+    # Streamlit discards the state of widgets it did not render, so switching to
+    # the grid and back loses the selection. Remember it separately and use it to
+    # seed the widget when it has to be recreated. `index` is only consulted when
+    # the key is absent, so a live widget still wins.
+    remembered = int(st.session_state.get(f"{key}_year_index", 0))
     picked = st.selectbox(
         "Year to edit",
         options=list(range(len(rows))),
-        format_func=lambda i: labels[i],
+        index=min(remembered, len(rows) - 1),
+        format_func=lambda i: f"Year {years[i]}",
         key=f"{key}_pick",
     )
+    st.session_state[f"{key}_year_index"] = picked
 
     rows = [dict(row) for row in rows]
     row = rows[picked]
@@ -90,6 +100,13 @@ def year_editor(rows: list[dict], key: str = "year_editor") -> list[dict]:
     blocked = gates(rows)[picked]
 
     for group, fields in GROUPS:
+        # Re-derive before each group so a decision gates the ones below it in
+        # the same pass. Sowing time sits in Establishment and decides whether
+        # the knock-down in Weed control can do anything; computing the gates
+        # once up front left that reason a full interaction out of date.
+        rows[picked] = row
+        blocked = gates(rows)[picked]
+
         st.markdown(
             f'<div class="rim-section" style="margin-top:1.1rem">{group}</div>',
             unsafe_allow_html=True,

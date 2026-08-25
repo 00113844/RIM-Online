@@ -35,15 +35,16 @@ def test_a_consistent_plan_opens_the_gate() -> None:
     assert problems(plan) == []
 
 
-def test_the_shipped_default_plan_does_not_open_it() -> None:
-    """The default selects a knock-down every year with dry sowing, which is inert.
+def test_the_shipped_default_plan_is_runnable() -> None:
+    """The app must not open on a plan that trips its own gate.
 
-    Worth pinning: it is the first thing anyone sees, and it is the reason the
-    gate earns its place rather than being a rarely-hit edge case.
+    The default used to select a knock-down in every year with dry sowing, which
+    the model ignores — so a new user met a wall of problems before touching
+    anything. Pinned here because it is the first thing anyone sees.
     """
     from rim.defaults import build_default_strategy
 
-    assert problems(build_default_strategy(10)) != []
+    assert problems(build_default_strategy(10)) == []
 
 
 def test_fixing_opens_the_gate_and_is_idempotent() -> None:

@@ -181,7 +181,7 @@ DEFAULT_STRATEGY_ROW = {
     "seeding_technique": "No-till",
     "seeding_rate": "Standard",
     "pre_tillage": "None",
-    "knockdown": "Single knock-down",
+    "knockdown": "None",
     "pre_emergent": "Yes",
     "post_emergent": "Yes",
     "spring_option": "None",

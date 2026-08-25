@@ -611,13 +611,17 @@ def seedbank_spine(years, crops, seed_bank, unit: str = "seeds/m²") -> None:
     """
     values = [max(0.0, float(v or 0.0)) for v in seed_bank]
     peak = max(values) if values else 0.0
+    # A bar is sienna only where the bank sits above where the run started —
+    # that is the thing worth flagging, and it needs no invented threshold.
+    start = values[0] if values else 0.0
     cells = []
     for year, crop, value in zip(years, crops, values):
         height = 0 if peak <= 0 else round(100 * value / peak)
-        # Ramp toward sienna as the bank fills; gold at the low end reads as
-        # "holding", not "safe".
-        share = 0 if peak <= 0 else value / peak
-        colour = GOLD if share < 0.25 else (WARN if share < 0.6 else RYE)
+        # One colour, not a ramp. Ramping by share-of-peak invented thresholds
+        # the workbook does not define, and made a flat run read as ten alarming
+        # bars. Height carries the shape; the figures carry the level; the
+        # legend says whether the run is winning or losing.
+        colour = RYE if value > start else GOLD
         shown = f"{value:,.0f}" if value >= 10 else f"{value:.1f}"
         cells.append(
             '<div class="rim-spine-cell">'

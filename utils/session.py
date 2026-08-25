@@ -80,11 +80,41 @@ def load_strategy_slot(slot: int) -> bool:
     if strategy is None:
         return False
     st.session_state.strategy_current = deepcopy(strategy)
+    reset_editor_widgets()
     return True
 
 
 def reset_strategy_current() -> None:
     st.session_state.strategy_current = build_default_strategy(10)
+    reset_editor_widgets()
+
+
+# Widget keys owned by the two strategy editors. Streamlit honours a widget's
+# initial value only when the widget is first created; after that its stored
+# value wins. So an editor that was off screen when the plan changed still holds
+# the old values, and re-applies them the moment it renders again.
+STRATEGY_GRID_KEY = "strategy_editor"
+YEAR_EDITOR_PREFIX = "yr_"
+# Which year you happen to be looking at is view state, not plan data. Clearing
+# it would throw the user back to year 1 every time the plan changed.
+YEAR_EDITOR_KEEP = {"yr_pick", "yr_year_index"}
+
+
+def reset_editor_widgets() -> None:
+    """Forget both editors' widget state so they re-seed from the current plan.
+
+    Call this from anywhere that changes ``strategy_current`` from outside an
+    editor — loading a slot or a file, clearing the plan, or the gate's fix
+    button. Without it the change appears to be undone as soon as the other
+    editor renders.
+    """
+    stale = [
+        key for key in st.session_state
+        if key not in YEAR_EDITOR_KEEP
+        and (key == STRATEGY_GRID_KEY or str(key).startswith(YEAR_EDITOR_PREFIX))
+    ]
+    for key in stale:
+        del st.session_state[key]
 
 
 def profile_completeness() -> dict:
@@ -197,5 +227,6 @@ def import_bundle(data: dict) -> tuple[bool, str]:
         }
 
     st.session_state.results_current = None
+    reset_editor_widgets()
     years = len(st.session_state.strategy_current)
     return True, f"Loaded a {years}-year strategy and its paddock profile."
