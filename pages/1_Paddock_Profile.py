@@ -76,6 +76,7 @@ st.caption(
 
 with st.expander("Keep this work"):
     save_load_controls("profile")
+    st.page_link("pages/4_How_RIM_Works.py", label="How saving and loading works")
 
 if st.session_state.get("confirm_clear_profile"):
     st.warning(

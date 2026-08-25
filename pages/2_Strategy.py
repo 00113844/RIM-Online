@@ -204,6 +204,7 @@ else:
 
 with st.expander("Keep this work"):
     save_load_controls("strategy")
+    st.page_link("pages/4_How_RIM_Works.py", label="How saving and loading works")
 
 # ── Charts ────────────────────────────────────────────────────────────────────
 if result is None:

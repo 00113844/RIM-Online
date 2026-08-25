@@ -51,6 +51,10 @@ with col_l:
         )
 
 with col_r:
+    st.markdown("#### New here?")
+    st.page_link("pages/4_How_RIM_Works.py",      label="→  How RIM works: a 10-minute guide")
+    st.caption("The idea behind the model, and how to save your work.")
+
     st.markdown("#### Navigate to")
     st.page_link("pages/1_Paddock_Profile.py",   label="→  Step 1: Paddock Profile")
     st.page_link("pages/2_Strategy.py",           label="→  Step 2: Strategy Builder")
