@@ -18,6 +18,15 @@ MONO = "IBM Plex Mono, ui-monospace, monospace"
 # split three ways rather than three unrelated things.
 INCOME_SHADES = (NAVY, "#4A6DA8", "#9DB0CE")
 
+# The workbook's own fixed axis limits, so two runs can be compared by eye.
+# Forms_Graphs.bas: Scale_Str() and Scale_Pop().
+FIXED_MARGIN_RANGE = [-200, 600]      # $/ha
+FIXED_RYEGRASS_RANGE = [0, 500]       # plants/m²
+FIXED_PLANTS_RANGE = [0, 500]         # plants/m²
+FIXED_SEEDBANK_RANGE = [0, 25]        # seeds/m²
+FIXED_WEED_COST_RANGE = [0, 100]      # $/ha
+FIXED_INCOME_RANGE = [0, 600]         # $/ha
+
 
 def _base(fig: go.Figure, *, height: int = 320, legend: bool = True) -> go.Figure:
     """Shared frame: no chart junk, generous margins, tabular figures."""
@@ -70,9 +79,13 @@ def gross_margin_and_ryegrass_chart(df, title: str = "", fixed_scale: bool = Fal
                     title_font=dict(size=11, color=RYE)),
     )
     if fixed_scale:
-        fig.update_yaxes(range=[-200, 600], secondary_y=False)
-        fig.update_layout(yaxis2=dict(range=[0, 500], overlaying="y", side="right",
-                                      title="plants/m²", showgrid=False))
+        # Set both axes through update_layout. `secondary_y` belongs to figures
+        # built with make_subplots; this one overlays yaxis2 by hand, so asking
+        # for it raises. update_layout merges, so the fonts set above survive.
+        fig.update_layout(
+            yaxis=dict(range=FIXED_MARGIN_RANGE),
+            yaxis2=dict(range=FIXED_RYEGRASS_RANGE),
+        )
     return fig
 
 
@@ -87,7 +100,7 @@ def weed_cost_chart(df, title: str = "", fixed_scale: bool = False):
     _base(fig, height=280, legend=False)
     fig.update_yaxes(title="$/ha")
     if fixed_scale:
-        fig.update_yaxes(range=[0, 100])
+        fig.update_yaxes(range=FIXED_WEED_COST_RANGE)
     return fig
 
 
@@ -106,7 +119,7 @@ def income_breakdown_chart(df, title: str = "", fixed_scale: bool = False):
     fig.update_layout(barmode="stack")
     fig.update_yaxes(title="$/ha")
     if fixed_scale:
-        fig.update_yaxes(range=[0, 600])
+        fig.update_yaxes(range=FIXED_INCOME_RANGE)
     return fig
 
 
@@ -137,9 +150,10 @@ def seedbank_population_chart(df, title: str = "", fixed_scale: bool = False):
                     title_font=dict(size=11, color=FAINT)),
     )
     if fixed_scale:
-        fig.update_yaxes(range=[0, 500])
-        fig.update_layout(yaxis2=dict(range=[0, 25], overlaying="y", side="right",
-                                      title="seeds/m²", showgrid=False))
+        fig.update_layout(
+            yaxis=dict(range=FIXED_PLANTS_RANGE),
+            yaxis2=dict(range=FIXED_SEEDBANK_RANGE),
+        )
     return fig
 
 
