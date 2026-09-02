@@ -54,5 +54,8 @@ def save_load_controls(key: str) -> None:
 
     st.caption(
         "Slots are kept for this browser session only — closing the tab or "
-        "restarting the app clears them. Save to a file to keep your work."
+        "restarting the app clears them. Save to a file to keep your work. "
+        "This `.rim.json` is the format that loads back in; the Export page also "
+        "writes an Excel workbook, which is for reading and sharing rather than "
+        "reloading."
     )

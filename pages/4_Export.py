@@ -7,7 +7,7 @@ from datetime import datetime
 
 import streamlit as st
 
-from utils.export import results_to_pdf_bytes, tables_to_excel_bytes
+from utils.export import results_to_pdf_bytes, scenario_to_excel_bytes
 from utils.session import ensure_current_results, init_state
 from utils.theme import inject_uwa_theme, uwa_page_header, uwa_footer, uwa_sidebar_logo
 
@@ -60,17 +60,31 @@ if "Population" in selected_sections:
 pdf_bytes = results_to_pdf_bytes("RIM Export", text_blocks)
 st.download_button("Download PDF report", data=pdf_bytes, file_name=f"RIM_{stamp}.pdf", mime="application/pdf")
 
-tables = {"Current": current["yearly"]}
+results = {"Current": current["yearly"]}
 if a is not None:
-    tables["Strategy_A"] = a["yearly"]
+    results["Strategy A"] = a["yearly"]
 if b is not None:
-    tables["Strategy_B"] = b["yearly"]
+    results["Strategy B"] = b["yearly"]
 
 st.download_button(
-    "Download tables as Excel",
-    data=tables_to_excel_bytes(tables),
+    "Download scenario as Excel",
+    data=scenario_to_excel_bytes(
+        strategy_rows=st.session_state.strategy_current,
+        profile=st.session_state.profile_current,
+        prices=st.session_state.prices_current,
+        options=st.session_state.options_current,
+        results=results,
+    ),
     file_name=f"RIM_{stamp}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    help="One workbook: the ten-year plan, the paddock profile, prices and "
+         "options, then the yearly results for each held strategy.",
+)
+st.caption(
+    "The workbook carries the inputs as well as the results, so a colleague can "
+    "see what was asked for and not just what came out. To move a scenario "
+    "*back* into RIM Online, use the .rim.json file from **Keep this work** on "
+    "the Strategy or Paddock profile page — Excel is for reading, JSON round-trips."
 )
 
 if a is None or b is None:

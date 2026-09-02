@@ -281,6 +281,22 @@ Both pages have a **Keep this work** panel.
 
 Files are how you keep a plan between sessions, move it to another computer, or send it to
 a colleague. The file is plain text, so it will still open years from now.
+
+### Excel — for reading, not reloading
+The **Export** page writes a workbook holding the ten-year plan, the paddock profile, prices
+and options, and the yearly results for every strategy you are holding. Use it to show
+someone a scenario, or to work on the numbers elsewhere.
+
+It does not load back into RIM Online. For that, use the `.rim.json` file above.
+
+<table class="rim-tbl">
+<thead><tr><th>You want to&hellip;</th><th>Use</th></tr></thead>
+<tbody>
+<tr><td>Stop for the day and carry on tomorrow</td><td><code>.rim.json</code> &mdash; Keep this work</td></tr>
+<tr><td>Send a colleague something to open in Excel</td><td>Excel &mdash; Export page</td></tr>
+<tr><td>Send a colleague something they can edit in RIM</td><td><code>.rim.json</code></td></tr>
+<tr><td>Chart or analyse the numbers elsewhere</td><td>Excel</td></tr>
+</tbody></table>
 """, unsafe_allow_html=True)
 
 st.markdown("""
