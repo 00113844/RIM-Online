@@ -39,6 +39,123 @@ def init_state() -> None:
         st.session_state.strategy_graph_mode = 1
 
 
+# ── The paddock profile form ──────────────────────────────────────────────────
+# Every widget on the profile page, and where its value belongs. Streamlit forms
+# hold their widgets' values until the form is submitted, so the page and the
+# bundle drift apart between submits: a farm name typed but not submitted is on
+# screen and not in state. Saving a slot in that gap captured the *previous*
+# farm, which is what made slots look like they saved to the wrong place.
+#
+# The mapping is the fix and the record of it. Save commits through it, so a slot
+# always holds what the page shows; Load clears the keys, so the form re-seeds
+# from what was loaded instead of writing its stale values back.
+PROFILE_WIDGETS: dict[str, tuple[str, tuple[str, ...]]] = {
+    "pf_farm_name": ("profile", ("farm_name",)),
+    "pf_paddock_name": ("profile", ("paddock_name",)),
+    "pf_farm_size_ha": ("profile", ("farm_size_ha",)),
+    "pf_farm_area_ha": ("profile", ("farm_area_ha",)),
+    "pf_y_wheat": ("profile", ("base_yields", "Wheat")),
+    "pf_y_barley": ("profile", ("base_yields", "Barley")),
+    "pf_y_canola": ("profile", ("base_yields", "Canola")),
+    "pf_y_legume": ("profile", ("base_yields", "Legume crop")),
+    "pf_sheep_gm": ("profile", ("sheep_gm_per_dse",)),
+    "pf_seed_bank_start": ("profile", ("seed_bank_start",)),
+    "pf_interest": ("profile", ("interest_rate_pct",)),
+    "pf_inflation": ("profile", ("inflation_rate_pct",)),
+    "pf_tax": ("profile", ("tax_rate_pct",)),
+    "pf_share_cereal": ("profile", ("rotation_shares", "cereal")),
+    "pf_share_canola": ("profile", ("rotation_shares", "canola")),
+    "pf_share_legume": ("profile", ("rotation_shares", "legume")),
+    "px_wheat": ("prices", ("Wheat",)),
+    "px_barley": ("prices", ("Barley",)),
+    "px_canola": ("prices", ("Canola",)),
+    "px_legume": ("prices", ("Legume crop",)),
+    "px_cost_no_till": ("prices", ("cost_no_till",)),
+    "px_cost_full_cut_extra": ("prices", ("cost_full_cut_extra",)),
+    "px_cost_tickle": ("prices", ("cost_tickle",)),
+    "px_cost_high_seeding_rate_extra": ("prices", ("cost_high_seeding_rate_extra",)),
+    "op_germ_default": ("options", ("germination_rate", "default")),
+    "op_germ_tickle": ("options", ("germination_rate", "tickle")),
+    "op_seed_mortality": ("options", ("natural_seed_mortality",)),
+    "op_stock_standard": ("options", ("stocking_rate", "standard")),
+    "op_stock_high": ("options", ("stocking_rate", "high")),
+}
+
+
+# A widget's identity is its key. Deleting the key from session state makes the
+# *server* forget the value, but the browser still holds a widget with that same
+# id and sends its old value straight back -- so a loaded slot appeared not to
+# load. Putting a generation number in the key changes the identity instead, and
+# the browser draws a genuinely new widget seeded from `value=`.
+PROFILE_WIDGET_GENERATION = "profile_widget_generation"
+
+
+def profile_widget_key(name: str) -> str:
+    """The session-state key a profile field currently answers to."""
+    return f"{name}__{st.session_state.get(PROFILE_WIDGET_GENERATION, 0)}"
+
+
+def commit_profile_widgets() -> None:
+    """Push what the profile page shows into the current bundle.
+
+    Fields not yet rendered this session are absent from session state and are
+    skipped, so this is safe to call before the page has ever been opened.
+    """
+    for name, (bundle, path) in PROFILE_WIDGETS.items():
+        key = profile_widget_key(name)
+        if key not in st.session_state:
+            continue
+        target = st.session_state[f"{bundle}_current"]
+        for step in path[:-1]:
+            target = target[step]
+        target[path[-1]] = st.session_state[key]
+
+
+def reset_profile_widgets() -> None:
+    """Retire the profile page's fields so they re-seed from the bundle.
+
+    The counterpart of :func:`utils.session.reset_editor_widgets` for the
+    profile page. Call it from anywhere that replaces the bundle from outside
+    the fields — loading a slot or a file, or resetting to defaults.
+    """
+    generation = st.session_state.get(PROFILE_WIDGET_GENERATION, 0)
+    for name in PROFILE_WIDGETS:
+        st.session_state.pop(f"{name}__{generation}", None)
+    st.session_state[PROFILE_WIDGET_GENERATION] = generation + 1
+
+
+def describe_profile(profile: dict) -> str:
+    """How a profile identifies itself in a slot label.
+
+    Derived rather than stored, so renaming the farm cannot leave a slot
+    labelled with a name that is no longer anywhere in the profile.
+    """
+    parts = [
+        str(profile.get(field) or "").strip()
+        for field in ("farm_name", "paddock_name")
+    ]
+    named = " · ".join(part for part in parts if part)
+    return named or "unnamed"
+
+
+def profile_slot_label(slot: int) -> str:
+    """"Slot 2 — Broomehill · North Paddock", or that it is still empty."""
+    bundle = st.session_state.profile_slots.get(slot)
+    if not bundle:
+        return f"Slot {slot} — empty"
+    return f"Slot {slot} — {describe_profile(bundle['profile'])}"
+
+
+def profile_slot_labels() -> dict[int, str]:
+    """Every slot's label, resolved once.
+
+    The picker formats through this mapping rather than calling
+    :func:`profile_slot_label` per option, so its ``format_func`` is a plain
+    lookup with no hidden read of session state behind it.
+    """
+    return {slot: profile_slot_label(slot) for slot in st.session_state.profile_slots}
+
+
 def snapshot_profile_bundle() -> dict:
     return {
         "profile": deepcopy(st.session_state.profile_current),
@@ -51,15 +168,19 @@ def load_profile_bundle(bundle: dict) -> None:
     st.session_state.profile_current = deepcopy(bundle["profile"])
     st.session_state.prices_current = deepcopy(bundle["prices"])
     st.session_state.options_current = deepcopy(bundle["options"])
+    reset_profile_widgets()
 
 
 def reset_profile_bundle() -> None:
     st.session_state.profile_current = deepcopy(DEFAULT_PROFILE)
     st.session_state.prices_current = deepcopy(DEFAULT_PRICES)
     st.session_state.options_current = deepcopy(DEFAULT_OPTIONS)
+    reset_profile_widgets()
 
 
 def save_profile_slot(slot: int) -> None:
+    """Save what the page shows, including edits not yet submitted."""
+    commit_profile_widgets()
     st.session_state.profile_slots[slot] = snapshot_profile_bundle()
 
 
@@ -179,7 +300,12 @@ SAVE_FORMAT_VERSION = 1
 
 
 def export_bundle() -> dict:
-    """Everything needed to restore this session's work, as plain JSON."""
+    """Everything needed to restore this session's work, as plain JSON.
+
+    Commits the profile page's pending edits first, for the same reason
+    :func:`save_profile_slot` does: the file should hold what the page shows.
+    """
+    commit_profile_widgets()
     return {
         "format": "rim-online-save",
         "version": SAVE_FORMAT_VERSION,
@@ -228,5 +354,6 @@ def import_bundle(data: dict) -> tuple[bool, str]:
 
     st.session_state.results_current = None
     reset_editor_widgets()
+    reset_profile_widgets()
     years = len(st.session_state.strategy_current)
     return True, f"Loaded a {years}-year strategy and its paddock profile."

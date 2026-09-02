@@ -94,7 +94,38 @@ model. That is item 3.
 
 ---
 
-## 5. Smaller items
+## 5. A headless CLI, so scenarios can be run without the browser
+
+Everything the model does is reachable only through Streamlit today. There is no
+way to run a profile and a strategy from the command line, which makes three
+things awkward: comparing several farms, regression-testing the app's numbers
+against the workbook, and reproducing a user's report from the `.rim.json` they
+send.
+
+The pieces already exist. `.rim.json` holds a whole scenario
+(`utils/session.py`, `export_bundle()`); `utils/export.py` writes the same
+scenario to a workbook; `rim.engine.simulate_strategy()` takes plain dicts and
+imports no Streamlit.
+
+**The work** — a `tools/run_scenario.py` that takes one or more `.rim.json`
+files, runs each, and writes results as CSV, JSON or an Excel workbook:
+
+```console
+.venv\Scripts\python -m tools.run_scenario scenarios/*.rim.json --out results/
+.venv\Scripts\python -m tools.run_scenario broomehill.rim.json --compare kojonup.rim.json
+```
+
+Needs a loader that reads a save file **without** `st.session_state` — the
+current `import_bundle()` writes straight into session state, so the reading and
+the applying have to come apart first. That split is small and makes the save
+format testable on its own.
+
+Worth doing after item 3: run through `rim/calcs.py` and the CLI becomes a way
+to check the app against a fixture, not just a convenience.
+
+---
+
+## 6. Smaller items
 
 - **`data/defaults.json` is dead.** Unread at runtime and deliberately untracked.
   Replace `rim/defaults.py`'s hand-transcribed scalars with a loader over generated
@@ -119,3 +150,7 @@ model. That is item 3.
 - Work can be saved to and loaded from a `.rim.json` file.
 - `data/extracted_RIM_Excel_Information/` — how the model works, and the coverage audit.
 - `ROADMAP.md` rewritten as the delivery roadmap.
+- Scenario export carries its inputs, not only its results (`utils/export.py`).
+- Profile slots save the farm on screen, and say which farm they hold. The page
+  no longer batches its fields behind `st.form`; see
+  `.claude/memory/streamlit-widget-state-staleness.md`.
