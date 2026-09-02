@@ -1,0 +1,1255 @@
+{
+  "_source": {
+    "generated_by": "tools/extract_documentation.py",
+    "workbook": "RIM-2013b",
+    "file": "Ryegrass-RIM-\u2013-DOWNLOAD-NOW.xlsm",
+    "generated_utc": "2026-09-02T07:50:16+00:00",
+    "warning": "Generated file. Do not hand-edit; rerun tools/extract_documentation.py."
+  },
+  "rows": {
+    "1": {
+      "label": "Year",
+      "read_by": null
+    },
+    "4": {
+      "label": "Table 1. Selected options & enterprises",
+      "read_by": null
+    },
+    "5": {
+      "label": "sourced from under the strategy table, feeding into the drop-down lists and into the labels of this table.",
+      "read_by": null
+    },
+    "6": {
+      "label": "0=wheat, 1=barley, 2=canola, 3=legumes, 4=volunteer past, 5=clover, 6=cadiz",
+      "read_by": null
+    },
+    "7": {
+      "label": "KD/DK: Glyphosate",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "8": {
+      "label": "KD/DK: Paraquat",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "9": {
+      "label": "KD/DK: Glyphosate/Paraquat",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "10": {
+      "label": "Pre-E: Triflur+Triallate",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "11": {
+      "label": "Pre-E: Propyzamide",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "12": {
+      "label": "Pre-E: Sakura",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "13": {
+      "label": "Pre-E: Boxer Gold",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "14": {
+      "label": "Pre-E: Triazine",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "15": {
+      "label": "High crop seeding rate selected",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "16": {
+      "label": "Tickle selected",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "17": {
+      "label": "Mouldboard plough selected",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "18": {
+      "label": "Full-cut selected",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "19": {
+      "label": "Seed dry",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "20": {
+      "label": "Seed wet (Default) (0+)",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "21": {
+      "label": "Seed delayed 1-2 weeks (10)",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "22": {
+      "label": "Seed +delayed 2-3 weeks (20)",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "23": {
+      "label": "Post-E: Topik",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "24": {
+      "label": "Post-E: Hussar",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "25": {
+      "label": "Post-E: Clethodim",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "26": {
+      "label": "Post-E: Glyphosate",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "27": {
+      "label": "Post-E: Paraquat",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "28": {
+      "label": "Grazing intensity, standard",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "29": {
+      "label": "Grazing intensity, high",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "30": {
+      "label": "Spring: Topping",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "31": {
+      "label": "Spring: Brown M",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "33": {
+      "label": "Spring: Mow+Spray",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "34": {
+      "label": "Spring: Green M.",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "35": {
+      "label": "Spring: Hay+Spray",
+      "read_by": "rim/seed_set.py \u2014 post-emergent use counts"
+    },
+    "36": {
+      "label": "Spring: Sil.+Spray",
+      "read_by": "rim/seed_set.py \u2014 post-emergent use counts"
+    },
+    "37": {
+      "label": "Spring A1: Define 1st",
+      "read_by": "rim/seed_set.py \u2014 post-emergent use counts"
+    },
+    "38": {
+      "label": "Spring A2: Define 2nd",
+      "read_by": "rim/seed_set.py \u2014 post-emergent use counts"
+    },
+    "39": {
+      "label": "Spring - swathe: W/o Spray",
+      "read_by": "rim/seed_set.py \u2014 post-emergent use counts"
+    },
+    "40": {
+      "label": "Spring - swathe: With Spray",
+      "read_by": "rim/seed_set.py \u2014 application counters"
+    },
+    "41": {
+      "label": "Harvest: Cart+B.",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "42": {
+      "label": "Harvest: Narr+B.",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "43": {
+      "label": "Harvest: HSD",
+      "read_by": "rim/activation.py \u2014 option activation"
+    },
+    "44": {
+      "label": "Harvest: Tram.",
+      "read_by": "rim/seed_set.py \u2014 application counters"
+    },
+    "45": {
+      "label": "empty slot for adding a harvest option, configured for bales",
+      "read_by": "rim/seed_set.py \u2014 application counters"
+    },
+    "46": {
+      "label": "Harvest: BDS+E.",
+      "read_by": "rim/seed_set.py \u2014 application counters"
+    },
+    "47": {
+      "label": "Harvest: B.all",
+      "read_by": "rim/seed_set.py \u2014 application counters"
+    },
+    "48": {
+      "label": "Harvest B1: Define 1st",
+      "read_by": "rim/seed_set.py \u2014 application counters"
+    },
+    "49": {
+      "label": "Harvest B2: Define 2nd",
+      "read_by": "rim/seed_set.py \u2014 application counters"
+    },
+    "55": {
+      "label": "KD/DK: Glyphosate",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "56": {
+      "label": "KD/DK: Paraquat",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "57": {
+      "label": "KD/DK: Glyphosate/Paraquat",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "58": {
+      "label": "Pre-E: Triflur+Triallate",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "59": {
+      "label": "Pre-E: Propyzamide",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "60": {
+      "label": "Pre-E: Sakura",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "61": {
+      "label": "Pre-E: Boxer Gold",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "62": {
+      "label": "Pre-E: Triazine",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "63": {
+      "label": "High crop seeding rate selected",
+      "read_by": null
+    },
+    "64": {
+      "label": "Tickle selected",
+      "read_by": null
+    },
+    "65": {
+      "label": "Mouldboard plough selected",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "66": {
+      "label": "Full-cut selected",
+      "read_by": null
+    },
+    "67": {
+      "label": "Seed dry",
+      "read_by": null
+    },
+    "68": {
+      "label": "Seed wet (0+)",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "69": {
+      "label": "Seed delayed 1-2 weeks (10)",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "70": {
+      "label": "Seed +delayed 2-3 weeks (20)",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "71": {
+      "label": "Post-E: Topik",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "72": {
+      "label": "Post-E: Hussar",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "73": {
+      "label": "Post-E: Clethodim",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "74": {
+      "label": "Post-E: Glyphosate",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "75": {
+      "label": "Post-E: Paraquat",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "76": {
+      "label": "Grazing intensity, standard",
+      "read_by": null
+    },
+    "77": {
+      "label": "Grazing intensity, high",
+      "read_by": null
+    },
+    "78": {
+      "label": "Spring: Brown M",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "79": {
+      "label": "Spring: Topping",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "80": {
+      "label": "empty slot for adding a spring option",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "81": {
+      "label": "Spring: Mow+Spray",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "82": {
+      "label": "Spring: Green M.",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "83": {
+      "label": "Spring: Hay+Spray",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "84": {
+      "label": "Spring: Sil.+Spray",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "85": {
+      "label": "Spring A1: Define 1st",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "86": {
+      "label": "Spring A2: Define 2nd",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "87": {
+      "label": "Spring - swathe: W/o Spray",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "88": {
+      "label": "Spring - swathe: With Spray",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "89": {
+      "label": "Harvest: Cart+B.",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "90": {
+      "label": "Harvest: Narr+B.",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "91": {
+      "label": "Harvest: HSD",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "92": {
+      "label": "Harvest: Tram.",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "93": {
+      "label": "empty slot for adding a harvest option, configured for bales",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "94": {
+      "label": "Harvest: BDS+E.",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "95": {
+      "label": "Harvest: B.all",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "96": {
+      "label": "Harvest B1: Define 1st",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "97": {
+      "label": "Harvest B2: Define 2nd",
+      "read_by": "rim/survival.py \u2014 stage survival factor"
+    },
+    "99": {
+      "label": "Removal of seed in normal harvest",
+      "read_by": "rim/stage_multipliers.py \u2014 stage multiplier"
+    },
+    "105": {
+      "label": "KD/DK: Glyphosate",
+      "read_by": null
+    },
+    "106": {
+      "label": "KD/DK: Paraquat",
+      "read_by": null
+    },
+    "107": {
+      "label": "KD/DK: Glyphosate/Paraquat",
+      "read_by": null
+    },
+    "108": {
+      "label": "Pre-E: Triflur+Triallate",
+      "read_by": null
+    },
+    "109": {
+      "label": "Pre-E: Propyzamide",
+      "read_by": null
+    },
+    "110": {
+      "label": "Pre-E: Sakura",
+      "read_by": null
+    },
+    "111": {
+      "label": "Pre-E: Boxer Gold",
+      "read_by": null
+    },
+    "112": {
+      "label": "Pre-E: Triazine",
+      "read_by": null
+    },
+    "113": {
+      "label": "High crop seeding rate selected :extra cost",
+      "read_by": null
+    },
+    "114": {
+      "label": "Tickle selected :extra cost",
+      "read_by": null
+    },
+    "115": {
+      "label": "Mouldboard plough selected :extra cost",
+      "read_by": null
+    },
+    "116": {
+      "label": "Full-cut selected :extra cost",
+      "read_by": null
+    },
+    "117": {
+      "label": "Seed dry",
+      "read_by": null
+    },
+    "119": {
+      "label": "Seed delayed 1-2 weeks (10)",
+      "read_by": null
+    },
+    "120": {
+      "label": "Seed +delayed 2-3 weeks (20)",
+      "read_by": null
+    },
+    "121": {
+      "label": "Post-E: Topik",
+      "read_by": null
+    },
+    "122": {
+      "label": "Post-E: Hussar",
+      "read_by": null
+    },
+    "123": {
+      "label": "Post-E: Clethodim",
+      "read_by": null
+    },
+    "124": {
+      "label": "Post-E: Glyphosate",
+      "read_by": null
+    },
+    "125": {
+      "label": "Post-E: Paraquat",
+      "read_by": null
+    },
+    "126": {
+      "label": "Grazing intensity, standard",
+      "read_by": null
+    },
+    "127": {
+      "label": "Grazing intensity, high",
+      "read_by": null
+    },
+    "128": {
+      "label": "Spring: Brown M",
+      "read_by": null
+    },
+    "129": {
+      "label": "Spring: Topping",
+      "read_by": null
+    },
+    "130": {
+      "label": "empty slot for adding a spring option",
+      "read_by": null
+    },
+    "131": {
+      "label": "Spring: Mow+Spray",
+      "read_by": null
+    },
+    "132": {
+      "label": "Spring: Green M.",
+      "read_by": null
+    },
+    "133": {
+      "label": "Spring: Hay+Spray",
+      "read_by": null
+    },
+    "134": {
+      "label": "Spring: Sil.+Spray",
+      "read_by": null
+    },
+    "135": {
+      "label": "Spring A1: Define 1st",
+      "read_by": null
+    },
+    "136": {
+      "label": "Spring A2: Define 2nd",
+      "read_by": null
+    },
+    "137": {
+      "label": "Spring - swathe: W/o Spray",
+      "read_by": null
+    },
+    "138": {
+      "label": "Spring - swathe: With Spray",
+      "read_by": null
+    },
+    "139": {
+      "label": "Harvest: Cart+B.",
+      "read_by": null
+    },
+    "140": {
+      "label": "Harvest: Narr+B.",
+      "read_by": null
+    },
+    "141": {
+      "label": "Harvest: HSD",
+      "read_by": null
+    },
+    "142": {
+      "label": "Harvest: Tram.",
+      "read_by": null
+    },
+    "143": {
+      "label": "empty slot for adding a harvest option, configured for bales",
+      "read_by": null
+    },
+    "144": {
+      "label": "Harvest: BDS+E.",
+      "read_by": null
+    },
+    "145": {
+      "label": "Harvest: B.all",
+      "read_by": null
+    },
+    "146": {
+      "label": "Harvest B1: Define 1st",
+      "read_by": null
+    },
+    "147": {
+      "label": "Harvest B2: Define 2nd",
+      "read_by": null
+    },
+    "151": {
+      "label": "Prior to break",
+      "read_by": "rim/population.py \u2014 germination fraction, cohort 1"
+    },
+    "152": {
+      "label": "10 days after break",
+      "read_by": "rim/population.py \u2014 germination fraction, cohort 2"
+    },
+    "153": {
+      "label": "20 days after break",
+      "read_by": "rim/population.py \u2014 germination fraction, cohort 3"
+    },
+    "154": {
+      "label": "Time for post-emergence spraying",
+      "read_by": "rim/population.py \u2014 germination fraction, cohort 4"
+    },
+    "155": {
+      "label": "Early spring",
+      "read_by": "rim/population.py \u2014 germination fraction, cohort 5"
+    },
+    "159": {
+      "label": "Seeds surviving beyond day 10",
+      "read_by": "rim/population.py \u2014 ploughing burial, no +delayed sowing"
+    },
+    "160": {
+      "label": "Seeds surviving beyond day 20",
+      "read_by": "rim/population.py \u2014 ploughing burial, with +delayed sowing"
+    },
+    "164": {
+      "label": "Weeds surviving beyond day 0",
+      "read_by": "rim/stage_multipliers.py \u2014 stage multiplier"
+    },
+    "165": {
+      "label": "Weeds surviving beyond day 10",
+      "read_by": "rim/stage_multipliers.py \u2014 stage multiplier"
+    },
+    "166": {
+      "label": "Weeds surviving beyond day 20",
+      "read_by": "rim/stage_multipliers.py \u2014 stage multiplier"
+    },
+    "167": {
+      "label": "Weeds surviving pre-em treatments",
+      "read_by": "rim/stage_multipliers.py \u2014 stage multiplier"
+    },
+    "168": {
+      "label": "Weeds surviving post-em treatments",
+      "read_by": "rim/stage_multipliers.py \u2014 stage multiplier"
+    },
+    "169": {
+      "label": "Weeds surviving spring treatments",
+      "read_by": "rim/stage_multipliers.py \u2014 stage multiplier"
+    },
+    "170": {
+      "label": "Seeds surviving harvest",
+      "read_by": "rim/stage_multipliers.py \u2014 stage multiplier"
+    },
+    "174": {
+      "label": "10 days after break",
+      "read_by": "rim/seed_set.py \u2014 competition-weighted density"
+    },
+    "175": {
+      "label": "20 days after break",
+      "read_by": "rim/seed_set.py \u2014 competition-weighted density"
+    },
+    "176": {
+      "label": "Time for post-emergence spraying",
+      "read_by": "rim/seed_set.py \u2014 competition-weighted density"
+    },
+    "177": {
+      "label": "Spring",
+      "read_by": "rim/seed_set.py \u2014 competition-weighted density"
+    },
+    "183": {
+      "label": "Year",
+      "read_by": null
+    },
+    "184": {
+      "label": "Enterprise code #1: enterprise selected",
+      "read_by": "rim/rotation.py \u2014 crop_code"
+    },
+    "185": {
+      "label": "Enterprise code #2: pasture types",
+      "read_by": "rim/rotation.py \u2014 phase_code"
+    },
+    "186": {
+      "label": "Enterprise code #3: differentiates cereals",
+      "read_by": "rim/rotation.py \u2014 pasture_carry"
+    },
+    "187": {
+      "label": "Enterprise code #4: differentiates wheat & barley",
+      "read_by": "rim/rotation.py \u2014 barley_code"
+    },
+    "188": {
+      "label": "Break since canola",
+      "read_by": "rim/rotation.py \u2014 break_since_canola"
+    },
+    "189": {
+      "label": "Enterprise code #5: differentiates canolas",
+      "read_by": "rim/rotation.py \u2014 rotation_key"
+    },
+    "195": {
+      "label": "Wheat (3rd or more cereal in a row)",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "196": {
+      "label": "Barley (3rd or more cereal in a row)",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "198": {
+      "label": "Legume",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "199": {
+      "label": "Vol. past. yr 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "200": {
+      "label": "Vol. past. yr 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "201": {
+      "label": "Vol. past. yr 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "202": {
+      "label": "Clover yr 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "203": {
+      "label": "Clover yr 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "204": {
+      "label": "Clover yr 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "205": {
+      "label": "Cadiz yr 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "206": {
+      "label": "Cadiz yr 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "207": {
+      "label": "Cadiz yr 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "208": {
+      "label": "Wheat 1st crop after canola",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "209": {
+      "label": "Wheat 1st crop after Legume crop",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "210": {
+      "label": "Wheat 1st crop after Vol. past. x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "211": {
+      "label": "Wheat 1st crop after Vol. past. x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "212": {
+      "label": "Wheat 1st crop after Vol. past. x 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "213": {
+      "label": "Wheat 1st crop after Clover x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "214": {
+      "label": "Wheat 1st crop after Clover x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "215": {
+      "label": "Wheat 1st crop after Clover x 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "216": {
+      "label": "Wheat 1st crop after Cadiz x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "217": {
+      "label": "Wheat 1st crop after Cadiz x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "218": {
+      "label": "Wheat 1st crop after Cadiz x 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "219": {
+      "label": "Wheat 2nd cereal after Canola",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "220": {
+      "label": "Wheat 2nd cereal after Legume crop",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "221": {
+      "label": "Wheat 2nd cereal after Vol. past. x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "222": {
+      "label": "Wheat 2nd cereal after Vol. past. x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "223": {
+      "label": "Wheat 2nd cereal after Vol. past. x 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "224": {
+      "label": "Wheat 2nd cereal after Clover x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "225": {
+      "label": "Wheat 2nd cereal after Clover x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "226": {
+      "label": "Wheat 2nd cereal after Clover x 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "227": {
+      "label": "Wheat 2nd cereal after Cadiz x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "228": {
+      "label": "Wheat 2nd cereal after Cadiz x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "229": {
+      "label": "Wheat 2nd cereal after Cadiz x 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "230": {
+      "label": "Barley 1st crop after canola",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "231": {
+      "label": "Barley 1st crop after Legume crop",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "232": {
+      "label": "Barley 1st crop after Vol. past. x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "233": {
+      "label": "Barley 1st crop after Vol. past. x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "234": {
+      "label": "Barley 1st crop after Vol. past. x 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "235": {
+      "label": "Barley 1st crop after Clover x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "236": {
+      "label": "Barley 1st crop after Clover x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "237": {
+      "label": "Barley 1st crop after Clover x 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "238": {
+      "label": "Barley 1st crop after Cadiz x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "239": {
+      "label": "Barley 1st crop after Cadiz x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "240": {
+      "label": "Barley 1st crop after Cadiz x 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "241": {
+      "label": "Barley 2nd cereal after Canola",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "242": {
+      "label": "Barley 2nd cereal after Legume crop",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "243": {
+      "label": "Barley 2nd cereal after Vol. past. x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "244": {
+      "label": "Barley 2nd cereal after Vol. past. x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "245": {
+      "label": "Barley 2nd cereal after Vol. past. x 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "246": {
+      "label": "Barley 2nd cereal after Clover x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "247": {
+      "label": "Barley 2nd cereal after Clover x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "248": {
+      "label": "Barley 2nd cereal after Clover x 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "249": {
+      "label": "Barley 2nd cereal after Cadiz x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "250": {
+      "label": "Barley 2nd cereal after Cadiz x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "251": {
+      "label": "Barley 2nd cereal after Cadiz x 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "252": {
+      "label": "Canola, 1 year break, wheat",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "253": {
+      "label": "Canola, 1 year break, barley",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "255": {
+      "label": "Canola, 1 year break, Legume crop",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "256": {
+      "label": "Canola, 1 year break, vol past x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "259": {
+      "label": "Canola, 1 year break, clover x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "262": {
+      "label": "Canola, 1 year break, cadiz x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "265": {
+      "label": "Canola, 2 year break, wheat",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "266": {
+      "label": "Canola, 2 year break, barley",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "268": {
+      "label": "Canola, 2 year break, Legume crop",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "269": {
+      "label": "Canola, 2 yr break, vol past x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "270": {
+      "label": "Canola, 2 yr break, vol past x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "272": {
+      "label": "Canola, 2 yr break, clover x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "273": {
+      "label": "Canola, 2 yr break, clover x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "275": {
+      "label": "Canola, 2 yr break, cadiz x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "276": {
+      "label": "Canola, 2 yr break, cadiz x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "278": {
+      "label": "Canola, 3+ yr break, wheat",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "279": {
+      "label": "Canola, 3+ yr break, barley",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "281": {
+      "label": "Canola, 3+ yr break, Legume crop",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "282": {
+      "label": "Canola, 3+ yr break, vol past x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "283": {
+      "label": "Canola, 3+ yr break, vol past x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "284": {
+      "label": "Canola, 3+ yr break, vol past x 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "285": {
+      "label": "Canola, 3+ yr break, clover x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "286": {
+      "label": "Canola, 3+ yr break, clover x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "287": {
+      "label": "Canola, 3+ yr break, clover x 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "288": {
+      "label": "Canola, 3+ yr break, cadiz x 1",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "289": {
+      "label": "Canola, 3+ yr break, cadiz x 2",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "290": {
+      "label": "Canola, 3+ yr break, cadiz x 3",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "291": {
+      "label": "Canola, 2 yr break, Legume crop-cereal",
+      "read_by": "rim/rotation.py / rim/population.py \u2014 Table 8 lookup"
+    },
+    "292": {
+      "label": "Canola, 3+ yr break, Legume crop-cereal",
+      "read_by": null
+    },
+    "297": {
+      "label": "Value of total N saving ($/ha)",
+      "read_by": null
+    },
+    "298": {
+      "label": "Environmental cost of cultivation ($/ha)",
+      "read_by": null
+    },
+    "299": {
+      "label": "Legumes",
+      "read_by": null
+    },
+    "300": {
+      "label": "Wheat",
+      "read_by": null
+    },
+    "301": {
+      "label": "Barley",
+      "read_by": null
+    },
+    "302": {
+      "label": "Canola",
+      "read_by": null
+    },
+    "303": {
+      "label": "Volunteer pasture",
+      "read_by": null
+    },
+    "304": {
+      "label": "Phase cadiz pasture",
+      "read_by": null
+    },
+    "305": {
+      "label": "regen clover pasture",
+      "read_by": null
+    },
+    "306": {
+      "label": "Pasture total",
+      "read_by": null
+    },
+    "310": {
+      "label": "Normal grazing, no hay (1=yes, 0 = no)",
+      "read_by": "rim/population.py \u2014 grazing survival"
+    },
+    "311": {
+      "label": "Proportion of weeds killed",
+      "read_by": "rim/population.py \u2014 grazing survival"
+    },
+    "312": {
+      "label": "High intensity grazing (1=yes, 0 = no)",
+      "read_by": "rim/population.py \u2014 grazing survival"
+    },
+    "313": {
+      "label": "Proportion of weeds killed",
+      "read_by": "rim/population.py \u2014 grazing survival"
+    },
+    "314": {
+      "label": "Weed proportion remaining after grazing",
+      "read_by": "rim/population.py \u2014 grazing survival"
+    },
+    "318": {
+      "label": "Standard grazing (1=yes, 0 = no)",
+      "read_by": null
+    },
+    "319": {
+      "label": "Stocking rate (DSE/ha)",
+      "read_by": null
+    },
+    "320": {
+      "label": "High intensity grazing (1=yes, 0 = no)",
+      "read_by": null
+    },
+    "321": {
+      "label": "Stocking rate (DSE/ha)",
+      "read_by": null
+    },
+    "322": {
+      "label": "if hay, silage, g manure (1=yes, 0 = no)",
+      "read_by": "rim/population.py \u2014 grazing survival"
+    },
+    "323": {
+      "label": "Stocking rate (DSE/ha)",
+      "read_by": null
+    },
+    "324": {
+      "label": "if hay, etc - high intensity grazing (1=yes, 0 = no)",
+      "read_by": "rim/population.py \u2014 grazing survival"
+    },
+    "325": {
+      "label": "Stocking rate (DSE/ha)",
+      "read_by": null
+    },
+    "326": {
+      "label": "if hay, etc - NO grazing (1=yes, 0 = no)",
+      "read_by": null
+    },
+    "327": {
+      "label": "Normal pasture returns",
+      "read_by": null
+    },
+    "328": {
+      "label": "Total pasture returns ($/ha)",
+      "read_by": null
+    },
+    "332": {
+      "label": "Clover Standard Grazing - Hay",
+      "read_by": null
+    },
+    "333": {
+      "label": "Cadiz Standard Grazing - Hay",
+      "read_by": null
+    },
+    "334": {
+      "label": "Volunt Standard Grazing - Hay",
+      "read_by": null
+    },
+    "335": {
+      "label": "Clover High Grazing - Hay",
+      "read_by": null
+    },
+    "336": {
+      "label": "Cadiz High Grazing - Hay",
+      "read_by": null
+    },
+    "337": {
+      "label": "Volunt High Grazing - Hay",
+      "read_by": null
+    },
+    "338": {
+      "label": "Clover NO Grazing - Hay",
+      "read_by": null
+    },
+    "339": {
+      "label": "Cadiz NO Grazing - Hay",
+      "read_by": null
+    },
+    "340": {
+      "label": "Volunt NO Grazing - Hay",
+      "read_by": null
+    },
+    "341": {
+      "label": "Normal Pasture Hay",
+      "read_by": null
+    },
+    "342": {
+      "label": "Sum Pasture Hay",
+      "read_by": null
+    },
+    "346": {
+      "label": "Harvest: Cart+B.",
+      "read_by": null
+    },
+    "347": {
+      "label": "Harvest: Narr+B.",
+      "read_by": null
+    },
+    "348": {
+      "label": "Harvest: HSD",
+      "read_by": null
+    },
+    "349": {
+      "label": "Harvest: Tram.",
+      "read_by": null
+    },
+    "350": {
+      "label": "Harvest: to specify",
+      "read_by": null
+    },
+    "351": {
+      "label": "Harvest: BDS+E.",
+      "read_by": null
+    },
+    "352": {
+      "label": "Age of: Chaff cart system (burning dumps)",
+      "read_by": null
+    },
+    "353": {
+      "label": "Age of: Narrow windrows burning system",
+      "read_by": null
+    },
+    "354": {
+      "label": "Age of: HSD - Harrington seed destructor",
+      "read_by": null
+    },
+    "355": {
+      "label": "Age of: Chaff-tramlining",
+      "read_by": null
+    },
+    "356": {
+      "label": "Age of: to specify, baling for stock feed",
+      "read_by": null
+    },
+    "357": {
+      "label": "Age of: BDS - Bale direct system",
+      "read_by": null
+    },
+    "358": {
+      "label": "Machinery repayments (from '+Prices', goes to 'Eco results')",
+      "read_by": null
+    },
+    "362": {
+      "label": "Increase of potential crop yield",
+      "read_by": null
+    },
+    "363": {
+      "label": "Increase of sheep/pasture productivity",
+      "read_by": null
+    },
+    "364": {
+      "label": "Inflation for crop sale prices",
+      "read_by": null
+    },
+    "365": {
+      "label": "Inflation for sheep product prices",
+      "read_by": null
+    },
+    "366": {
+      "label": "Inflation for input costs",
+      "read_by": null
+    },
+    "371": {
+      "label": "->",
+      "read_by": null
+    },
+    "373": {
+      "label": "",
+      "read_by": null
+    },
+    "374": {
+      "label": "",
+      "read_by": null
+    },
+    "375": {
+      "label": "",
+      "read_by": null
+    },
+    "376": {
+      "label": "",
+      "read_by": null
+    },
+    "377": {
+      "label": "",
+      "read_by": null
+    },
+    "378": {
+      "label": "",
+      "read_by": null
+    },
+    "379": {
+      "label": "",
+      "read_by": null
+    },
+    "380": {
+      "label": "",
+      "read_by": null
+    },
+    "381": {
+      "label": "",
+      "read_by": null
+    },
+    "382": {
+      "label": "",
+      "read_by": null
+    },
+    "383": {
+      "label": "",
+      "read_by": null
+    },
+    "384": {
+      "label": "",
+      "read_by": null
+    },
+    "385": {
+      "label": "",
+      "read_by": null
+    }
+  }
+}

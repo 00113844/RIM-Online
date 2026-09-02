@@ -58,9 +58,32 @@ depends on, so a rule cannot outlive its evidence.
 
 ---
 
-## 3. Finish the engine port — blocks 6 and 7
+## 3. Rewire the app onto the ported engine
 
-**Independent of 1 and 2.** Blocks 1–5 are done and biological parity is exact
+**The app does not use the ported engine at all.** `rim/calcs.py` and its five modules
+reproduce the workbook's biology exactly, and are imported by nothing outside `tests/`.
+`utils/session.py` calls `rim.engine.simulate_strategy` — the original pre-port model — so
+every number a user sees comes from the unverified one, and the exact engine is dead code.
+
+Measured on the shipped default plan, both starting from 20 seeds/m² so only the model
+differs: the app draws the seed bank down **8%** over ten years; the ported engine draws it
+down **98%**. Drawing the seed bank down is the entire point of RIM, and the app does not
+show it happening.
+
+The biological outputs — ryegrass counts and seed bank — could be switched over now, ahead
+of items 4 and 5, which would make the Population page correct while economics catches up.
+Doing so means adapting `simulate_years()` output into the `simulate_strategy()` contract
+(`yearly`, `summary`, `machinery_repayments`), and translating the app's strategy dicts into
+the workbook's own labels — `rim/excel_inputs.py` already does that, lossily, and item 1
+removes the loss.
+
+See `data/extracted_RIM_Excel_Information/04-coverage-audit.md`.
+
+---
+
+## 4. Finish the engine port — blocks 6 and 7
+
+**Independent of 1 and 2.** Blocks 1-5 are done and biological parity is exact
 (640 comparisons, worst relative error 5.9e-16). Remaining:
 
 - **Block 6 — yield and competition**, `Bio results!D23:D50`.
@@ -76,7 +99,7 @@ where Excel gives −$240.91/ha and ryegrass escaping to ~18,763 plants/m².
 
 ---
 
-## 4. Smaller items
+## 5. Smaller items
 
 - **`data/defaults.json` is dead.** Unread at runtime and deliberately untracked.
   Replace `rim/defaults.py`'s hand-transcribed scalars with a loader over generated

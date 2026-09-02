@@ -19,6 +19,7 @@
 # Generated workbook parameters, captured parity fixtures and the scenario
 # definitions that produce them are tracked, despite the blanket *.json above.
 !data/*.json
+!data/**/*.json
 !tests/fixtures/excel_parity/*.json
 !scenarios/*.json
 

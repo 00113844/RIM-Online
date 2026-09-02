@@ -112,3 +112,18 @@ before changing anything in `rim/`.
 Durable project facts live in `.claude/memory/`, indexed by `.claude/memory/MEMORY.md`.
 Read the index at the start of a session. Update `engine-port-status.md` whenever a block of
 the engine port lands.
+
+
+## Context:
+
+Extracted from the Excel File: `What is RIM ?
+
+RIM is a decision support system for farmers, advisers, agronomists and students. RIM is designed to provide information and insight into the long-term management of ryegrass, one of the most important agricultural weeds in Australia. 
+RIM integrates numerous agronomic, biological and economic information. "What-if" scenarios simulate ryegrass numbers in a field over time and its impact on yield and profit. An average year in the Southern Australian wheatbelt is assumed, without climatic variability. However, RIM allows users to customise various parameters to represent regional conditions in their particular area. Advanced users can further investigate the underlying bioeconomic model by unlocking RIM and accessing the background parameters and calculations.
+
+RIM can help provide answers to questions such as:
+    ● Which combination of control options and rotations provides the best overall management system in the long-term?
+    ● How fast can a ryegrass problem develop?
+    ● How can I maintain my income if I cannot rely on herbicides?
+    ● If a pasture phase is included, how long should it be for?
+    ● Is it worth investing in specific machinery? Is a particular treatment (e.g. green manuring) a profitable practice? If so, under what circumstances?`

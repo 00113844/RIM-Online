@@ -1,0 +1,288 @@
+{
+  "_source": {
+    "generated_by": "tools/extract_documentation.py",
+    "workbook": "RIM-2013b",
+    "file": "Ryegrass-RIM-\u2013-DOWNLOAD-NOW.xlsm",
+    "generated_utc": "2026-09-02T07:50:16+00:00",
+    "warning": "Generated file. Do not hand-edit; rerun tools/extract_documentation.py."
+  },
+  "sheets": {
+    "Calcs": {
+      "formula_rows": 311,
+      "first_row": 1,
+      "last_row": 385
+    },
+    "Bio results": {
+      "formula_rows": 91,
+      "first_row": 1,
+      "last_row": 97
+    },
+    "+Options": {
+      "formula_rows": 84,
+      "first_row": 7,
+      "last_row": 199
+    },
+    "Eco results": {
+      "formula_rows": 68,
+      "first_row": 1,
+      "last_row": 73
+    },
+    "+Prices": {
+      "formula_rows": 50,
+      "first_row": 7,
+      "last_row": 182
+    },
+    "2.Strategy": {
+      "formula_rows": 46,
+      "first_row": 1,
+      "last_row": 118
+    },
+    "3. Out Tab": {
+      "formula_rows": 30,
+      "first_row": 4,
+      "last_row": 49
+    },
+    "1.Profile": {
+      "formula_rows": 16,
+      "first_row": 20,
+      "last_row": 221
+    },
+    "3. Out Pop": {
+      "formula_rows": 13,
+      "first_row": 10,
+      "last_row": 39
+    },
+    "3. Out C&G": {
+      "formula_rows": 8,
+      "first_row": 10,
+      "last_row": 39
+    },
+    "3. Out Eco": {
+      "formula_rows": 3,
+      "first_row": 10,
+      "last_row": 39
+    }
+  },
+  "coverage": {
+    "Calcs": {
+      "formula_rows": 311,
+      "read_by_port": 195,
+      "not_read": 116
+    },
+    "Bio results": {
+      "formula_rows": 91,
+      "read_by_port": 16,
+      "not_read": 75
+    },
+    "Eco results": {
+      "formula_rows": 68,
+      "read_by_port": 0,
+      "not_read": 68
+    }
+  },
+  "unused_calcs_blocks": [
+    {
+      "from": 119,
+      "to": 147,
+      "rows": 29,
+      "label": "Seed delayed 1-2 weeks (10)"
+    },
+    {
+      "from": 105,
+      "to": 117,
+      "rows": 13,
+      "label": "KD/DK: Glyphosate"
+    },
+    {
+      "from": 346,
+      "to": 358,
+      "rows": 13,
+      "label": "Harvest: Cart+B."
+    },
+    {
+      "from": 373,
+      "to": 385,
+      "rows": 13,
+      "label": ""
+    },
+    {
+      "from": 332,
+      "to": 342,
+      "rows": 11,
+      "label": "Clover Standard Grazing - Hay"
+    },
+    {
+      "from": 297,
+      "to": 306,
+      "rows": 10,
+      "label": "Value of total N saving ($/ha)"
+    },
+    {
+      "from": 362,
+      "to": 366,
+      "rows": 5,
+      "label": "Increase of potential crop yield"
+    },
+    {
+      "from": 318,
+      "to": 321,
+      "rows": 4,
+      "label": "Standard grazing (1=yes, 0 = no)"
+    },
+    {
+      "from": 325,
+      "to": 328,
+      "rows": 4,
+      "label": "Stocking rate (DSE/ha)"
+    },
+    {
+      "from": 4,
+      "to": 6,
+      "rows": 3,
+      "label": "Table 1. Selected options & enterprises"
+    },
+    {
+      "from": 63,
+      "to": 64,
+      "rows": 2,
+      "label": "High crop seeding rate selected"
+    },
+    {
+      "from": 66,
+      "to": 67,
+      "rows": 2,
+      "label": "Full-cut selected"
+    },
+    {
+      "from": 76,
+      "to": 77,
+      "rows": 2,
+      "label": "Grazing intensity, standard"
+    }
+  ],
+  "unported_bio_rows": {
+    "2": "Table 1. Ryegrass plants per m2",
+    "10": "Table 2. Ryegrass seeds per m2",
+    "22": "Table 3. Yields",
+    "23": "Yield penalty from phytotoxicity",
+    "24": "Yield penalty for late sowing (if any) (%)",
+    "25": "Yield pen. for not swathing crops (%)",
+    "26": "Yield pen. for crop topping (%)",
+    "27": "Yield benefit for mouldboarding (%)",
+    "28": "Yield benefit for early sowing (if any) (%)",
+    "29": "Yiled benefit from previous green/brown manuring/mow (%)",
+    "30": "Weed-free yield - Wheat (t/ha)",
+    "31": "Weed-free yield - Barley (t/ha)",
+    "32": "Weed-free yield - Canola (t/ha)",
+    "33": "Weed-free yield - Legumes (t/ha)",
+    "34": "Crop plant density - Wheat (plants/m2)",
+    "35": "Crop plant density - Barley (plants/m2)",
+    "36": "Crop plant density - Canola (plants/m2)",
+    "37": "Crop plant density - Legumes (plants/m2)",
+    "38": "Prop'n of weed-free yield with weeds - Wheat",
+    "39": "Prop'n of weed-free yield with weeds - Barley",
+    "40": "Prop'n of weed-free yield with weeds - Canola",
+    "41": "Prop'n of weed-free yield with weeds - Legumes",
+    "42": "Wheat yield after weeds, haying, etc. (t/ha)",
+    "43": "Barley yield after weeds, haying, etc. (t/ha)",
+    "44": "Canola yield after weeds, haying, etc. (t/ha)",
+    "45": "Legume yield after weeds, haying, etc. (t/ha)",
+    "46": "Hay or silage yield - Wheat (t/ha)",
+    "47": "Hay or silage yield - Barley (t/ha)",
+    "48": "Hay or silage yield - Canola (t/ha)",
+    "49": "Hay or silage yield - Legumes (t/ha)",
+    "50": "Hay yield - pasture (t/ha)",
+    "51": "Baling (Harvest) - Wheat (t/ha)",
+    "52": "Baling (Harvest) - Barley",
+    "53": "Baling (Harvest) - Canola",
+    "54": "Baling (Harvest) - Legume",
+    "56": "Table 4. Yield and RG summary for outputs",
+    "57": "Weed-free yield - Wheat (t/ha)",
+    "58": "Weed-free yield - Barley (t/ha)",
+    "59": "Weed-free yield - Canola (t/ha)",
+    "60": "Weed-free yield - Legumes (t/ha)",
+    "61": "Wheat yield after weeds (t/ha)",
+    "62": "Barley yield after weeds (t/ha)",
+    "63": "Canola yield after weeds. (t/ha)",
+    "64": "Legumes yield after weeds (t/ha)",
+    "65": "number of crops",
+    "66": "Enterprise (number of crops)",
+    "67": "Average long term, weed-free yield (as entered in the Profile)",
+    "68": "Yield after agronomical benefits/penalties (rotations, sowing date, phytotoxicity...)",
+    "69": "Final yield after weed burden",
+    "73": "Number transformations for outputs",
+    "77": "Agro impact (% initial yield)",
+    "78": "Weed burden (%)",
+    "80": "Note:",
+    "81": "Tables 1, 2 and 4 provide data to the bottom and right tables that are behind the comparisons.",
+    "84": "Bio results",
+    "87": "The same principle applies for the Eco result page."
+  },
+  "unported_eco_rows": {
+    "3": "Grain gross receipts ($/ha)",
+    "4": "Hay gross receipts ($/ha)",
+    "5": "Silage gross receipts ($/ha)",
+    "6": "Baling gross receipts ($/ha)",
+    "7": "Pasture/livestock gross receipts ($/ha)",
+    "8": "Total gross receipts ($/ha)",
+    "10": "Table 2. Expenses",
+    "11": "Non-weed-control costs, grain ($/ha)",
+    "12": "Non-weed-control costs, pasture ($/ha)",
+    "13": "Total non-weed-control costs ($/ha)",
+    "15": "KD/DK: Glyphosate",
+    "16": "KD/DK: Paraquat",
+    "17": "KD/DK: Glyphosate/Paraquat",
+    "18": "Pre-E: Triflur+Triallate",
+    "19": "Pre-E: Propyzamide",
+    "20": "Pre-E: Sakura",
+    "21": "Pre-E: Boxer Gold",
+    "22": "Pre-E: Triazine",
+    "23": "High crop seeding rate selected",
+    "24": "Tickle selected",
+    "25": "Mouldboard plough selected",
+    "26": "Full-cut selected",
+    "27": "Seed dry",
+    "28": "Seed wet (Default) (0+)",
+    "29": "Seed delayed 1-2 weeks (10)",
+    "30": "Seed +delayed 2-3 weeks (20)",
+    "31": "Post-E: Topik",
+    "32": "Post-E: Hussar",
+    "33": "Post-E: Clethodim",
+    "34": "Post-E: Glyphosate",
+    "35": "Post-E: Paraquat",
+    "36": "Grazing intensity, standard",
+    "37": "Grazing intensity, high",
+    "38": "Spring: Brown M",
+    "39": "Spring: Topping",
+    "40": "empty slot for adding a spring option",
+    "41": "Spring: Mow+Spray",
+    "42": "Spring: Green M.",
+    "43": "Spring: Hay+Spray",
+    "44": "Spring: Sil.+Spray",
+    "45": "Spring A1: Define 1st",
+    "46": "Spring A2: Define 2nd",
+    "47": "Spring - swathe: W/o Spray",
+    "48": "Spring - swathe: With Spray",
+    "49": "Harvest: Cart+B.",
+    "50": "Harvest: Narr+B.",
+    "51": "Harvest: HSD",
+    "52": "Harvest: Tram.",
+    "53": "empty slot for adding a harvest option, configured for bales",
+    "54": "Harvest: BDS+E.",
+    "55": "Harvest: B.all",
+    "56": "Harvest B1: Define 1st",
+    "57": "Harvest B2: Define 2nd",
+    "58": "Machinery repayments (from '+Prices', goes to 'Eco results')",
+    "59": "Total weed control costs ($/ha)",
+    "61": "Total variable input costs ($/ha)",
+    "63": "Annual gross margins ($/ha)",
+    "66": "Gross receipts ($/ha)",
+    "67": "Costs ($/ha)",
+    "68": "Interest ($/ha)",
+    "69": "Tax  ($/ha)",
+    "70": "Running total ($/ha)",
+    "71": "Final balance after 10 years  ($/ha)",
+    "72": "Equivalent opening balance* ($/ha)",
+    "73": "Equivalent annual profit** ($/ha)"
+  }
+}
