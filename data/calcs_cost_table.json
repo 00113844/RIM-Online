@@ -1,0 +1,576 @@
+{
+  "_source": {
+    "generated_by": "tools/extract_params.py",
+    "workbook": "RIM-2013b",
+    "file": "Ryegrass-RIM-\u2013-DOWNLOAD-NOW.xlsm",
+    "generated_utc": "2026-09-02T08:39:56+00:00",
+    "ranges": {
+      "table": "Calcs!N105:T147",
+      "labels": "Calcs!B105:B147",
+      "column_mapping": "derived per row from the nested IFs in Calcs!C105:C147"
+    },
+    "warning": "Generated file. Do not hand-edit; rerun tools/extract_params.py."
+  },
+  "note": "Cost twin of the survival table: option row r in Calcs 55-97 has its cost at r + 50. The crop-code to column mapping is not uniform -- observed signatures (crop 0..6): ['NOPQRST', 'NOPQRTS']. Rows differ in where Clover and Cadiz sit, so each row records its own.",
+  "column_signatures": [
+    "NOPQRST",
+    "NOPQRTS"
+  ],
+  "options": {
+    "105": {
+      "label": "KD/DK: Glyphosate",
+      "survival_row": 55,
+      "activation_cell": 7,
+      "column_signature": "NOPQRST",
+      "cost_by_crop_code": {
+        "0": 26.0,
+        "1": 26.0,
+        "2": 26.0,
+        "3": 26.0,
+        "4": 22.0,
+        "5": 22.0,
+        "6": 22.0
+      }
+    },
+    "106": {
+      "label": "KD/DK: Paraquat",
+      "survival_row": 56,
+      "activation_cell": 8,
+      "column_signature": "NOPQRST",
+      "cost_by_crop_code": {
+        "0": 16.0,
+        "1": 16.0,
+        "2": 16.0,
+        "3": 16.0,
+        "4": 16.0,
+        "5": 16.0,
+        "6": 16.0
+      }
+    },
+    "107": {
+      "label": "KD/DK: Glyphosate/Paraquat",
+      "survival_row": 57,
+      "activation_cell": 9,
+      "column_signature": "NOPQRST",
+      "cost_by_crop_code": {
+        "0": 42.0,
+        "1": 42.0,
+        "2": 42.0,
+        "3": 42.0,
+        "4": 38.0,
+        "5": 38.0,
+        "6": 38.0
+      }
+    },
+    "108": {
+      "label": "Pre-E: Triflur+Triallate",
+      "survival_row": 58,
+      "activation_cell": 10,
+      "column_signature": "NOPQRST",
+      "cost_by_crop_code": {
+        "0": 30.0,
+        "1": 30.0,
+        "2": 30.0,
+        "3": 30.0,
+        "4": 8.0,
+        "5": 8.0,
+        "6": 8.0
+      }
+    },
+    "109": {
+      "label": "Pre-E: Propyzamide",
+      "survival_row": 59,
+      "activation_cell": 11,
+      "column_signature": "NOPQRST",
+      "cost_by_crop_code": {
+        "0": 8.0,
+        "1": 8.0,
+        "2": 34.0,
+        "3": 34.0,
+        "4": 8.0,
+        "5": 8.0,
+        "6": 8.0
+      }
+    },
+    "110": {
+      "label": "Pre-E: Sakura",
+      "survival_row": 60,
+      "activation_cell": 12,
+      "column_signature": "NOPQRST",
+      "cost_by_crop_code": {
+        "0": 48.0,
+        "1": 48.0,
+        "2": 48.0,
+        "3": 48.0,
+        "4": 8.0,
+        "5": 8.0,
+        "6": 8.0
+      }
+    },
+    "111": {
+      "label": "Pre-E: Boxer Gold",
+      "survival_row": 61,
+      "activation_cell": 13,
+      "column_signature": "NOPQRST",
+      "cost_by_crop_code": {
+        "0": 35.0,
+        "1": 35.0,
+        "2": 35.0,
+        "3": 35.0,
+        "4": 8.0,
+        "5": 8.0,
+        "6": 8.0
+      }
+    },
+    "112": {
+      "label": "Pre-E: Triazine",
+      "survival_row": 62,
+      "activation_cell": 14,
+      "column_signature": "NOPQRST",
+      "cost_by_crop_code": {
+        "0": 8.0,
+        "1": 8.0,
+        "2": 18.0,
+        "3": 18.0,
+        "4": 13.0,
+        "5": 13.0,
+        "6": 13.0
+      }
+    },
+    "113": {
+      "label": "High crop seeding rate selected :extra cost",
+      "survival_row": 63,
+      "activation_cell": 15,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 28.5,
+        "1": 24.428571428571427,
+        "2": 26.666666666666664,
+        "3": 12.0,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.0
+      }
+    },
+    "114": {
+      "label": "Tickle selected :extra cost",
+      "survival_row": 64,
+      "activation_cell": 16,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 7.703999999999999,
+        "1": 7.703999999999999,
+        "2": 7.703999999999999,
+        "3": 7.703999999999999,
+        "4": 7.703999999999999,
+        "5": 7.703999999999999,
+        "6": 7.703999999999999
+      }
+    },
+    "115": {
+      "label": "Mouldboard plough selected :extra cost",
+      "survival_row": 65,
+      "activation_cell": 17,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 150.0,
+        "1": 150.0,
+        "2": 150.0,
+        "3": 150.0,
+        "4": 150.0,
+        "5": 150.0,
+        "6": 150.0
+      }
+    },
+    "116": {
+      "label": "Full-cut selected :extra cost",
+      "survival_row": 66,
+      "activation_cell": 18,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 2.083999999999998,
+        "1": 2.083999999999998,
+        "2": 2.083999999999998,
+        "3": 2.083999999999998,
+        "4": 0.0,
+        "5": 2.083999999999998,
+        "6": 2.083999999999998
+      }
+    },
+    "121": {
+      "label": "Post-E: Topik",
+      "survival_row": 71,
+      "activation_cell": 23,
+      "column_signature": "NOPQRST",
+      "cost_by_crop_code": {
+        "0": 13.0,
+        "1": 13.0,
+        "2": 8.0,
+        "3": 8.0,
+        "4": 8.0,
+        "5": 8.0,
+        "6": 8.0
+      }
+    },
+    "122": {
+      "label": "Post-E: Hussar",
+      "survival_row": 72,
+      "activation_cell": 24,
+      "column_signature": "NOPQRST",
+      "cost_by_crop_code": {
+        "0": 38.0,
+        "1": 38.0,
+        "2": 8.0,
+        "3": 8.0,
+        "4": 8.0,
+        "5": 8.0,
+        "6": 8.0
+      }
+    },
+    "123": {
+      "label": "Post-E: Clethodim",
+      "survival_row": 73,
+      "activation_cell": 25,
+      "column_signature": "NOPQRST",
+      "cost_by_crop_code": {
+        "0": 8.0,
+        "1": 8.0,
+        "2": 48.0,
+        "3": 48.0,
+        "4": 8.0,
+        "5": 8.0,
+        "6": 8.0
+      }
+    },
+    "124": {
+      "label": "Post-E: Glyphosate",
+      "survival_row": 74,
+      "activation_cell": 26,
+      "column_signature": "NOPQRST",
+      "cost_by_crop_code": {
+        "0": 8.0,
+        "1": 8.0,
+        "2": 26.0,
+        "3": 26.0,
+        "4": 8.0,
+        "5": 8.0,
+        "6": 8.0
+      }
+    },
+    "125": {
+      "label": "Post-E: Paraquat",
+      "survival_row": 75,
+      "activation_cell": 27,
+      "column_signature": "NOPQRST",
+      "cost_by_crop_code": {
+        "0": 8.0,
+        "1": 8.0,
+        "2": 8.0,
+        "3": 8.0,
+        "4": 16.0,
+        "5": 16.0,
+        "6": 16.0
+      }
+    },
+    "128": {
+      "label": "Spring: Brown M",
+      "survival_row": 78,
+      "activation_cell": 31,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 1.7920000000000016,
+        "1": 1.7920000000000016,
+        "2": 1.7920000000000016,
+        "3": 1.7920000000000016,
+        "4": 21.2,
+        "5": 21.2,
+        "6": 21.2
+      }
+    },
+    "129": {
+      "label": "Spring: Topping",
+      "survival_row": 79,
+      "activation_cell": 30,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 14.5,
+        "1": 14.5,
+        "2": 14.5,
+        "3": 11.25,
+        "4": 10.75,
+        "5": 10.75,
+        "6": 10.75
+      }
+    },
+    "130": {
+      "label": "empty slot for adding a spring option",
+      "survival_row": 80,
+      "activation_cell": 32,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.0
+      }
+    },
+    "131": {
+      "label": "Spring: Mow+Spray",
+      "survival_row": 81,
+      "activation_cell": 33,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 101.792,
+        "1": 101.792,
+        "2": 101.792,
+        "3": 101.792,
+        "4": 99.392,
+        "5": 99.392,
+        "6": 99.392
+      }
+    },
+    "132": {
+      "label": "Spring: Green M.",
+      "survival_row": 82,
+      "activation_cell": 34,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": -6.400000000000002,
+        "1": -6.400000000000002,
+        "2": -6.400000000000002,
+        "3": -6.400000000000002,
+        "4": 15.407999999999998,
+        "5": 15.407999999999998,
+        "6": 15.407999999999998
+      }
+    },
+    "133": {
+      "label": "Spring: Hay+Spray",
+      "survival_row": 83,
+      "activation_cell": 35,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 256.79200000000003,
+        "1": 256.79200000000003,
+        "2": 254.29200000000003,
+        "3": 254.29200000000003,
+        "4": 249.392,
+        "5": 249.392,
+        "6": 249.392
+      }
+    },
+    "134": {
+      "label": "Spring: Sil.+Spray",
+      "survival_row": 84,
+      "activation_cell": 36,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 255.54200000000003,
+        "1": 255.54200000000003,
+        "2": 253.66700000000003,
+        "3": 253.66700000000003,
+        "4": 249.392,
+        "5": 249.392,
+        "6": 249.392
+      }
+    },
+    "135": {
+      "label": "Spring A1: Define 1st",
+      "survival_row": 85,
+      "activation_cell": 37,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 10.0,
+        "1": 10.0,
+        "2": 10.0,
+        "3": 10.0,
+        "4": 10.0,
+        "5": 10.0,
+        "6": 10.0
+      }
+    },
+    "136": {
+      "label": "Spring A2: Define 2nd",
+      "survival_row": 86,
+      "activation_cell": 38,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 10.0,
+        "1": 10.0,
+        "2": 10.0,
+        "3": 10.0,
+        "4": 10.0,
+        "5": 10.0,
+        "6": 10.0
+      }
+    },
+    "137": {
+      "label": "Spring - swathe: W/o Spray",
+      "survival_row": 87,
+      "activation_cell": 39,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 35.0,
+        "1": 35.0,
+        "2": 35.0,
+        "3": 35.0,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.0
+      }
+    },
+    "138": {
+      "label": "Spring - swathe: With Spray",
+      "survival_row": 88,
+      "activation_cell": 40,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 49.5,
+        "1": 49.5,
+        "2": 49.5,
+        "3": 46.25,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.0
+      }
+    },
+    "139": {
+      "label": "Harvest: Cart+B.",
+      "survival_row": 89,
+      "activation_cell": 41,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 14.884,
+        "1": 14.884,
+        "2": 14.884,
+        "3": 14.884,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.0
+      }
+    },
+    "140": {
+      "label": "Harvest: Narr+B.",
+      "survival_row": 90,
+      "activation_cell": 42,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 15.25,
+        "1": 15.25,
+        "2": 15.25,
+        "3": 15.25,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.0
+      }
+    },
+    "141": {
+      "label": "Harvest: HSD",
+      "survival_row": 91,
+      "activation_cell": 43,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 6.588,
+        "1": 6.588,
+        "2": 6.588,
+        "3": 6.588,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.0
+      }
+    },
+    "142": {
+      "label": "Harvest: Tram.",
+      "survival_row": 92,
+      "activation_cell": 44,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 6.85,
+        "1": 6.85,
+        "2": 6.85,
+        "3": 5.875,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.0
+      }
+    },
+    "143": {
+      "label": "empty slot for adding a harvest option, configured for bales",
+      "survival_row": 93,
+      "activation_cell": 45,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 0.0,
+        "1": 0.0,
+        "2": 0.0,
+        "3": 0.0,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.0
+      }
+    },
+    "144": {
+      "label": "Harvest: BDS+E.",
+      "survival_row": 94,
+      "activation_cell": 46,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 37.872,
+        "1": 37.872,
+        "2": 37.872,
+        "3": 37.872,
+        "4": 0.0,
+        "5": 0.0,
+        "6": 0.0
+      }
+    },
+    "145": {
+      "label": "Harvest: B.all",
+      "survival_row": 95,
+      "activation_cell": 47,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 21.0,
+        "1": 21.0,
+        "2": 21.0,
+        "3": 21.0,
+        "4": 21.0,
+        "5": 21.0,
+        "6": 21.0
+      }
+    },
+    "146": {
+      "label": "Harvest B1: Define 1st",
+      "survival_row": 96,
+      "activation_cell": 48,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 10.0,
+        "1": 10.0,
+        "2": 10.0,
+        "3": 10.0,
+        "4": 10.0,
+        "5": 10.0,
+        "6": 10.0
+      }
+    },
+    "147": {
+      "label": "Harvest B2: Define 2nd",
+      "survival_row": 97,
+      "activation_cell": 49,
+      "column_signature": "NOPQRTS",
+      "cost_by_crop_code": {
+        "0": 10.0,
+        "1": 10.0,
+        "2": 10.0,
+        "3": 10.0,
+        "4": 10.0,
+        "5": 10.0,
+        "6": 10.0
+      }
+    }
+  }
+}

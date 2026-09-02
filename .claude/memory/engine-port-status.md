@@ -15,8 +15,8 @@ Tracks the formula-level port of RIM-2013b into `rim/`. Update this whenever a b
 | 3b | Stage multipliers | `Calcs!C99`, `C164:C170` | **ported** -- `rim/stage_multipliers.py` |
 | 4 | Seasonal population model | `Bio results!D3:D8`, `D11:D16` | **ported** -- `rim/population.py`, `tests/test_population.py` |
 | 5 | Seed set and competition | `Bio results!D17:D20`, `Calcs!C174:C177` | **ported** -- `rim/seed_set.py`, `tests/test_seed_set.py` |
-| 6 | Yield | `Bio results!D23:D50` | not started -- next |
-| 7 | Economics | `Eco results!E3:E59` | not started |
+| 6 | Yield | `Bio results!D23:D54` | **ported** -- `rim/yield_model.py`, `tests/test_yield_model.py` |
+| 7 | Economics | `Eco results!E3:E73` | **ported** -- `rim/economics_model.py`, `tests/test_economics_model.py` |
 
 Everything not marked ported is the original independent reimplementation and should be
 treated as unverified - see [[excel-is-source-of-truth]].
@@ -148,3 +148,34 @@ error 5.9e-16. `tests/test_full_biology.py` holds that line.
 
 Still to port before `rim/engine.py` can be rewired and the whole-model parity fixtures move:
 yield (`Bio results!D23:D50`) and economics (`Eco results!E3:E59`).
+
+Blocks 6 and 7 notes. **The port is complete**: `simulate_years()` reproduces `TabSum`,
+`Bio results` 23-54 and `Eco results` 3-73 from the strategy grid alone -- 200 comparisons
+across four fixtures, worst error 5.7e-14, and all four nominal annuities exact.
+
+Five traps, each of which silently produced wrong numbers until caught:
+
+- **The cost table has two crop-column mappings.** `Calcs!N105:T147` puts Clover in S and
+  Cadiz in T for the 13 herbicide rows, and swaps them for the other 24. One uniform mapping
+  mis-costs every spring and harvest option on pasture. The extractor derives it per row.
+- **Cost rows 128 and 129 are transposed**, exactly as survival rows 78 and 79 are: Brown M
+  reads `C31`, Topping reads `C30`. Everything else is `r - 98`.
+- **Full-cut is priced but has no survival row.** `Calcs!C116` charges it while `C66` is
+  empty, because full-cut acts on ryegrass through the seeding rows. Routing costs via the
+  survival block drops it.
+- **The mouldboard yield benefit is permanent.** `Bio results!D27` widens its COUNTIF range
+  each year (`$C$17:D17`, `$C$17:E17`), so once ploughed the benefit never lapses.
+- **The trends compound.** `Calcs` 362-366 are `(1 + rate) ** year`, not a constant. Store
+  the rate, not year 1's factor.
+
+And the annuity is **not** a discounted average. `Eco results` 66-73 carry an after-tax
+balance forward with interest on it (`F70 = (F66-F67+F68)*(1-tax) + E70`), then PMT. Getting
+this wrong is what made the pre-port `_annuity_from_cashflows()` wrong in shape, not just in
+inputs.
+
+`Calcs!AC113` (environmental cost of cultivation) is on **Calcs**, not `+Prices`, and applies
+to crops only -- `C299:C302` add it, `C303:C305` do not.
+
+**Still not done: the app.** `tests/test_excel_parity.py` exercises `rim.engine.simulate_strategy`,
+so its four fixtures stay red until `rim/engine.py` is rewired onto `rim/calcs.py`. That is
+TASKS item 3 and the single highest-value thing left.

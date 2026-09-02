@@ -240,3 +240,93 @@ TABLE8_KEY_COL = 3  # C
 GERMINATION_COHORTS = 5
 GERMINATION_PASTURE_ROW = 105
 GERMINATION_SOWN_ROW = 115
+
+# --- Cost table: Calcs C105:C147 <- N105:T147 ------------------------------
+# The cost twin of the survival block: same option order, paired at r + 50.
+# Unlike the survival block it is written as nested IFs rather than HLOOKUP,
+# and the crop-code -> column mapping is NOT uniform across the rows, so the
+# extractor derives it per row from the formulas. See COST_ROW_OFFSET.
+COST_TABLE_RANGE = "Calcs!N105:T147"
+COST_FIRST_ROW = 105
+COST_LAST_ROW = 147
+COST_ROW_OFFSET = 50  # survival row r has its cost twin at r + 50
+
+# --- Economics inputs (block 7) --------------------------------------------
+NON_WEED_COST_ROWS = {"legumes": 299, "wheat": 300, "barley": 301, "canola": 302}
+PASTURE_COST_ROW = 306
+MACHINERY_REPAYMENT_ROW = 358
+TREND_ROWS = {
+    "crop_yield_trend": 362,
+    "pasture_productivity_trend": 363,
+    "crop_price_inflation": 364,
+    "sheep_price_inflation": 365,
+    "input_cost_inflation": 366,
+}
+# +Prices!AV68:AV72 -- the annual rates the Calcs 362-366 factors compound from.
+TREND_RATE_CELLS = {
+    "crop_yield_trend": "AV68",
+    "pasture_productivity_trend": "AV69",
+    "crop_price_inflation": "AV70",
+    "sheep_price_inflation": "AV71",
+    "input_cost_inflation": "AV72",
+}
+# '+Prices'!AR72:AR77 -- per-hectare repayment per HWSC machine, in the order
+# Calcs!C352:C357 counts their ages. O37 is the loan term in years.
+MACHINERY_REPAYMENT_CELLS = {
+    "cart_and_burn": "AR72",
+    "narrow_windrow": "AR73",
+    "harrington_seed_destructor": "AR74",
+    "chaff_tramlining": "AR75",
+    "spare_slot": "AR76",
+    "bale_direct": "AR77",
+}
+MACHINERY_LOAN_TERM_CELL = "O37"
+INTEREST_CELL = ("+Prices", 73, 48)  # AV73
+TAX_CELL = ("+Prices", 74, 48)       # AV74
+
+# --- Yield inputs (block 6), +Options per-crop rows -------------------------
+YIELD_PARAM_ROWS = {
+    "weed_free_yield": 56,
+    "plant_density_standard": 59,
+    "plant_density_high": 60,
+    "harvest_index": 61,             # Bio results D46:D54, hay and baling
+    "fodder_conversion": 62,
+    "benefit_early_sowing": 67,      # Bio results D28
+    "benefit_after_green_manure": 68,   # D29 term 1
+    "benefit_after_brown_manure": 69,   # D29 term 2
+    "benefit_after_mowing": 70,         # D29 term 3
+    "penalty_not_swathing": 73,      # D25
+    "penalty_crop_topping": 74,      # D26
+    "legume_after_legume_penalty": 77,
+    "penalty_sowing_delayed": 79,    # D24, delayed 1-2 weeks
+    "penalty_sowing_plus_delayed": 80,  # D24, +delayed
+    "phytotoxicity_per_spray": 81,   # D23, x Calcs!P40
+    "max_yield_loss": 86,
+    "competition_a": 88,
+    "competition_b": 89,
+}
+MOULDBOARD_YIELD_BENEFIT_CELL = ("+Options", 25, 8)  # H25, Bio results D27
+RYEGRASS_COMPETITIVENESS_ROWS = (136, 137, 138, 139)  # AG only, per crop code 0-3
+
+# --- Yield block: Bio results!D23:D54 (block 6) -----------------------------
+YIELD_ROWS = tuple(range(23, 55))
+# --- Economics block: Eco results!E3:E63 (block 7) --------------------------
+# Captured as a whole so a fixture can check receipts, costs and gross margin
+# line by line rather than only the EcoSum summary.
+ECO_DETAIL_ROWS = tuple(range(3, 64))
+
+# --- Block 7 price inputs (+Prices and 1.Profile) ---------------------------
+# Non-weed-control cost per crop, Calcs!C299:C302 -> +Prices row 96.
+NON_WEED_CROP_COST = {"3": "AM96", "0": "AJ96", "1": "AK96", "2": "AL96"}
+# Fertiliser saved when the crop was green-manured, Calcs!C299:C302.
+GREEN_MANURE_SAVING = {"cereal": "F19", "canola": "G19", "legume": "H19"}
+CULTIVATION_ENV_COST = "AC113"          # on Calcs, NOT +Prices. Calcs!C298, halved per trigger.
+# Pasture non-weed costs by rotation key, Calcs!C303:C305.
+PASTURE_COST_VOLUNTEER = {"4": "AJ111", "5": "AK111", "6": "AL111"}
+PASTURE_COST_CLOVER = {"7_resown": "AJ123", "7": "AJ119", "8": "AK119", "9": "AL119"}
+PASTURE_COST_CADIZ = {"10": "AJ129", "11": "AK129", "12": "AL129"}
+# 1.Profile row 8: grain prices D:G, fodder K:M, sheep gross margin P.
+PROFILE_PRICE_CELLS = {
+    "grain_0": "D8", "grain_1": "E8", "grain_2": "F8", "grain_3": "G8",
+    "hay": "K8", "silage": "L8", "bales": "M8", "sheep_gm_per_dse": "P8",
+}

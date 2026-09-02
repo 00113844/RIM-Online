@@ -196,3 +196,25 @@ def read_stage_multipliers(wb: openpyxl.Workbook) -> list[dict[str, Any]]:
             {"year": year, **{str(row): _num(ws.cell(row, col).value) for row in cm.MULTIPLIER_ROWS}}
         )
     return years
+
+
+def read_yield_rows(wb: openpyxl.Workbook) -> list[dict[str, Any]]:
+    """Read Bio results!D23:D54 (per year) -- the yield block."""
+    ws = wb[cm.SHEET_BIO]
+    return [
+        {"year": year,
+         **{str(row): _num(ws.cell(row, cm.year_col(year, cm.FIRST_COL_BIO)).value)
+            for row in cm.YIELD_ROWS}}
+        for year in range(1, cm.N_YEARS + 1)
+    ]
+
+
+def read_eco_detail(wb: openpyxl.Workbook) -> list[dict[str, Any]]:
+    """Read Eco results!E3:E63 (per year) -- receipts, costs, gross margin."""
+    ws = wb[cm.SHEET_ECO]
+    return [
+        {"year": year,
+         **{str(row): _num(ws.cell(row, cm.year_col(year, cm.FIRST_COL_ECO)).value)
+            for row in cm.ECO_DETAIL_ROWS}}
+        for year in range(1, cm.N_YEARS + 1)
+    ]

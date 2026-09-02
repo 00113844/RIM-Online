@@ -3,7 +3,7 @@
     "generated_by": "tools/extract_params.py",
     "workbook": "RIM-2013b",
     "file": "Ryegrass-RIM-\u2013-DOWNLOAD-NOW.xlsm",
-    "generated_utc": "2026-08-24T09:00:23+00:00",
+    "generated_utc": "2026-09-02T08:39:55+00:00",
     "ranges": {
       "crop": "+Options!AG59:AJ60 (plant density), AG87:AJ87 (competitiveness)",
       "seed": "+Options!AG133 (max seed), AG135 (density constant), AS182 (pasture)",

@@ -171,6 +171,18 @@ def read_outputs(wb: Any) -> dict[str, Any]:
             {"year": year, **{str(r): calcs_ws.Cells(r, col).Value2 for r in cm.MULTIPLIER_ROWS}}
         )
 
+    yields = []
+    eco_detail = []
+    for year in range(1, cm.N_YEARS + 1):
+        bio_col = cm.year_col(year, cm.FIRST_COL_BIO)
+        eco_col = cm.year_col(year, cm.FIRST_COL_ECO)
+        yields.append(
+            {"year": year, **{str(r): bio_ws.Cells(r, bio_col).Value2 for r in cm.YIELD_ROWS}}
+        )
+        eco_detail.append(
+            {"year": year, **{str(r): eco_ws.Cells(r, eco_col).Value2 for r in cm.ECO_DETAIL_ROWS}}
+        )
+
     history = {}
     for field, (sheet, row, col) in cm.HISTORY_CELLS.items():
         value = wb.Sheets(sheet).Cells(row, col).Value2
@@ -184,6 +196,8 @@ def read_outputs(wb: Any) -> dict[str, Any]:
         "activation": activation,
         "survival": survival,
         "multipliers": multipliers,
+        "yields": yields,
+        "eco_detail": eco_detail,
         "history": history,
         "average_gross_margin": eco_ws.Cells(avg_row, avg_col).Value2,
     }

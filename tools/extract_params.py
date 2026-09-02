@@ -34,6 +34,14 @@ def _source_header(ranges: dict[str, str]) -> dict[str, Any]:
     }
 
 
+def _a1(ws, address: str) -> float:
+    """Read an A1-style address, treating a blank as 0 as Excel's arithmetic does."""
+    value = ws[address].value
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return float(value)
+    return 0.0
+
+
 def _cell(ws, row: int, col: int) -> float:
     """A blank in this table means 'no effect'.
 
@@ -303,6 +311,153 @@ def extract_seed_set() -> dict[str, Any]:
     }
 
 
+def _cost_column_map() -> dict[int, dict[str, Any]]:
+    """Read each cost row's crop-code -> column mapping out of the formulas.
+
+    ``Calcs!C105:C147`` is written as nested IFs rather than an HLOOKUP, and the
+    mapping is **not uniform**: rows 105-112 and 121-125 (the herbicides) put
+    Clover in column S and Cadiz in T, while the other 24 rows swap them. Read
+    with a single mapping, every spring and harvest option is mis-costed on
+    clover and Cadiz. Deriving it per row from the formula text means the quirk
+    cannot be lost.
+    """
+    import re
+
+    pattern = re.compile(r"IF\(C\d+=(\d),Calcs!\$([A-Z])\d+")
+    # Which activation cell the row tests. Mostly r - 98, but not always:
+    # rows 128 and 129 are transposed, exactly as survival rows 78 and 79 are.
+    activation_pattern = re.compile(r"^\(?IF\(C(\d+)\s*(?:=|<>)")
+    formulas = (wr.REPO_ROOT / "Rim_Formulas.md").read_text(encoding="utf-8", errors="replace")
+
+    mapping: dict[int, dict[int, int]] = {}
+    for line in formulas.splitlines():
+        fields = line.split("	")
+        if len(fields) < 3 or fields[0] != cm.SHEET_CALCS:
+            continue
+        cell = re.fullmatch(r"C(\d+)", fields[1])
+        if not cell:
+            continue
+        row = int(cell.group(1))
+        if not (cm.COST_FIRST_ROW <= row <= cm.COST_LAST_ROW):
+            continue
+        pairs = pattern.findall(fields[2])
+        activation = activation_pattern.match(fields[2].strip())
+        if pairs or activation:
+            entry: dict[str, Any] = {}
+            if pairs:
+                # Column letter -> 1-based index; N is 14.
+                entry["columns"] = {int(code): ord(col) - ord("A") + 1 for code, col in pairs}
+            if activation:
+                entry["activation_cell"] = int(activation.group(1))
+            mapping[row] = entry
+    return mapping
+
+
+def extract_cost_table() -> dict[str, Any]:
+    """Calcs!N105:T147 -- what each control option costs, per crop, in $/ha."""
+    wb = wr.load()
+    ws = wb[cm.SHEET_CALCS]
+    columns = _cost_column_map()
+
+    options: dict[str, Any] = {}
+    for row in range(cm.COST_FIRST_ROW, cm.COST_LAST_ROW + 1):
+        entry = columns.get(row) or {}
+        per_crop = entry.get("columns")
+        if not per_crop:
+            continue
+        label = ws.cell(row, 2).value
+        signature = "".join(
+            chr(ord("A") + per_crop[code] - 1) if code in per_crop else "?"
+            for code in range(7)
+        )
+        options[str(row)] = {
+            "label": str(label).strip() if label else "",
+            "survival_row": row - cm.COST_ROW_OFFSET,
+            "activation_cell": entry.get("activation_cell", row - 98),
+            "column_signature": signature,
+            "cost_by_crop_code": {
+                str(code): _cell(ws, row, column) for code, column in sorted(per_crop.items())
+            },
+        }
+
+    signatures = sorted({entry["column_signature"] for entry in options.values()})
+    return {
+        "_source": _source_header({
+            "table": cm.COST_TABLE_RANGE,
+            "labels": f"Calcs!B{cm.COST_FIRST_ROW}:B{cm.COST_LAST_ROW}",
+            "column_mapping": "derived per row from the nested IFs in Calcs!C105:C147",
+        }),
+        "note": "Cost twin of the survival table: option row r in Calcs 55-97 has its "
+                "cost at r + 50. The crop-code to column mapping is not uniform -- "
+                f"observed signatures (crop 0..6): {signatures}. Rows differ in where "
+                "Clover and Cadiz sit, so each row records its own.",
+        "column_signatures": signatures,
+        "options": options,
+    }
+
+
+def extract_economics() -> dict[str, Any]:
+    """The scalars Eco results assembles a gross margin and an annuity from."""
+    wb = wr.load()
+    calcs = wb[cm.SHEET_CALCS]
+    prices = wb[cm.SHEET_PRICES]
+    options_ws = wb[cm.SHEET_OPTIONS]
+
+    def crop_cols(row: int) -> dict[str, float]:
+        return {
+            str(code): _cell(options_ws, row, col)
+            for code, col in enumerate(
+                (cm.OPTIONS_WHEAT_COL, cm.OPTIONS_BARLEY_COL,
+                 cm.OPTIONS_CANOLA_COL, cm.OPTIONS_LEGUME_COL)
+            )
+        }
+
+    _, interest_row, interest_col = cm.INTEREST_CELL
+    _, tax_row, tax_col = cm.TAX_CELL
+
+    return {
+        "_source": _source_header({
+            "non_weed_costs": "Calcs!C299:C302, C306",
+            "machinery": f"Calcs!C{cm.MACHINERY_REPAYMENT_ROW}",
+            "trends": "Calcs!C362:C366",
+            "finance": "+Prices!AV73 (interest), AV74 (tax)",
+            "yield": "+Options rows 56, 59, 60, 77, 86, 88, 89 and AG136:AG139",
+        }),
+        "note": "The nominal annuity is NOT a discounted average. Eco results rows "
+                "66-73 carry a compounding after-tax balance across the ten years "
+                "(E68 = interest x previous E70) before the PMT. See "
+                "rim/economics_model.py.",
+        "interest_rate": _cell(prices, interest_row, interest_col),
+        "tax_rate": _cell(prices, tax_row, tax_col),
+        # Calcs 362-366 compound year on year: year n is (1 + rate) ** n. Storing
+        # the rate rather than year 1's factor is what makes that reproducible.
+        "trend_rates": {name: _a1(prices, addr)
+                        for name, addr in cm.TREND_RATE_CELLS.items()},
+        "trends_year_one": {name: _cell(calcs, row, cm.FIRST_COL_CALCS)
+                            for name, row in cm.TREND_ROWS.items()},
+        "yield_parameters": {name: crop_cols(row)
+                             for name, row in cm.YIELD_PARAM_ROWS.items()},
+        "ryegrass_competitiveness": {
+            str(code): _cell(options_ws, row, cm.OPTIONS_WHEAT_COL)
+            for code, row in enumerate(cm.RYEGRASS_COMPETITIVENESS_ROWS)
+        },
+        "mouldboard_yield_benefit": _cell(
+            options_ws, cm.MOULDBOARD_YIELD_BENEFIT_CELL[1],
+            cm.MOULDBOARD_YIELD_BENEFIT_CELL[2],
+        ),
+        "non_weed_crop_cost": {k: _a1(prices, a) for k, a in cm.NON_WEED_CROP_COST.items()},
+        "green_manure_saving": {k: _a1(prices, a) for k, a in cm.GREEN_MANURE_SAVING.items()},
+        "cultivation_env_cost": _a1(calcs, cm.CULTIVATION_ENV_COST),
+        "pasture_cost_volunteer": {k: _a1(prices, a) for k, a in cm.PASTURE_COST_VOLUNTEER.items()},
+        "pasture_cost_clover": {k: _a1(prices, a) for k, a in cm.PASTURE_COST_CLOVER.items()},
+        "pasture_cost_cadiz": {k: _a1(prices, a) for k, a in cm.PASTURE_COST_CADIZ.items()},
+        "prices": {k: _a1(wb[cm.SHEET_PROFILE], a) for k, a in cm.PROFILE_PRICE_CELLS.items()},
+        "machinery_repayments": {k: _a1(prices, a)
+                                 for k, a in cm.MACHINERY_REPAYMENT_CELLS.items()},
+        "machinery_loan_term_years": int(_a1(prices, cm.MACHINERY_LOAN_TERM_CELL)),
+    }
+
+
 def _write(name: str, payload: dict[str, Any], summary: str) -> None:
     target = DATA_DIR / name
     target.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -327,6 +482,12 @@ def main() -> int:
 
     seed_set = extract_seed_set()
     _write("seed_set.json", seed_set, "seed production and competition parameters")
+
+    costs = extract_cost_table()
+    _write("calcs_cost_table.json", costs, f"{len(costs['options'])} priced options")
+
+    economics = extract_economics()
+    _write("economics.json", economics, "yield and finance parameters")
 
     vocabulary = extract_strategy_vocabulary()
     _write("strategy_vocabulary.json", vocabulary,

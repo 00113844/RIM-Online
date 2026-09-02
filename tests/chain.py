@@ -34,6 +34,21 @@ TABSUM_ROWS: dict[str, int] = {
     "seeds_spring": 16,
 }
 
+# Bio results rows 23-54 (yield) and Eco results rows 3-63 (economics) that the
+# fixtures capture whole, so blocks 6 and 7 can be asserted line by line.
+YIELD_GROUPS: dict[str, range] = {
+    "weed_free_yield": range(30, 34),
+    "grain_yield": range(42, 46),
+    "fodder_yield": range(46, 51),
+    "baled_yield": range(51, 55),
+}
+ECO_ROWS: dict[str, str] = {
+    "total_receipts": "8",
+    "non_weed_costs": "13",
+    "weed_control_costs": "59",
+    "gross_margin": "63",
+}
+
 # Bio results rows 17-20, which close the year.
 TABSUM_CLOSING_ROWS: dict[str, int] = {
     "seed_produced_per_plant": 17,
@@ -59,6 +74,8 @@ class Year:
     expected_activation: dict[str, Any]
     expected_survival: dict[str, Any]
     expected_multipliers: dict[str, Any]
+    expected_yields: dict[str, Any]
+    expected_eco: dict[str, Any]
 
     @property
     def year(self) -> int:
@@ -82,4 +99,6 @@ def walk(fixture_path: Path) -> Iterator[Year]:
             expected_activation=reference["activation"][index],
             expected_survival=reference["survival_factors"][index],
             expected_multipliers=reference["stage_multipliers"][index],
+            expected_yields=reference["yields"][index],
+            expected_eco=reference["eco_detail"][index],
         )

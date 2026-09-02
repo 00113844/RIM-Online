@@ -40,6 +40,7 @@ from rim.population import (
     run_season,
     starting_seed_bank,
 )
+from rim.population import load_table8
 from rim.rotation import YearCodes, history_columns, rotation_codes
 from rim.seed_set import (
     YearClose,
@@ -54,9 +55,22 @@ from rim.stage_multipliers import (
     post_emergent_use_counts,
     stage_multipliers,
 )
+from rim.economics_model import (
+    YearEconomics,
+    machinery_loan_term,
+    machinery_repayment_by_machine,
+    machinery_repayments,
+    nominal_annuity,
+    stocking_rate,
+    year_economics,
+)
 from rim.survival import survival_factors
+from rim.yield_model import YieldResult, compute_yield
 
 POST_EMERGENT_FIELDS = ("post_emergent_1", "post_emergent_2", "post_emergent_3")
+
+# Calcs!C17 -- ploughing, whose yield benefit never expires.
+MOULDBOARD_CELL = 17
 
 
 @dataclass(frozen=True)
@@ -71,6 +85,8 @@ class YearResult:
     season: SeasonState
     weighted_density: float          # Calcs!C177
     close: YearClose
+    yields: YieldResult              # Bio results D23:D54
+    economics: YearEconomics         # Eco results E3:E63
 
     @property
     def plants(self) -> tuple[float, ...]:
@@ -86,6 +102,16 @@ class YearResult:
     def seed_bank_next_autumn(self) -> float:
         """Bio results!D20 -- and the next year's D11."""
         return self.close.next_autumn
+
+    @property
+    def gross_margin(self) -> float:
+        """Eco results!E63 -- receipts less every cost, $/ha."""
+        return self.economics.gross_margin
+
+    @property
+    def grain_yield(self) -> float:
+        """Bio results!D42:D45 -- what was actually harvested, t/ha."""
+        return self.yields.grain_yield
 
     def tabsum(self) -> dict[str, float]:
         """This year's column of TabSum, by the workbook's own captions."""
@@ -119,6 +145,9 @@ def run_year(
     prev_crop_code: int,
     prev2_crop_code: int,
     year: int,
+    mouldboard_ever: bool = False,
+    machinery_repayment: float = 0.0,
+    previous_activation: Mapping[int, Any] | None = None,
 ) -> YearResult:
     """Evaluate one column: strategy in, biology out."""
     constants = load_constants()
@@ -173,6 +202,37 @@ def run_year(
         summer_seed_loss=constants["seed_loss_over_summer"],
     )
 
+    # Block 6 -- yield. Table 8 supplies the weed-free potential and the
+    # nitrogen credit, both keyed on this year's rotation key.
+    table8 = load_table8()["by_key"].get(str(int(codes.rotation_key)), {})
+    sprays = herbicide_applications(
+        activation, post_emergent_use_counts(slots, activation)
+    )
+    yields = compute_yield(
+        activation,
+        crop_code=codes.crop_code,
+        phase_code=codes.phase_code,
+        weed_free_from_table8=table8.get("weed_free_yield", 0.0),
+        ryegrass_early_spring=season.plants[4],
+        herbicide_applications=sprays,
+        mouldboard_ever=mouldboard_ever,
+        two_years_ago_crop_code=prev2_crop_code,
+        previous_activation=previous_activation,
+    )
+
+    # Block 7 -- economics.
+    economics = year_economics(
+        activation,
+        crop_code=codes.crop_code,
+        rotation_key=codes.rotation_key,
+        grain_yield=yields.grain_yield,
+        fodder_yield=yields.fodder_yield,
+        baled_yield=yields.baled_yield,
+        stocking_dse=stocking_rate(activation, table8),
+        nitrogen_saving=table8.get("nitrogen_saving", 0.0),
+        machinery_repayment=machinery_repayment,
+    )
+
     return YearResult(
         year=year,
         codes=codes,
@@ -182,6 +242,8 @@ def run_year(
         season=season,
         weighted_density=weighted_density,
         close=close,
+        yields=yields,
+        economics=economics,
     )
 
 
@@ -211,10 +273,32 @@ def simulate_years(
 
     seed_bank = starting_seed_bank() if seed_bank_start is None else float(seed_bank_start)
 
+    # Machinery repayment cannot be worked out a year at a time: a machine's age
+    # counter starts when it is first used and runs for the loan term, so year 8
+    # is still paying for a header bought in year 1. Activation is pure and needs
+    # only the strategy and the crop codes, so derive it for the whole run first.
+    activations = [
+        activation_cells(row, crop_code=code.crop_code,
+                         prev_crop_code=prev, prev2_crop_code=prev2)
+        for row, code, prev, prev2 in zip(strategy_rows, codes, previous, before)
+    ]
+    repayments = machinery_repayments(
+        activations,
+        [code.crop_code for code in codes],
+        machinery_repayment_by_machine(),
+        machinery_loan_term(),
+    )
+
     results: list[YearResult] = []
+    mouldboard_ever = False
     for index, (row, code, prev, prev2) in enumerate(
         zip(strategy_rows, codes, previous, before)
     ):
+        # Bio results!D27 expands its COUNTIF range each year, so the mouldboard
+        # yield benefit is permanent once earned.
+        mouldboard_ever = mouldboard_ever or (
+            activations[index].get(MOULDBOARD_CELL) not in (None, "")
+        )
         result = run_year(
             row,
             seed_bank_start=seed_bank,
@@ -222,6 +306,9 @@ def simulate_years(
             prev_crop_code=prev,
             prev2_crop_code=prev2,
             year=index + 1,
+            mouldboard_ever=mouldboard_ever,
+            machinery_repayment=repayments[index],
+            previous_activation=activations[index - 1] if index else None,
         )
         results.append(result)
         # Bio results!E11 = D20 -- the only thread between years.

@@ -154,6 +154,28 @@ def plough_burial(
     return (1.0, survival) if plus_delayed else (survival, 1.0)
 
 
+def grazing_flags(activation: Mapping[int, Any]) -> tuple[int, int, int, int]:
+    """Calcs!C310, C312, C322, C324 -- who is grazing this paddock, and how.
+
+    Returned as the workbook's four 0/1 flags so both the ryegrass effect and
+    the stocking rate read the same decision:
+
+    * ``C310`` standard grazing, ``C312`` high intensity — the plain cases;
+    * ``C322``/``C324`` the same two but where a fodder or manuring option was
+      also taken, which the workbook prices differently because the paddock is
+      cut as well as grazed.
+    """
+    fodder = any(_active(activation.get(cell)) for cell in FODDER_CELLS)
+    standard = _active(activation.get(GRAZING_STANDARD_CELL))
+    high = _active(activation.get(GRAZING_HIGH_CELL))
+
+    c322 = 1 if (fodder and standard) else 0
+    c324 = 1 if (fodder and high) else 0
+    c310 = 0 if (high or c322 > 0 or c324 > 1) else (1 if standard else 0)
+    c312 = 0 if (c322 > 0 or c324 > 0) else (1 if high else 0)
+    return c310, c312, c322, c324
+
+
 def grazing_survival(
     activation: Mapping[int, Any],
     rotation_key: int,
@@ -170,18 +192,7 @@ def grazing_survival(
     if entry is None:
         return 1.0
 
-    fodder = any(_active(activation.get(cell)) for cell in FODDER_CELLS)
-    standard = _active(activation.get(GRAZING_STANDARD_CELL))
-    high = _active(activation.get(GRAZING_HIGH_CELL))
-
-    # Calcs!C322/C324 -- fodder cancels whichever grazing was selected.
-    c322 = 1 if (fodder and standard) else 0
-    c324 = 1 if (fodder and high) else 0
-
-    # Calcs!C310: high grazing or a fodder clash suppresses standard grazing.
-    c310 = 0 if (high or c322 > 0 or c324 > 1) else (1 if standard else 0)
-    # Calcs!C312.
-    c312 = 0 if (c322 > 0 or c324 > 0) else (1 if high else 0)
+    c310, c312, _c322, _c324 = grazing_flags(activation)
 
     c311 = float(entry["ryegrass_control_standard_grazing"]) * c310
     c313 = float(entry["ryegrass_control_high_grazing"]) * c312

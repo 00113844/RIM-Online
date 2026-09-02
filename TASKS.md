@@ -1,6 +1,6 @@
 # Outstanding work
 
-Ordered by what unblocks what. Status as of 2026-08-24, branch `parity-framework`.
+Ordered by what unblocks what. Status as of 2026-09-02, branch `main`.
 
 Background: [`ARCHITECTURE.md`](ARCHITECTURE.md) · Rules: [`CLAUDE.md`](CLAUDE.md) ·
 Port status: [`.claude/memory/engine-port-status.md`](.claude/memory/engine-port-status.md)
@@ -81,21 +81,16 @@ See `data/extracted_RIM_Excel_Information/04-coverage-audit.md`.
 
 ---
 
-## 4. Finish the engine port — blocks 6 and 7
+## 4. ~~Finish the engine port — blocks 6 and 7~~ — DONE
 
-**Independent of 1 and 2.** Blocks 1-5 are done and biological parity is exact
-(640 comparisons, worst relative error 5.9e-16). Remaining:
+Ported 2026-09-02. `rim/yield_model.py` (`Bio results!D23:D54`) and
+`rim/economics_model.py` (`Eco results!E3:E73`). The chain reproduces the workbook
+from the strategy grid alone: 200 comparisons across four fixtures, worst error
+5.7e-14, all four nominal annuities exact.
 
-- **Block 6 — yield and competition**, `Bio results!D23:D50`.
-- **Block 7 — economics**, `Eco results!E3:E59`.
-
-Then rewire `rim/engine.py` to call `rim.calcs`, preserving the `simulate_strategy()`
-contract (`yearly`, `summary`, `machinery_repayments`).
-
-**Until this lands the app's numbers are the old unverified model.** The four failing
-fixtures in `tests/test_excel_parity.py` cannot move before it. Ten years of continuous
-wheat currently reports +$349/ha average gross margin and a seed bank falling to zero,
-where Excel gives −$240.91/ha and ryegrass escaping to ~18,763 plants/m².
+**This did not turn the parity fixtures green**, and it was never going to:
+`tests/test_excel_parity.py` exercises `rim.engine.simulate_strategy`, the pre-port
+model. That is item 3.
 
 ---
 
@@ -107,8 +102,6 @@ where Excel gives −$240.91/ha and ryegrass escaping to ~18,763 plants/m².
 - **Streamlit only reloads pages, not deeply-imported modules.** Editing anything under
   `utils/` needs a server restart; the file watcher will not pick it up. Worth a line in
   the README when one exists.
-- **`ROADMAP.md`** predates the port and describes a seven-period loop the workbook does
-  not have. Either fold it into `ARCHITECTURE.md` or mark it historical.
 - **The UWA/AHRI branding was reworked** in the redesign. The navy and gold came from an
   explicit AHRI request, so the new treatment should be shown to whoever owns that.
 
@@ -118,9 +111,11 @@ where Excel gives −$240.91/ha and ryegrass escaping to ~18,763 plants/m².
 
 - Agent framework: `CLAUDE.md`, `.claude/memory/`.
 - Excel parity harness: two capture paths, self-test agreeing to 1e-6, four fixtures.
-- Engine port blocks 1, 2, 3, 3b, 4, 5 — full biological parity.
-- Six parameter files generated from the workbook, never hand-typed.
+- Engine port, all seven blocks — biology and economics, exact against four fixtures.
+- Nine parameter files generated from the workbook, never hand-typed.
 - `ARCHITECTURE.md`, and a published visual companion.
 - Interface redesign around the seed-bank spine.
 - Impossible decisions enforced: disabled in the year editor, cleared from the grid.
 - Work can be saved to and loaded from a `.rim.json` file.
+- `data/extracted_RIM_Excel_Information/` — how the model works, and the coverage audit.
+- `ROADMAP.md` rewritten as the delivery roadmap.

@@ -131,3 +131,26 @@ reaches the relevant block, not preserved:
 **Superseded by the port.** Items #7a/#7b, #11a/#11b, #12, #16, #17, #18a and #19 all concern
 control fractions, fecundity multipliers and timing factors that the staged model
 (`Bio results!D3:D20`, `Calcs!C75:C83`) replaces wholesale.
+
+---
+
+## Workbook defects reproduced, not fixed — 2026-09-02
+
+Found while porting block 6. Both are in `Bio results!E29` (the yield benefit from the
+previous year's manuring) and both are reproduced faithfully, because parity means matching
+the workbook including where it is wrong. Recorded here so nobody "fixes" them and breaks
+parity, and so AHRI can decide whether the workbook itself should change.
+
+**1. `#REF!` for a legume after green manuring.** The first term reads
+`'+Options'!#REF!` for crop code 3, so a legume grown the year after green manuring returns
+an Excel error, which poisons that year's yield and every figure downstream of it. Ported as
+`0.0`, matching the formula's own else-branch. No captured scenario reaches it, so no fixture
+disagrees — but a user can construct one in the app today.
+
+**2. Wheat reads the legume column.** The same term reads `'+Options'!$AJ68` for crop code 0
+where `AG68` is clearly meant. **Harmless**: row 68 holds 0.1 in all four crop columns, so
+the wrong column returns the right number. It would stop being harmless the moment anyone
+gives the crops different manuring benefits.
+
+Both are stated in `rim/yield_model.py` as `WORKBOOK_DEFECTS`, and a test asserts they stay
+documented.

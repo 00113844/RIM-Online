@@ -61,6 +61,8 @@ def build_fixture(name: str | None = None) -> tuple[str, dict[str, Any]]:
         activation=wr.read_activation(wb),
         survival=wr.read_survival_factors(wb),
         multipliers=wr.read_stage_multipliers(wb),
+        yields=wr.read_yield_rows(wb),
+        eco_detail=wr.read_eco_detail(wb),
         history=wr.read_history(wb),
         method="openpyxl cached values from the workbook's saved state "
                "(exact floats; no recalculation, no rounding)",
@@ -84,6 +86,8 @@ def build_fixture_from_scenario(scenario_path: Path, name: str | None = None) ->
         activation=outputs["activation"],
         survival=outputs["survival"],
         multipliers=outputs["multipliers"],
+        yields=outputs["yields"],
+        eco_detail=outputs["eco_detail"],
         history=outputs["history"],
         method=f"Excel COM recalculation of scenarios/{scenario_path.name} "
                "(CalculateFullRebuild, Value2 reads, macros force-disabled)",
@@ -101,6 +105,8 @@ def assemble(
     activation: list[dict[str, Any]],
     survival: list[dict[str, Any]],
     multipliers: list[dict[str, Any]],
+    yields: list[dict[str, Any]],
+    eco_detail: list[dict[str, Any]],
     history: dict[str, str],
     method: str,
 ) -> dict[str, Any]:
@@ -191,6 +197,11 @@ def assemble(
                                "used as input by tests/test_survival_factors.py.",
             "survival_factors": survival,
             "stage_multipliers": multipliers,
+            "yields": yields,
+            "yields_note": "Bio results!D23:D54. Asserted by tests/test_yield_model.py.",
+            "eco_detail": eco_detail,
+            "eco_note": "Eco results!E3:E63 -- receipts, costs and gross margin, "
+                        "line by line. Asserted by tests/test_economics_model.py.",
             "multipliers_note": "Calcs!C99 and C164:C170. Asserted by "
                                 "tests/test_stage_multipliers.py against "
                                 "rim.stage_multipliers.",
