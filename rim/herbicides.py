@@ -13,9 +13,11 @@ earlier version up to the current schema. There have been three:
        names of our own ("Green manuring", "Narrow windrow burn").
     2  Herbicides named as the workbook names them, and ``post_emergent`` split
        into the three slots the workbook has.
-    3  Every weed-control decision uses the workbook's own vocabulary, and the
-       three decisions RIM has that the app lacked -- spring swathe, spring
-       others, harvest others -- exist.
+    3  The three decisions RIM has that the app lacked -- spring swathe,
+       spring others, harvest others -- exist, and every decision used the
+       workbook's own abbreviations.
+    4  Those abbreviations became readable names ("Whole paddock burn" for
+       "B.all"), with every earlier spelling kept as an alias.
 
 A row already at the current schema passes through untouched, so upgrading is
 safe to apply to anything.
@@ -104,38 +106,16 @@ def first_that_works(crop_code: int, *, slot: str) -> str:
     return NONE
 
 
-# ── Carrying older plans forward ──────────────────────────────────────────────
+# ── Carrying older plans forward ─────────────────────────────
 
-# Version 1 named the knock-down by how many passes it was, which the workbook
-# never does. A single knock becomes the first single product it lists; the
-# double becomes the row that *is* the double.
-LEGACY_KNOCKDOWN = {
-    "Single knock-down": "Glyphosate",
-    "Double knock-down": "Glyphosate/Paraquat",
-}
-
-# Version 1 spring and harvest names, against the workbook rows they meant.
-LEGACY_SPRING = {
-    "Green manuring": "Green M.",
-    "Brown manuring": "Brown M",
-    "Mowing": "Mow+Spray",
-    "Hay & Silage": "Hay+Spray",
-    "Topping": "Topping",
-}
-LEGACY_HARVEST = {
-    "Narrow windrow burn": "Narr+B.",
-    "Chaff-tramlining": "Tram.",
-    "Chaff cart+dumps": "Cart+B.",
-    "HSD": "HSD",
-    "BDS": "BDS+E.",
-}
-
-# Two version-1 choices sat in the wrong column: the workbook keeps burning
-# everything on the harvest-others row, and swathing on a row of its own.
-LEGACY_MOVED = {
-    ("harvest_option", "Whole paddock burn"): ("harvest_others", "B.all"),
-    ("spring_option", "Swathing"): ("spring_swathe", "W/o Spray"),
-}
+# Decisions that used to live in one column and now live in another: swathing
+# was a spring option, and burning the whole paddock was a harvest control.
+# Stated as a pair of columns rather than a pair of names, so it keeps working
+# however those options are spelled.
+MOVED_COLUMNS: tuple[tuple[str, str], ...] = (
+    ("spring_option", "spring_swathe"),
+    ("harvest_option", "harvest_others"),
+)
 
 
 def _text(value: object) -> str:
@@ -143,7 +123,13 @@ def _text(value: object) -> str:
 
 
 def upgrade_row(row: dict) -> dict:
-    """Bring one strategy row up to the current schema. Idempotent."""
+    """Bring one strategy row up to the current schema. Idempotent.
+
+    Names resolve through :func:`rim.control_options.canonical`, which knows the
+    workbook's abbreviations and every name earlier versions of this app used,
+    so nothing here needs a rename table -- only the two decisions that changed
+    *column*, and those are found by asking which column the value fits.
+    """
     from rim.rotation import app_crop_code
 
     out = dict(row)
@@ -170,22 +156,24 @@ def upgrade_row(row: dict) -> dict:
         if _text(out.get(field)) in ("", "No", "Yes"):
             out[field] = resolve(out.get(field, NONE), "post")
 
-    for field, legacy_names in (("knockdown", LEGACY_KNOCKDOWN),
-                                ("spring_option", LEGACY_SPRING),
-                                ("harvest_option", LEGACY_HARVEST)):
-        current = _text(out.get(field))
-        out[field] = legacy_names.get(
-            current, current or control_options.INERT[field]
-        )
-
-    for (field, old), (target, new) in LEGACY_MOVED.items():
-        if _text(out.get(field)) == old:
-            out[field] = control_options.INERT[field]
-            if _text(out.get(target)) in (NONE, ""):
-                out[target] = new
+    # A value that its own column does not recognise, but the column beside it
+    # does, is one of the two that moved.
+    for field, target in MOVED_COLUMNS:
+        value = out.get(field)
+        if _text(value) in ("", control_options.INERT[field]):
+            continue
+        if control_options.find(field, value) is None:
+            moved = control_options.find(target, value)
+            if moved is not None:
+                out[field] = control_options.INERT[field]
+                if _text(out.get(target)) in (NONE, ""):
+                    out[target] = moved.name
 
     for field in control_options.FIELDS:
-        out.setdefault(field, control_options.INERT[field])
+        value = out.get(field, control_options.INERT[field])
+        out[field] = (control_options.INERT[field]
+                      if _text(value) in ("", control_options.INERT[field])
+                      else control_options.canonical(field, value))
 
     return out
 

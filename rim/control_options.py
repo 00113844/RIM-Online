@@ -23,9 +23,12 @@ nothing here is typed.
     harvest_option   rows 89-94    2.Strategy row 18
     harvest_others   rows 95-97    2.Strategy row 19
 
-**Names are the workbook's own.** They are the labels a RIM user already reads
-in ``1.Profile`` and in the ``2.Strategy`` dropdowns, so "Sil.+Spray" stays
-"Sil.+Spray" rather than becoming something tidier that matches no source.
+**Names are readable; the workbook's are kept as aliases.** A spreadsheet
+abbreviates because a cell is narrow -- "B.all", "Sil.+Spray", "Triflur+Tria" --
+and there is no reason to inflict that on a web page. Each row carries a display
+name, the workbook label it came from, and every name earlier versions of this
+app used. :func:`find` accepts any of them, so renaming a display name can never
+strand a saved plan; that is what the alias list is for.
 
 **A zero control is a statement, not a gap.** Where the survival table holds 0
 for a crop the option does nothing there, and the workbook means it.
@@ -84,8 +87,70 @@ INERT: dict[str, str] = {
     for field in FIELD_ROWS
 }
 
+# Readable names, by Calcs row. The workbook's own abbreviation stays reachable
+# as an alias, so nothing here can strand a plan that used it.
+#
+# B.all is whole-paddock burning, not baling: the workbook rates it 60% in
+# cereals and 45% elsewhere with the note "Highly variable. Much lower for
+# canola and legumes than cereals", which is the user guide's whole-paddock
+# burning row. HSD is the Harrington Seed Destructor and BDS the Bale Direct
+# System, both named in the +Prices machinery costs.
+DISPLAY_NAMES: dict[int, str] = {
+    55: "Glyphosate",
+    56: "Paraquat",
+    57: "Double knock-down",
+    58: "Trifluralin + triallate",
+    59: "Propyzamide",
+    60: "Sakura",
+    61: "Boxer Gold",
+    62: "Triazine",
+    71: "Topik",
+    72: "Hussar",
+    73: "Clethodim",
+    74: "Glyphosate",
+    75: "Paraquat",
+    78: "Brown manuring",
+    79: "Crop topping",
+    81: "Mowing + spray",
+    82: "Green manuring",
+    83: "Hay + spray",
+    84: "Silage + spray",
+    85: "Custom spring option 1",
+    86: "Custom spring option 2",
+    87: "Swathe only",
+    88: "Swathe + spray",
+    89: "Chaff cart + burn dumps",
+    90: "Narrow windrow burn",
+    91: "Harrington Seed Destructor",
+    92: "Chaff tramlining",
+    94: "Bale Direct System",
+    95: "Whole paddock burn",
+    96: "Custom harvest option 1",
+    97: "Custom harvest option 2",
+}
+
+# Names earlier versions of this app used, by Calcs row. Kept so a plan saved
+# against any of them still resolves.
+LEGACY_NAMES: dict[int, tuple[str, ...]] = {
+    55: ("Single knock-down",),
+    57: ("DoubleK",),
+    58: ("Triflur+Triallate", "Triflur+Tria"),
+    78: ("Brown man.",),
+    79: ("Topping",),
+    81: ("Mowing",),
+    82: ("Green man.",),
+    83: ("Hay & Silage", "Hay"),
+    84: ("Silage",),
+    87: ("Swathing",),
+    89: ("Chaff cart+dumps",),
+    91: ("HSD",),
+    92: ("Chaff-tramlining", "Tramline"),
+    94: ("BDS",),
+    95: ("Burn",),
+}
+
 # Group prefixes the survival table puts on its labels. Stripping one leaves the
-# name the option is actually known by.
+# workbook's own short name for the option.
 _PREFIXES = (
     "KD/DK: ", "Pre-E: ", "Post-E: ", "Spring - swathe: ",
     "Spring A1: ", "Spring A2: ", "Spring: ",
@@ -98,7 +163,8 @@ class ControlOption:
     """One row of the workbook's option list, control and cost together."""
 
     row: int                      # Calcs survival row; cost sits at row + 50
-    name: str                     # "Sakura", "Sil.+Spray"
+    name: str                     # "Sakura", "Silage + spray"
+    workbook_name: str            # "Sakura", "Sil.+Spray"
     workbook_label: str           # "Pre-E: Sakura"
     control: dict[int, float]     # crop code -> proportion of ryegrass killed
     cost: dict[int, float]        # crop code -> $/ha
@@ -113,6 +179,14 @@ class ControlOption:
     @property
     def crops_it_works_on(self) -> tuple[int, ...]:
         return tuple(code for code, v in sorted(self.control.items()) if v > 0.0)
+
+    @property
+    def aliases(self) -> tuple[str, ...]:
+        """Every name this option answers to, current and historical."""
+        return tuple(dict.fromkeys(
+            (self.name, self.workbook_name, self.workbook_label)
+            + LEGACY_NAMES.get(self.row, ())
+        ))
 
 
 def _load(path: Path) -> dict:
@@ -144,9 +218,11 @@ def _rows() -> dict[int, ControlOption]:
         # A row with no cost row is free, not missing: the workbook leaves the
         # cell blank where an option carries no cost of its own.
         cost_entry = costs.get(str(row + COST_ROW_OFFSET), {})
+        workbook_name = _strip_prefix(entry["label"])
         out[row] = ControlOption(
             row=row,
-            name=_strip_prefix(entry["label"]),
+            name=DISPLAY_NAMES.get(row, workbook_name),
+            workbook_name=workbook_name,
             workbook_label=entry["label"],
             control={int(c): float(v) for c, v in entry["by_crop_code"].items()},
             cost={int(c): float(v)
@@ -162,9 +238,25 @@ def options_for(field: str) -> tuple[ControlOption, ...]:
     return tuple(rows[row] for row in FIELD_ROWS[field])
 
 
+def _key(name: object) -> str:
+    """Fold a name for lookup: case and inner spacing do not distinguish."""
+    return " ".join(str(name).split()).casefold()
+
+
 @lru_cache(maxsize=None)
 def _index(field: str) -> dict[str, ControlOption]:
-    return {option.name: option for option in options_for(field)}
+    """Every name each option answers to, folded.
+
+    Display names are indexed first so that one option's current name always
+    beats another option's historical alias.
+    """
+    index: dict[str, ControlOption] = {}
+    for option in options_for(field):
+        index.setdefault(_key(option.name), option)
+    for option in options_for(field):
+        for alias in option.aliases:
+            index.setdefault(_key(alias), option)
+    return index
 
 
 def names(field: str) -> list[str]:
@@ -181,7 +273,7 @@ def find(field: str, name: object) -> ControlOption | None:
     """
     if field not in FIELD_ROWS or name in (None, "", INERT[field]):
         return None
-    return _index(field).get(str(name).strip())
+    return _index(field).get(_key(name))
 
 
 def control(field: str, name: object, crop_code: int) -> float:
@@ -199,6 +291,29 @@ def cost(field: str, name: object, crop_code: int) -> float:
 def works_on(field: str, name: object, crop_code: int) -> bool:
     """Would this choice have any effect on ryegrass in this crop?"""
     return control(field, name, crop_code) > 0.0
+
+
+def row_of(field: str, name: object) -> int | None:
+    """The Calcs row this choice is, or None if nothing is chosen.
+
+    Behaviour that depends on *which* option was picked should branch on this
+    rather than on the name. A row number is what the workbook actually keys
+    on, and it survives every rename.
+    """
+    option = find(field, name)
+    return None if option is None else option.row
+
+
+def canonical(field: str, name: object) -> str:
+    """The current display name for whatever this choice used to be called.
+
+    Resolves the workbook's abbreviation and every historical app name onto the
+    name the dropdown shows now, so a plan saved against an older vocabulary
+    still selects. Anything unrecognised comes back as the field's inert value
+    rather than a name no dropdown offers.
+    """
+    option = find(field, name)
+    return INERT[field] if option is None else option.name
 
 
 def usable_names(field: str, crop_code: int) -> list[str]:

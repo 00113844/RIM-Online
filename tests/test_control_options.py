@@ -91,14 +91,14 @@ def test_every_decision_the_registry_owns_is_on_the_strategy_sheet() -> None:
 
 def test_the_knockdown_offers_the_workbooks_three_products() -> None:
     assert co.names("knockdown") == [
-        "None", "Glyphosate", "Paraquat", "Glyphosate/Paraquat",
+        "None", "Glyphosate", "Paraquat", "Double knock-down",
     ]
 
 
 def test_the_double_knock_controls_more_than_either_single(tables) -> None:
     survival, _ = tables
     single = co.control("knockdown", "Glyphosate", WHEAT)
-    double = co.control("knockdown", "Glyphosate/Paraquat", WHEAT)
+    double = co.control("knockdown", "Double knock-down", WHEAT)
 
     assert double > single
     assert single == float(survival["55"]["by_crop_code"]["0"])
@@ -106,7 +106,7 @@ def test_the_double_knock_controls_more_than_either_single(tables) -> None:
 
 
 def test_the_double_knock_costs_more_than_either_single() -> None:
-    assert (co.cost("knockdown", "Glyphosate/Paraquat", WHEAT)
+    assert (co.cost("knockdown", "Double knock-down", WHEAT)
             > co.cost("knockdown", "Glyphosate", WHEAT)
             > co.cost("knockdown", "Paraquat", WHEAT))
 
@@ -121,9 +121,10 @@ def test_a_knockdown_costs_less_on_pasture_than_in_a_crop() -> None:
 
 
 @pytest.mark.parametrize("field, expected", [
-    ("spring_swathe", ["None", "W/o Spray", "With Spray"]),
-    ("spring_others", ["None", "Define 1st", "Define 2nd"]),
-    ("harvest_others", ["None", "B.all", "Define 1st", "Define 2nd"]),
+    ("spring_swathe", ["None", "Swathe only", "Swathe + spray"]),
+    ("spring_others", ["None", "Custom spring option 1", "Custom spring option 2"]),
+    ("harvest_others", ["None", "Whole paddock burn",
+                        "Custom harvest option 1", "Custom harvest option 2"]),
 ])
 def test_the_missing_columns_exist_and_offer_the_workbooks_options(field, expected) -> None:
     assert co.names(field) == expected
@@ -132,22 +133,22 @@ def test_the_missing_columns_exist_and_offer_the_workbooks_options(field, expect
 def test_swathing_does_nothing_on_pasture() -> None:
     """Calcs rows 87-88 are zero for crop codes 4-6: there is nothing to swathe."""
     for code in (VOLUNTEER, CLOVER, CADIZ):
-        assert not co.works_on("spring_swathe", "W/o Spray", code)
+        assert not co.works_on("spring_swathe", "Swathe only", code)
     assert product_options("spring_swathe", "Volunteer pasture") == ["None"]
 
 
 def test_spraying_the_swathe_controls_more_than_not() -> None:
-    assert co.control("spring_swathe", "With Spray", WHEAT) > \
-           co.control("spring_swathe", "W/o Spray", WHEAT)
-    assert co.cost("spring_swathe", "With Spray", WHEAT) > \
-           co.cost("spring_swathe", "W/o Spray", WHEAT)
+    assert co.control("spring_swathe", "Swathe + spray", WHEAT) > \
+           co.control("spring_swathe", "Swathe only", WHEAT)
+    assert co.cost("spring_swathe", "Swathe + spray", WHEAT) > \
+           co.cost("spring_swathe", "Swathe only", WHEAT)
 
 
 def test_burning_everything_works_on_pasture_where_a_header_does_not() -> None:
-    """B.all is on the harvest-others row precisely because it needs no header."""
-    assert co.works_on("harvest_others", "B.all", VOLUNTEER)
+    """Whole-paddock burning is on the others row because it needs no header."""
+    assert co.works_on("harvest_others", "Whole paddock burn", VOLUNTEER)
     assert product_options("harvest_option", "Volunteer pasture") == ["Standard"]
-    assert "B.all" in product_options("harvest_others", "Volunteer pasture")
+    assert "Whole paddock burn" in product_options("harvest_others", "Volunteer pasture")
 
 
 def _row(**decisions) -> dict:
@@ -160,9 +161,9 @@ def test_the_new_columns_reach_the_engine() -> None:
     def control(**decisions) -> float:
         return total_control_fraction(_row(**decisions), DEFAULT_OPTIONS, None)
 
-    assert control(spring_swathe="With Spray") > control()
-    assert control(spring_others="Define 1st") > control()
-    assert control(harvest_others="B.all") > control()
+    assert control(spring_swathe="Swathe + spray") > control()
+    assert control(spring_others="Custom spring option 1") > control()
+    assert control(harvest_others="Whole paddock burn") > control()
 
 
 def test_the_new_columns_are_paid_for() -> None:
@@ -170,10 +171,10 @@ def test_the_new_columns_are_paid_for() -> None:
         return compute_costs(_row(**decisions), DEFAULT_PRICES,
                              DEFAULT_OPTIONS, 0.0)["weed_control_cost"]
 
-    assert cost(spring_swathe="With Spray") == pytest.approx(
-        cost() + co.cost("spring_swathe", "With Spray", WHEAT))
-    assert cost(harvest_others="B.all") == pytest.approx(
-        cost() + co.cost("harvest_others", "B.all", WHEAT))
+    assert cost(spring_swathe="Swathe + spray") == pytest.approx(
+        cost() + co.cost("spring_swathe", "Swathe + spray", WHEAT))
+    assert cost(harvest_others="Whole paddock burn") == pytest.approx(
+        cost() + co.cost("harvest_others", "Whole paddock burn", WHEAT))
 
 
 # -- Nothing invented is left in the defaults ---------------------------------
@@ -203,26 +204,44 @@ def test_the_shipped_plan_is_priced_from_the_workbook() -> None:
 
 
 @pytest.mark.parametrize("field, old, new", [
+    # Version 1 counted knock-down passes; the workbook names products.
     ("knockdown", "Single knock-down", "Glyphosate"),
-    ("knockdown", "Double knock-down", "Glyphosate/Paraquat"),
-    ("spring_option", "Green manuring", "Green M."),
-    ("spring_option", "Hay & Silage", "Hay+Spray"),
-    ("harvest_option", "Narrow windrow burn", "Narr+B."),
-    ("harvest_option", "BDS", "BDS+E."),
+    ("knockdown", "DoubleK", "Double knock-down"),
+    # Version 3 briefly used the workbook's own abbreviations.
+    ("spring_option", "Green M.", "Green manuring"),
+    ("spring_option", "Hay & Silage", "Hay + spray"),
+    ("harvest_option", "Narr+B.", "Narrow windrow burn"),
+    ("harvest_option", "BDS", "Bale Direct System"),
+    ("harvest_option", "HSD", "Harrington Seed Destructor"),
+    ("pre_emergent", "Triflur+Tria", "Trifluralin + triallate"),
 ])
-def test_an_older_name_becomes_the_workbooks(field, old, new) -> None:
+def test_an_older_name_resolves_to_the_current_one(field, old, new) -> None:
     assert upgrade_row({"crop": "Wheat", field: old})[field] == new
+
+
+def test_a_name_resolves_however_it_is_cased_or_spaced() -> None:
+    """Hand-written scenario files should not fail on whitespace."""
+    assert co.canonical("pre_emergent", "  sakura ") == "Sakura"
+    assert co.canonical("harvest_option", "bale direct system") == "Bale Direct System"
+
+
+def test_every_option_answers_to_the_workbooks_own_name() -> None:
+    """The abbreviation stays a valid key, so nothing written against it breaks."""
+    for field in co.FIELDS:
+        for option in co.options_for(field):
+            assert co.find(field, option.workbook_name) is option
+            assert co.find(field, option.workbook_label) is option
 
 
 def test_choices_that_were_in_the_wrong_column_move() -> None:
     """Swathing was a spring option; burning everything was a harvest control."""
     swathed = upgrade_row({"crop": "Wheat", "spring_option": "Swathing"})
     assert swathed["spring_option"] == co.NONE
-    assert swathed["spring_swathe"] == "W/o Spray"
+    assert swathed["spring_swathe"] == "Swathe only"
 
     burnt = upgrade_row({"crop": "Wheat", "harvest_option": "Whole paddock burn"})
     assert burnt["harvest_option"] == co.STANDARD_HARVEST
-    assert burnt["harvest_others"] == "B.all"
+    assert burnt["harvest_others"] == "Whole paddock burn"
 
 
 def test_upgrading_fills_in_the_decisions_that_did_not_exist() -> None:

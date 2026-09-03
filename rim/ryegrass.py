@@ -71,30 +71,23 @@ def seed_production(
 
     These multipliers are the pre-port engine's own and have no workbook cell
     behind them; TASKS item 3 replaces the whole of this with Bio results
-    D17:D20. They are keyed by the workbook's spring vocabulary so that at
-    least the *labels* are real -- green manuring incorporates the plants before
-    they seed, so nothing sets; swathing and topping cut seed set without
-    ending it. Hay and silage are a single figure here where the workbook
-    prices and rates them separately.
+    D17:D20. They are keyed by ``Calcs`` row rather than by name, so renaming
+    an option cannot silently turn green manuring back into a full seed set.
     """
     fecundity = float(options.get("fecundity_base", 12.0))
-    spring_multiplier = {
-        "None": 1.0,
-        "Green M.": 0.0,
-        "Brown M": 0.0,
-        "Mow+Spray": 0.05,
-        "Hay+Spray": 0.10,
-        "Sil.+Spray": 0.10,
-        "Topping": 0.25,
-    }.get(spring_option, 1.0)
 
-    # Swathing is its own decision (2.Strategy row 16), not a spring option, and
-    # can be taken alongside one. Whichever cuts seed set harder governs.
-    swathe_multiplier = {
-        "None": 1.0,
-        "W/o Spray": 0.30,
-        "With Spray": 0.30,
-    }.get(spring_swathe, 1.0)
+    # Calcs 82 green manuring and 78 brown manuring incorporate the plants
+    # before they seed; 81 mowing, 83 hay and 84 silage cut most of it; 79 crop
+    # topping sterilises some of the heads.
+    by_row = {82: 0.0, 78: 0.0, 81: 0.05, 83: 0.10, 84: 0.10, 79: 0.25}
+
+    spring_row = control_options.row_of("spring_option", spring_option)
+    spring_multiplier = by_row.get(spring_row, 1.0)
+
+    # Swathing is its own decision (2.Strategy row 16) and can be taken
+    # alongside a spring option. Whichever cuts seed set harder governs.
+    swathe_row = control_options.row_of("spring_swathe", spring_swathe)
+    swathe_multiplier = 0.30 if swathe_row in (87, 88) else 1.0
 
     competition_effect = 1.0 - crop_competition_strength(crop)
     return max(

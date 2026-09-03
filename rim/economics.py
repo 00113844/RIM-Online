@@ -29,15 +29,18 @@ def harvest_machine_cost(decision: dict, repayments: dict) -> float:
     # 2.Strategy row 18 now carries the workbook's own labels; these are the
     # machinery-repayment keys they correspond to. Burning everything moved to
     # the harvest-others row and buys no machinery, so it is not here.
-    map_key = {
-        "HSD": "HSD",
-        "BDS+E.": "BDS",
-        "Cart+B.": "Chaff cart",
-        "Tram.": "Chaff tramlining",
-        "Narr+B.": "Narrow windrow",
-        "Standard": "Standard harvest reference",
+    # Calcs row -> the machinery this harvest system needs a repayment for.
+    # Keyed by row, not by name: +Prices names the machines and 2.Strategy names
+    # the operations, and the two need not agree forever.
+    by_row = {
+        89: "Chaff cart",
+        90: "Narrow windrow",
+        91: "HSD",
+        92: "Chaff tramlining",
+        94: "BDS",
     }
-    key = map_key.get(decision.get("harvest_option", "Standard"), "Standard harvest reference")
+    row = control_options.row_of("harvest_option", decision.get("harvest_option"))
+    key = by_row.get(row, "Standard harvest reference")
     return float(repayments.get(key, 0.0))
 
 
@@ -51,8 +54,9 @@ def compute_revenue(decision: dict, yield_t_ha: float, profile: dict, prices: di
 
     if "pasture" in crop.lower():
         livestock_income = stocking_dse * float(profile.get("sheep_gm_per_dse", 50.0))
-        # Calcs rows 83 and 84 -- the workbook prices hay and silage separately.
-        if decision.get("spring_option") in ("Hay+Spray", "Sil.+Spray"):
+        # Calcs rows 83 and 84 -- hay and silage, which the workbook prices
+        # separately. Keyed by row so a rename cannot lose the income.
+        if control_options.row_of("spring_option", decision.get("spring_option")) in (83, 84):
             pasture_income = yield_t_ha * float(prices.get("Hay", 0.0))
     else:
         grain_income = yield_t_ha * crop_price

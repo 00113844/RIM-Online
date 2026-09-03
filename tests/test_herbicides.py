@@ -40,7 +40,8 @@ def table() -> dict:
 def test_the_products_are_read_from_the_generated_table(table) -> None:
     for product in herbicides.pre_emergents() + herbicides.post_emergents():
         label = table[str(product.row)]["label"]
-        assert label.endswith(product.name), f"row {product.row}: {label}"
+        assert label == product.workbook_label, f"row {product.row}: {label}"
+        assert label.endswith(product.workbook_name), f"row {product.row}: {label}"
         assert product.control == {
             int(code): float(value)
             for code, value in table[str(product.row)]["by_crop_code"].items()

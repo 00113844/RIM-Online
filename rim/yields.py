@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from rim import control_options
+
 import math
 
 
@@ -80,7 +82,7 @@ def compute_actual_yield(
 
     # Determine if previous crop was green-manured legume
     green_manured = (
-        previous_spring_option in ("Green M.",)
+        control_options.row_of("spring_option", previous_spring_option) == 82
         and _is_legume(previous_crop or "")
     )
     rot_factor = rotation_factor(crop, previous_crop, options, green_manured)

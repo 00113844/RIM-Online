@@ -298,11 +298,12 @@ def freeze_results(slot: str) -> None:
 # helpers are the only way to keep work beyond a session.
 
 # 2 named the herbicides and split post_emergent into the workbook's three
-# slots. 3 put every weed-control decision into the workbook's own vocabulary
-# and added the three decisions RIM has that the app lacked -- spring swathe,
-# spring others, harvest others. Older files still load:
-# rim.herbicides.upgrade_strategy carries them across.
-SAVE_FORMAT_VERSION = 3
+# slots. 3 added the three decisions RIM has that the app lacked -- spring
+# swathe, spring others, harvest others. 4 gave every option a readable name in
+# place of the workbook's abbreviation. Older files still load, and always
+# will: every name any version used is an alias in rim.control_options, so
+# rim.herbicides.upgrade_strategy resolves rather than translates.
+SAVE_FORMAT_VERSION = 4
 
 
 def export_bundle() -> dict:

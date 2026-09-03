@@ -15,7 +15,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from rim.herbicides import NONE as HERBICIDE_NONE
+from rim import control_options
 
 # 2.Strategy row 4 label -> the crop name rim/options.py uses.
 CROP_LABELS: dict[str, str] = {
@@ -62,27 +62,17 @@ def _present(value: Any) -> bool:
     return value is not None and str(value).strip() != ""
 
 
-# 2.Strategy's dropdown (P70:P95) abbreviates one name that the control table
-# (Calcs!B55:B97) spells out. Everything else matches, so only the exception is
-# listed; an unrecognised label is passed through rather than silently dropped.
-STRATEGY_PRODUCT_LABELS: dict[str, str] = {
-    "Triflur+Tria": "Triflur+Triallate",
-    "DoubleK": "Glyphosate/Paraquat",
-    "Green man.": "Green M.",
-    "Brown man.": "Brown M",
-    "Hay": "Hay+Spray",
-    "Silage": "Sil.+Spray",
-    "Mowing": "Mow+Spray",
-    "Burn": "B.all",
-}
+def _option(field: str, value: Any) -> str:
+    """A weed-control cell on 2.Strategy, as the app names that option.
 
-
-def _product(value: Any) -> str:
-    """A herbicide cell on 2.Strategy, as the app names the product."""
+    The strategy sheet's dropdowns abbreviate differently from the control table
+    -- "Triflur+Tria" against "Triflur+Triallate", "Green man." against
+    "Green M." -- and both are aliases in rim.control_options, so resolving is
+    the same lookup the app uses everywhere else rather than a table kept here.
+    """
     if not _present(value):
-        return HERBICIDE_NONE
-    text = str(value).strip()
-    return STRATEGY_PRODUCT_LABELS.get(text, text)
+        return control_options.INERT[field]
+    return control_options.canonical(field, value)
 
 
 def translate_year(excel_row: dict[str, Any]) -> dict[str, Any]:
@@ -107,19 +97,17 @@ def translate_year(excel_row: dict[str, Any]) -> dict[str, Any]:
         # rated and priced per crop, so these carry across as they are rather
         # than collapsing into names of ours. 2.Strategy rows 7, 8, 11-13,
         # 15-19.
-        "knockdown": _product(excel_row.get("knock_down")),
-        "pre_emergent": _product(excel_row.get("pre_emergent")),
-        **{f"post_emergent_{i}": _product(excel_row.get(f"post_emergent_{i}"))
+        "knockdown": _option("knockdown", excel_row.get("knock_down")),
+        "pre_emergent": _option("pre_emergent", excel_row.get("pre_emergent")),
+        **{f"post_emergent_{i}": _option(f"post_emergent_{i}",
+                                         excel_row.get(f"post_emergent_{i}"))
            for i in (1, 2, 3)},
-        "spring_option": _product(spring_raw),
-        "spring_swathe": _product(excel_row.get("spring_swathe")),
-        "spring_others": _product(excel_row.get("spring_others")),
-        "harvest_others": _product(excel_row.get("harvest_others")),
+        "spring_option": _option("spring_option", spring_raw),
+        "spring_swathe": _option("spring_swathe", excel_row.get("spring_swathe")),
+        "spring_others": _option("spring_others", excel_row.get("spring_others")),
+        "harvest_others": _option("harvest_others", excel_row.get("harvest_others")),
         "grazing_intensity": str(excel_row.get("grazing_intensity") or "None").strip(),
-        "harvest_option": (
-            _product(excel_row.get("harvest_crops"))
-            if _present(excel_row.get("harvest_crops")) else "Standard"
-        ),
+        "harvest_option": _option("harvest_option", excel_row.get("harvest_crops")),
     }
 
 
