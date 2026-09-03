@@ -23,8 +23,9 @@ def _year(**overrides) -> dict:
     base = {
         "year": 1, "crop": "Wheat", "seeding_timing": "Dry",
         "seeding_technique": "No-till", "seeding_rate": "Standard",
-        "pre_tillage": "None", "knockdown": "None", "pre_emergent": "No",
-        "post_emergent": "No", "spring_option": "None",
+        "pre_tillage": "None", "knockdown": "None", "pre_emergent": "None",
+        "post_emergent_1": "None", "post_emergent_2": "None",
+        "post_emergent_3": "None", "spring_option": "None",
         "grazing_intensity": "None", "harvest_option": "Standard",
     }
     base.update(overrides)
@@ -52,10 +53,10 @@ def test_a_settled_plan_survives_an_editor_round_trip() -> None:
     """If this ever changes a clean plan, the page starts rerunning forever."""
     plan = [
         _year(year=1, crop="Wheat", seeding_timing="Delayed (1-2 wks)",
-              knockdown="Single knock-down", pre_emergent="Yes",
+              knockdown="Single knock-down", pre_emergent="Sakura",
               harvest_option="Narrow windrow burn"),
         _year(year=2, crop="Sub-Clover pasture", grazing_intensity="Standard"),
-        _year(year=3, crop="Canola", post_emergent="Yes"),
+        _year(year=3, crop="Canola", post_emergent_1="Clethodim"),
     ]
 
     assert _apply_gates(plan) == plan
@@ -74,7 +75,7 @@ def test_the_round_trip_settles_in_one_pass() -> None:
     """A plan with problems must reach a fixed point immediately, not oscillate."""
     plan = [
         _year(year=1, crop="Canola", grazing_intensity="High"),
-        _year(year=2, crop="Volunteer pasture", harvest_option="HSD", pre_emergent="Yes"),
+        _year(year=2, crop="Volunteer pasture", harvest_option="HSD", pre_emergent="Triazine"),
     ]
 
     once = _apply_gates(plan)
@@ -114,7 +115,8 @@ def test_the_year_editor_covers_every_decision_the_grid_does() -> None:
     """Switching modes must not lose a decision that only one view can reach."""
     grid_fields = {
         "seeding_timing", "seeding_technique", "seeding_rate", "pre_tillage",
-        "knockdown", "pre_emergent", "post_emergent",
+        "knockdown", "pre_emergent",
+        "post_emergent_1", "post_emergent_2", "post_emergent_3",
         "spring_option", "grazing_intensity", "harvest_option",
     }
     year_fields = {field for _group, fields in GROUPS for field, _label, _opts in fields}

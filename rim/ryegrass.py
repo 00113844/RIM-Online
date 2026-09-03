@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+from rim import herbicides
+from rim.rotation import app_crop_code
+
 
 def _combined_fraction(parts: list[float]) -> float:
     remaining = 1.0
@@ -18,13 +21,22 @@ def total_control_fraction(decision: dict, options: dict, years_since_mouldboard
     if pre_tillage_name == "Mouldboard plough" and years_since_mouldboard is not None and years_since_mouldboard < 3:
         pre_tillage_control = 0.30
 
+    # A herbicide's effect depends on the crop it goes into -- Topik takes 90%
+    # of the ryegrass in wheat and nothing in canola -- so it comes from the
+    # workbook's per-crop table rather than a flat rate in `options`. The three
+    # post-emergent slots are 2.Strategy rows 11-13.
+    crop_code = app_crop_code(decision.get("crop", "Wheat"))
+
     parts = [
         pre_tillage_control,
         control.get("knockdown", {}).get(decision.get("knockdown", "None"), 0.0),
-        control.get("pre_emergent", {}).get(decision.get("pre_emergent", "No"), 0.0),
-        control.get("post_emergent", {}).get(decision.get("post_emergent", "No"), 0.0),
+        herbicides.control(decision.get("pre_emergent"), crop_code, slot="pre"),
         control.get("spring", {}).get(decision.get("spring_option", "None"), 0.0),
         control.get("harvest", {}).get(decision.get("harvest_option", "Standard"), 0.0),
+    ]
+    parts += [
+        herbicides.control(decision.get(field), crop_code, slot="post")
+        for field in herbicides.POST_EMERGENT_FIELDS
     ]
 
     if decision.get("seeding_technique") == "Full-cut (wide points)":

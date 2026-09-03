@@ -24,8 +24,9 @@ def _year(**overrides) -> dict:
     base = {
         "year": 1, "crop": "Wheat", "seeding_timing": "Dry",
         "seeding_technique": "No-till", "seeding_rate": "Standard",
-        "pre_tillage": "None", "knockdown": "None", "pre_emergent": "No",
-        "post_emergent": "No", "spring_option": "None",
+        "pre_tillage": "None", "knockdown": "None", "pre_emergent": "None",
+        "post_emergent_1": "None", "post_emergent_2": "None",
+        "post_emergent_3": "None", "spring_option": "None",
         "grazing_intensity": "None", "harvest_option": "Standard",
     }
     base.update(overrides)
@@ -89,7 +90,7 @@ def test_knockdown_is_gated_by_dry_or_wet_sowing() -> None:
 
 def test_unsown_pasture_ignores_seeding_and_pre_emergent() -> None:
     """2.Strategy!D66 — volunteer pasture regenerates, it is never sown."""
-    plan = [_year(crop="Volunteer pasture", pre_emergent="Yes", seeding_rate="High")]
+    plan = [_year(crop="Volunteer pasture", pre_emergent="Triazine", seeding_rate="High")]
 
     # All four seeding-related decisions are gated, so the editor disables them.
     blocked = gates(plan)[0]
@@ -104,8 +105,8 @@ def test_first_year_of_clover_is_sown_so_pre_emergent_counts() -> None:
     """A clover phase is re-sown in its first year, then regenerates."""
     plan = [
         _year(year=1, crop="Wheat"),
-        _year(year=2, crop="Sub-Clover pasture", pre_emergent="Yes"),
-        _year(year=3, crop="Sub-Clover pasture", pre_emergent="Yes"),
+        _year(year=2, crop="Sub-Clover pasture", pre_emergent="Triazine"),
+        _year(year=3, crop="Sub-Clover pasture", pre_emergent="Triazine"),
     ]
     findings = ineffective_choices(plan)
     flagged = {f["year"] for f in findings if f["field"] == "Pre-emergent"}
@@ -134,7 +135,7 @@ def test_standard_harvest_is_not_flagged() -> None:
 def test_a_clean_plan_raises_nothing() -> None:
     findings = ineffective_choices([
         _year(year=1, crop="Wheat", seeding_timing="Delayed (1-2 wks)",
-              knockdown="Single knock-down", pre_emergent="Yes",
+              knockdown="Single knock-down", pre_emergent="Sakura",
               harvest_option="Narrow windrow burn"),
     ])
 
@@ -153,14 +154,14 @@ def test_neutralise_leaves_no_impossible_value_behind() -> None:
     """The grid cannot disable a cell, so the plan is cleaned after every edit."""
     plan = [
         _year(year=1, crop="Canola", grazing_intensity="Standard"),
-        _year(year=2, crop="Volunteer pasture", harvest_option="HSD", pre_emergent="Yes"),
+        _year(year=2, crop="Volunteer pasture", harvest_option="HSD", pre_emergent="Triazine"),
     ]
 
     cleaned, changes = neutralise(plan)
 
     assert cleaned[0]["grazing_intensity"] == "None"
     assert cleaned[1]["harvest_option"] == "Standard"
-    assert cleaned[1]["pre_emergent"] == "No"
+    assert cleaned[1]["pre_emergent"] == "None"
     assert len(changes) == 3
     # Running it again finds nothing left to clear.
     assert neutralise(cleaned)[1] == []

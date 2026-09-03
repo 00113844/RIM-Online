@@ -1,60 +1,58 @@
 # Outstanding work
 
-Ordered by what unblocks what. Status as of 2026-09-02, branch `main`.
+Ordered by what unblocks what. Status as of 2026-09-03, branch `main`.
 
 Background: [`ARCHITECTURE.md`](ARCHITECTURE.md) · Rules: [`CLAUDE.md`](CLAUDE.md) ·
 Port status: [`.claude/memory/engine-port-status.md`](.claude/memory/engine-port-status.md)
 
 ---
 
-## 1. Product-level vocabulary — the keystone
+## 1. Product-level vocabulary — herbicides named, knock-down still generic
 
-**Why first:** almost everything else below is blocked on it, and it is the largest
-single gap between the app and the workbook.
+**Done 2026-09-03.** Pre- and post-emergent herbicides are named, and each one's
+effect is read per crop from `Calcs!N54:T97` via `data/calcs_survival_table.json`
+(`rim/herbicides.py`). The single post-emergent boolean became the workbook's three
+slots, `2.Strategy` rows 11-13. Flat invented rates -- pre-em 0.45, post-em 0.50 --
+are gone from `rim/defaults.py`.
 
-The strategy editor still offers invented generic options where Excel names products,
-each with its own cost and control rate per crop category:
-
-| Decision | Excel | App today |
+| Decision | Excel | App |
 |---|---|---|
+| Pre-emergent | 5 named products | **5 named products** |
+| Post-emergent | 5 named products across **3 slots** | **5 products, 3 slots** |
 | Knock-down | Glyphosate, Paraquat, DoubleK | None / Single / Double |
-| Pre-emergent | 5 named products | Yes / No |
-| Post-emergent | 5 named products across **3 slots** | Yes / No, **1 slot** |
 | Spring — swathe | W/o Spray, With Spray | column missing |
 | Spring — others | Define 1st, Define 2nd | column missing |
 | Harvest — others | B.all, Define 1st, Define 2nd | column missing |
 
-So 13 named herbicides collapse to five generic choices, three post-emergent slots to
-one, and three whole columns do not exist. Excel also lets a user define two custom
-spring and two custom harvest options; those are absent entirely.
+**What is left**
 
-**The work**
-- Replace `rim/options.py`'s invented lists with the workbook's own, loaded from the
-  already-generated `data/strategy_vocabulary.json`.
-- Add `post_emergent_1/2/3`, `spring_swathe`, `spring_others`, `harvest_others` to the
-  strategy dict and to `pages/2_Strategy.py`.
-- Migrate saved strategies in `utils/session.py` and in the `.rim.json` save format
-  (bump `SAVE_FORMAT_VERSION`, keep reading version 1).
-- Retire `rim/excel_inputs.py`'s lossy adapter as its `TRANSLATION_LOSSES` entries
-  become representable.
+- Knock-down products. Rows 55-57 hold Glyphosate 0.95, Paraquat 0.95 and
+  Glyphosate/Paraquat 1.00; the app still offers Single/Double against invented
+  0.55/0.75. Same shape as the work just done, so it is now small.
+- The three missing columns (`spring_swathe`, `spring_others`, `harvest_others`)
+  and RIM's two user-definable spring and two harvest options.
+- Per-product **costs**. Control now comes from the workbook; cost is still a flat
+  sprayer pass per application (`rim/economics.py`), where `Calcs!N105:T147` prices
+  each product separately. Note the column-swap trap recorded in item 4.
 
 ---
 
-## 2. Per-product applicability rules
+## 2. ~~Per-product applicability rules~~ — DONE for herbicides
 
-**Blocked by 1.** `utils/applicability.py` currently gates at the coarsest level the
-generic vocabulary allows. With named products the same machinery gets precise, using
-`data/calcs_survival_table.json`, where a control of 0 for a crop means the product
-does nothing:
+Done 2026-09-03 alongside item 1. A control of 0 in `data/calcs_survival_table.json`
+means the product does nothing on that crop, and the app now reads it that way:
 
 - Topik and Hussar do nothing on canola, legume or any pasture.
 - Clethodim and post-emergent Glyphosate work only on canola and legume.
 - Post-emergent Paraquat works only on pastures.
 - Triflur+Triallate and Sakura do nothing on pasture; Triazine does.
 
-Each becomes a `gates()` rule and a disabled control in `utils/year_editor.py`. Extend
-`tests/test_applicability.py` the same way — every rule re-checks the generated data it
-depends on, so a rule cannot outlive its evidence.
+`utils.applicability.product_options` narrows the year editor's dropdown to what works,
+and `product_mismatch` catches a choice arriving from the grid, which cannot vary its
+options per row. `tests/test_herbicides.py` re-reads the generated table for every rule.
+
+Outstanding only for the decisions item 1 has not reached yet — knock-down products and
+the three missing columns.
 
 ---
 
@@ -162,6 +160,8 @@ to check the app against a fixture, not just a convenience.
 - Work can be saved to and loaded from a `.rim.json` file.
 - `data/extracted_RIM_Excel_Information/` — how the model works, and the coverage audit.
 - `ROADMAP.md` rewritten as the delivery roadmap.
+- Named herbicides: five pre-emergent and five post-emergent products, rated per
+  crop from the workbook, across its three post-emergent slots.
 - Scenario export carries its inputs, not only its results (`utils/export.py`).
 - Profile slots save the farm on screen, and say which farm they hold. The page
   no longer batches its fields behind `st.form`; see

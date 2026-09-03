@@ -4,6 +4,7 @@ import numpy_financial as npf
 import pandas as pd
 
 from rim.economics import compute_costs, compute_revenue, harvest_machine_cost, machinery_repayment_per_ha
+from rim.herbicides import upgrade_strategy
 from rim.ryegrass import seed_production, survivors_from_germinated, total_control_fraction
 from rim.seed_bank import germinate, germination_rate_for_context, replenish_seed_bank
 from rim.yields import compute_actual_yield
@@ -42,6 +43,12 @@ def simulate_strategy(profile: dict, prices: dict, options: dict, strategy_rows:
         interest_rate_pct=float(profile.get("interest_rate_pct", 6.0)),
         farm_area_ha=float(profile.get("farm_area_ha", profile.get("farm_size_ha", 1000.0))),
     )
+
+    # Strategy rows written before herbicides had names still arrive here --
+    # from an old save file, or a parity fixture captured against the earlier
+    # schema. Upgrading them is better than reading their "Yes" as an unknown
+    # product and silently applying no control at all.
+    strategy_rows = upgrade_strategy(list(strategy_rows))
 
     rows = []
     for i, decision in enumerate(strategy_rows, start=1):

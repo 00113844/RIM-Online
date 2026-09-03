@@ -22,15 +22,9 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
+from rim import herbicides
 from rim.activation import is_sown
-from rim.excel_inputs import CROP_LABELS
-from rim.rotation import CROP_CODE
-
-# The app's crop labels back to the workbook's crop codes.
-_APP_LABEL_TO_CODE = {
-    app_label: CROP_CODE[workbook_label]
-    for workbook_label, app_label in CROP_LABELS.items()
-}
+from rim.rotation import app_crop_code
 
 FIRST_PASTURE_CROP_CODE = 4
 
@@ -42,8 +36,8 @@ NO_GAP_SOWING = {"Dry", "Wet"}
 # "off": the model simply does not read it, so it is left as it is.
 INERT_VALUE: dict[str, str | None] = {
     "knockdown": "None",
-    "pre_emergent": "No",
-    "post_emergent": "No",
+    "pre_emergent": herbicides.NONE,
+    **{field: herbicides.NONE for field in herbicides.POST_EMERGENT_FIELDS},
     "grazing_intensity": "None",
     "harvest_option": "Standard",
     "seeding_technique": None,
@@ -59,7 +53,9 @@ FIELD_LABEL = {
     "pre_tillage": "Tillage",
     "knockdown": "Knock-down",
     "pre_emergent": "Pre-emergent",
-    "post_emergent": "Post-emergent",
+    "post_emergent_1": "Post-emergent 1",
+    "post_emergent_2": "Post-emergent 2",
+    "post_emergent_3": "Post-emergent 3",
     "spring_option": "Spring option",
     "grazing_intensity": "Grazing",
     "harvest_option": "Harvest control",
@@ -68,6 +64,7 @@ FIELD_LABEL = {
 SOURCE = {
     "knockdown": "2.Strategy!D65",
     "pre_emergent": "2.Strategy!D66",
+    **{field: "Calcs rows 71-75" for field in herbicides.POST_EMERGENT_FIELDS},
     "seeding_technique": "2.Strategy!D66",
     "seeding_rate": "2.Strategy!D66",
     "seeding_timing": "2.Strategy!D66",
@@ -87,7 +84,60 @@ def _chosen(field: str, value: Any) -> bool:
 
 
 def crop_code(label: Any) -> int:
-    return _APP_LABEL_TO_CODE.get(str(label).strip(), 0)
+    return app_crop_code(label)
+
+
+HERBICIDE_SLOT = {"pre_emergent": "pre",
+                  **{field: "post" for field in herbicides.POST_EMERGENT_FIELDS}}
+
+
+def product_options(field: str, crop: Any) -> list[str]:
+    """The products worth offering for this field in this crop.
+
+    Calcs rows 58-62 and 71-75 hold 0 where a product does nothing to ryegrass
+    in a crop, so those products are left out of the list rather than offered
+    and quietly ignored. "None" is always there; a crop with no working product
+    is left with only that, which is the workbook's answer.
+    """
+    slot = HERBICIDE_SLOT[field]
+    products = (herbicides.pre_emergents() if slot == "pre"
+                else herbicides.post_emergents())
+    code = crop_code(crop)
+    return [herbicides.NONE] + [p.name for p in products if p.works_on(code)]
+
+
+def product_mismatch(row: dict, code: int) -> dict[str, str]:
+    """Herbicides chosen here that do nothing to ryegrass in this crop.
+
+    Calcs rows 58-62 and 71-75 hold 0 where a product has no effect on a crop.
+    Topik and Hussar are grass-selective cereal herbicides and read 0 on canola,
+    legume and every pasture; Clethodim and post-emergent Glyphosate are the
+    other way round; post-emergent Paraquat works only on pasture. Spraying one
+    of those is not a cheaper choice -- it is a cost with no effect.
+
+    Kept separate from the structural gates because the right answer differs.
+    A pre-emergent on an unsown pasture is impossible and the control should be
+    switched off; the wrong product is merely the wrong pick, and the control
+    should stay live with the products that do work.
+    """
+    out: dict[str, str] = {}
+    for field, slot in HERBICIDE_SLOT.items():
+        chosen = row.get(field)
+        if not _chosen(field, chosen):
+            continue
+        if not herbicides.works_on(chosen, code, slot=slot):
+            out[field] = (
+                f"{str(chosen).strip()} does nothing to ryegrass in "
+                f"{str(row.get('crop', '')).strip().lower()} — the workbook "
+                f"rates its control at zero for this crop."
+            )
+    return out
+
+
+def product_mismatches(strategy_rows: Iterable[dict]) -> list[dict[str, str]]:
+    """:func:`product_mismatch` for each year of a plan."""
+    return [product_mismatch(row, crop_code(row.get("crop")))
+            for row in strategy_rows]
 
 
 def gates(strategy_rows: Iterable[dict]) -> list[dict[str, str]]:
@@ -144,6 +194,9 @@ def gates(strategy_rows: Iterable[dict]) -> list[dict[str, str]]:
                 "Pasture is not harvested, so there is no chaff for weed seed "
                 "control to treat."
             )
+
+        for field, reason in product_mismatch(row, code).items():
+            blocked.setdefault(field, reason)
 
         out.append(blocked)
 

@@ -11,6 +11,8 @@ what you typed.
 """
 from __future__ import annotations
 
+from functools import partial
+
 import streamlit as st
 
 from rim.options import (
@@ -23,9 +25,19 @@ from rim.options import (
     SEEDING_TECHNIQUE_OPTIONS,
     SEEDING_TIMING_OPTIONS,
     SPRING_OPTIONS,
-    YES_NO_OPTIONS,
 )
-from utils.applicability import INERT_VALUE, gates
+from rim.herbicides import NONE as NO_SPRAY, POST_EMERGENT_FIELDS
+from utils.applicability import (
+    INERT_VALUE,
+    gates,
+    product_mismatches,
+    product_options,
+)
+
+def _for_crop(field: str, row: dict) -> list[str]:
+    """The products worth offering for ``field`` in this row's crop."""
+    return product_options(field, row.get("crop"))
+
 
 # Grouped the way the season runs, not the way the columns happen to sit.
 GROUPS: tuple[tuple[str, tuple[tuple[str, str, list], ...]], ...] = (
@@ -35,10 +47,17 @@ GROUPS: tuple[tuple[str, tuple[tuple[str, str, list], ...]], ...] = (
         ("seeding_rate", "Sowing rate", SEEDING_RATE_OPTIONS),
         ("pre_tillage", "Tillage", PRE_TILLAGE_OPTIONS),
     )),
+    # Herbicide choices are given as a function of the row, not a fixed list:
+    # which products are worth offering depends on the year's crop, and a
+    # product the workbook rates at zero for that crop is left out rather than
+    # offered and quietly ignored. See utils.applicability.product_options.
     ("Weed control", (
         ("knockdown", "Knock-down", KNOCKDOWN_OPTIONS),
-        ("pre_emergent", "Pre-emergent", YES_NO_OPTIONS),
-        ("post_emergent", "Post-emergent", YES_NO_OPTIONS),
+        ("pre_emergent", "Pre-emergent", partial(_for_crop, "pre_emergent")),
+    )),
+    ("Post-emergent sprays", tuple(
+        (field, f"Spray {n}", partial(_for_crop, field))
+        for n, field in enumerate(POST_EMERGENT_FIELDS, start=1)
     )),
     ("Spring and harvest", (
         ("spring_option", "Spring option", SPRING_OPTIONS),
@@ -107,12 +126,23 @@ def year_editor(rows: list[dict], key: str = "year_editor") -> list[dict]:
         rows[picked] = row
         blocked = gates(rows)[picked]
 
+        # A product that does nothing in this year's crop is dropped and the
+        # control left live, its options already narrowed to what works. Change
+        # wheat to canola and the post-emergent should offer Clethodim, not go
+        # dead because Topik was in the box. The grid cannot do this -- it has
+        # one option list for the whole column -- so there the mismatch stays a
+        # gate, reported and cleared by utils.validation.
+        for field in product_mismatches(rows)[picked]:
+            row[field] = NO_SPRAY
+            blocked.pop(field, None)
+
         st.markdown(
             f'<div class="rim-section" style="margin-top:1.1rem">{group}</div>',
             unsafe_allow_html=True,
         )
         columns = st.columns(len(fields))
         for column, (field, label, options) in zip(columns, fields):
+            choices = options(row) if callable(options) else options
             reason = blocked.get(field)
             with column:
                 if reason:
@@ -134,8 +164,8 @@ def year_editor(rows: list[dict], key: str = "year_editor") -> list[dict]:
                 else:
                     row[field] = st.selectbox(
                         label,
-                        options=options,
-                        index=_index(options, row.get(field)),
+                        options=choices,
+                        index=_index(choices, row.get(field)),
                         key=f"{key}_{field}_{picked}",
                     )
 

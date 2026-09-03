@@ -60,16 +60,17 @@ Needs a translation from the app's strategy dicts to the workbook's own labels.
 **Done when:** `pytest -q` is fully green and the Population page shows the seed bank
 actually collapsing under a real herbicide programme.
 
-### Phase 2 — Product-level vocabulary
+### Phase 2 — Product-level vocabulary *(part landed)*
 
-The strategy editor offers generic options where the workbook names products: 13 named
-herbicides collapse to five choices, three post-emergent slots to one, and three decision
-rows (spring swathe, spring others, harvest others) do not exist. RIM's two user-definable
-spring and two harvest options are absent entirely.
+The strategy editor offered generic options where the workbook names products. As of
+2026-09-03 the herbicides that matter most are named: five pre-emergent and five
+post-emergent products, each rated per crop from `Calcs!N54:T97`, across the workbook's
+three post-emergent slots. Two of the six `TRANSLATION_LOSSES` entries are gone.
 
-The engine already works in workbook-native labels, so this is a UI and schema change, not a
-model change. It unlocks per-product costs, per-product gating in the year editor, and
-retires `rim/excel_inputs.py`.
+Still generic: knock-down products (Glyphosate / Paraquat / DoubleK), the three missing
+decision rows (spring swathe, spring others, harvest others), and RIM's two user-definable
+spring and two harvest options. Per-product *costs* are also outstanding — control now
+comes from the workbook while cost is still a flat sprayer pass.
 
 **Done when:** every option in `data/strategy_vocabulary.json` is selectable, and
 `TRANSLATION_LOSSES` is empty.

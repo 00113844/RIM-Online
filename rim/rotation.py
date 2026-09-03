@@ -41,6 +41,26 @@ CROP_CODE: dict[str, int] = {
     "Cadiz": 6,
 }
 
+# The app spells its crops out ("Volunteer pasture" where the workbook writes
+# "Volunt."), so anything holding a strategy row needs this map rather than
+# CROP_CODE. Looking an app label up in CROP_CODE silently returns Wheat, which
+# is wrong in a way nothing complains about.
+APP_CROP_CODE: dict[str, int] = {
+    "Wheat": 0,
+    "Barley": 1,
+    "Canola": 2,
+    "Legume crop": 3,
+    "Volunteer pasture": 4,
+    "Sub-Clover pasture": 5,
+    "Cadiz pasture": 6,
+}
+
+
+def app_crop_code(label: object, default: int = 0) -> int:
+    """The crop code for a strategy row's ``crop``, which uses app labels."""
+    return APP_CROP_CODE.get(str(label).strip(), default)
+
+
 # Calcs!C184/D184 -- paddock history uses single letters, not full labels.
 HISTORY_CODE: dict[str, int] = {
     "w": 0, "b": 1, "c": 2, "l": 3, "v": 4, "s": 5, "z": 6,

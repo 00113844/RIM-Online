@@ -16,8 +16,9 @@ def _year(**overrides) -> dict:
     base = {
         "year": 1, "crop": "Wheat", "seeding_timing": "Dry",
         "seeding_technique": "No-till", "seeding_rate": "Standard",
-        "pre_tillage": "None", "knockdown": "None", "pre_emergent": "No",
-        "post_emergent": "No", "spring_option": "None",
+        "pre_tillage": "None", "knockdown": "None", "pre_emergent": "None",
+        "post_emergent_1": "None", "post_emergent_2": "None",
+        "post_emergent_3": "None", "spring_option": "None",
         "grazing_intensity": "None", "harvest_option": "Standard",
     }
     base.update(overrides)
@@ -27,7 +28,7 @@ def _year(**overrides) -> dict:
 def test_a_consistent_plan_opens_the_gate() -> None:
     plan = [
         _year(year=1, crop="Wheat", seeding_timing="Delayed (1-2 wks)",
-              knockdown="Single knock-down", pre_emergent="Yes",
+              knockdown="Single knock-down", pre_emergent="Sakura",
               harvest_option="Narrow windrow burn"),
         _year(year=2, crop="Sub-Clover pasture", grazing_intensity="Standard"),
     ]
@@ -66,7 +67,7 @@ def test_every_problem_has_a_remedy_to_show() -> None:
     """The panel tells the user what to do, so no field may fall through."""
     plan = [
         _year(year=1, crop="Canola", grazing_intensity="Standard"),
-        _year(year=2, crop="Volunteer pasture", harvest_option="HSD", pre_emergent="Yes"),
+        _year(year=2, crop="Volunteer pasture", harvest_option="HSD", pre_emergent="Triazine"),
         _year(year=3, crop="Wheat", knockdown="Single knock-down"),
     ]
 

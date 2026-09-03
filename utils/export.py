@@ -53,7 +53,8 @@ from utils.applicability import FIELD_LABEL  # noqa: E402  (kept near its use)
 # The strategy grid, in the order the editor shows it.
 STRATEGY_COLUMNS = (
     "year", "crop", "seeding_timing", "seeding_technique", "seeding_rate",
-    "pre_tillage", "knockdown", "pre_emergent", "post_emergent",
+    "pre_tillage", "knockdown", "pre_emergent",
+    "post_emergent_1", "post_emergent_2", "post_emergent_3",
     "spring_option", "grazing_intensity", "harvest_option",
 )
 

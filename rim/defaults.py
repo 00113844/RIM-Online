@@ -98,14 +98,11 @@ DEFAULT_OPTIONS = {
             "Single knock-down": 0.55,
             "Double knock-down": 0.75,
         },
-        "pre_emergent": {
-            "No": 0.00,
-            "Yes": 0.45,
-        },
-        "post_emergent": {
-            "No": 0.00,
-            "Yes": 0.50,
-        },
+        # Pre- and post-emergent control is no longer a flat rate here. Each
+        # product has its own effect, and it differs per crop, so it is read
+        # from the workbook's own table -- rim/herbicides.py, Calcs rows 58-62
+        # and 71-75. Leaving invented numbers here would have them silently
+        # disagree with the table.
         "spring": {
             "None": 0.00,
             "Green manuring": 1.00,
@@ -182,8 +179,13 @@ DEFAULT_STRATEGY_ROW = {
     "seeding_rate": "Standard",
     "pre_tillage": "None",
     "knockdown": "None",
-    "pre_emergent": "Yes",
-    "post_emergent": "Yes",
+    # The first product the workbook lists that works in wheat, for each slot
+    # (Calcs rows 58 and 71). The shipped plan sprayed both before products
+    # existed; naming them keeps that intent and makes the rate a real one.
+    "pre_emergent": "Triflur+Triallate",
+    "post_emergent_1": "Topik",
+    "post_emergent_2": "None",
+    "post_emergent_3": "None",
     "spring_option": "None",
     "grazing_intensity": "None",
     "harvest_option": "Standard",

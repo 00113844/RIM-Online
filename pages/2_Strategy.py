@@ -16,7 +16,8 @@ from rim.options import (
     SEEDING_TECHNIQUE_OPTIONS,
     SEEDING_TIMING_OPTIONS,
     SPRING_OPTIONS,
-    YES_NO_OPTIONS,
+    PRE_EMERGENT_OPTIONS,
+    POST_EMERGENT_OPTIONS,
 )
 from utils.charts import gross_margin_and_ryegrass_chart, income_breakdown_chart, weed_cost_chart
 from utils.session import (
@@ -137,7 +138,8 @@ else:
         column_order=[
             "year", "crop",
             "seeding_timing", "seeding_technique", "seeding_rate", "pre_tillage",
-            "knockdown", "pre_emergent", "post_emergent",
+            "knockdown", "pre_emergent",
+            "post_emergent_1", "post_emergent_2", "post_emergent_3",
             "spring_option", "grazing_intensity", "harvest_option",
         ],
         column_config={
@@ -148,8 +150,15 @@ else:
             "seeding_rate": st.column_config.SelectboxColumn("Rate", options=SEEDING_RATE_OPTIONS, width="small"),
             "pre_tillage": st.column_config.SelectboxColumn("Tillage", options=PRE_TILLAGE_OPTIONS),
             "knockdown": st.column_config.SelectboxColumn("Knock-down", options=KNOCKDOWN_OPTIONS),
-            "pre_emergent": st.column_config.SelectboxColumn("Pre", options=YES_NO_OPTIONS, width="small"),
-            "post_emergent": st.column_config.SelectboxColumn("Post", options=YES_NO_OPTIONS, width="small"),
+            # The grid offers every product, because st.data_editor cannot vary
+            # a column's options per row. Anything that does nothing in that
+            # year's crop is cleared by utils.applicability.neutralise and
+            # reported, rather than left to look effective. The year editor,
+            # which can vary per row, never offers it in the first place.
+            "pre_emergent": st.column_config.SelectboxColumn("Pre-em", options=PRE_EMERGENT_OPTIONS),
+            "post_emergent_1": st.column_config.SelectboxColumn("Post-em 1", options=POST_EMERGENT_OPTIONS),
+            "post_emergent_2": st.column_config.SelectboxColumn("Post-em 2", options=POST_EMERGENT_OPTIONS),
+            "post_emergent_3": st.column_config.SelectboxColumn("Post-em 3", options=POST_EMERGENT_OPTIONS),
             "spring_option": st.column_config.SelectboxColumn("Spring", options=SPRING_OPTIONS),
             "grazing_intensity": st.column_config.SelectboxColumn("Grazing", options=GRAZING_OPTIONS, width="small"),
             "harvest_option": st.column_config.SelectboxColumn("Harvest", options=HARVEST_OPTIONS, width="small"),

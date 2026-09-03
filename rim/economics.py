@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from rim.herbicides import POST_EMERGENT_FIELDS
+
 import numpy_financial as npf
 
 
@@ -75,8 +77,12 @@ def compute_costs(decision: dict, prices: dict, options: dict, machinery_cost_pe
     herb_passes = knockdown_passes
     if decision.get("pre_emergent") not in ("No", "None", "", None):
         herb_passes += 1.0
-    if decision.get("post_emergent") not in ("No", "None", "", None):
-        herb_passes += 1.0
+    # 2.Strategy rows 11-13: each post-emergent slot filled is its own pass over
+    # the paddock, and its own cost. "post_emergent" is the version-1 field,
+    # still read so an old row is not silently sprayed for free.
+    for field in ("post_emergent", *POST_EMERGENT_FIELDS):
+        if decision.get(field) not in ("No", "None", "", None):
+            herb_passes += 1.0
     herbicide_cost = herb_passes * spray_pass_cost
 
     spring_cost = float(options.get("costs", {}).get("spring", {}).get(decision.get("spring_option", "None"), 0.0))

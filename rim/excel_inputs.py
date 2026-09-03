@@ -15,6 +15,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from rim.herbicides import NONE as HERBICIDE_NONE
+
 # 2.Strategy row 4 label -> the crop name rim/options.py uses.
 CROP_LABELS: dict[str, str] = {
     "Wheat": "Wheat",
@@ -77,9 +79,6 @@ HARVEST_LABELS: dict[str, str] = {
 }
 
 TRANSLATION_LOSSES: tuple[str, ...] = (
-    "Herbicide products collapse to Yes/No: Excel prices and rates each product "
-    "separately from 1.Profile (e.g. E20/H20 Triflur+Triallate $22/ha, 80% control).",
-    "Three post-emergent slots (2.Strategy rows 11-13) collapse to one boolean.",
     "Knock-down products collapse to Single/Double; Excel distinguishes "
     "Glyphosate from Paraquat in both cost and control.",
     "Spring sub-options (rows 16 'Swathe' and 17 'Others', e.g. 'With Spray') "
@@ -95,14 +94,26 @@ def _present(value: Any) -> bool:
     return value is not None and str(value).strip() != ""
 
 
+# 2.Strategy's dropdown (P70:P95) abbreviates one name that the control table
+# (Calcs!B55:B97) spells out. Everything else matches, so only the exception is
+# listed; an unrecognised label is passed through rather than silently dropped.
+STRATEGY_PRODUCT_LABELS: dict[str, str] = {
+    "Triflur+Tria": "Triflur+Triallate",
+}
+
+
+def _product(value: Any) -> str:
+    """A herbicide cell on 2.Strategy, as the app names the product."""
+    if not _present(value):
+        return HERBICIDE_NONE
+    text = str(value).strip()
+    return STRATEGY_PRODUCT_LABELS.get(text, text)
+
+
 def translate_year(excel_row: dict[str, Any]) -> dict[str, Any]:
     """Map one Excel strategy year onto a ``simulate_strategy`` decision dict."""
     crop_raw = str(excel_row.get("enterprise") or "Wheat").strip()
     spring_raw = str(excel_row.get("spring_option") or "").strip()
-
-    post_em_selected = any(
-        _present(excel_row.get(f"post_emergent_{i}")) for i in (1, 2, 3)
-    )
 
     return {
         "year": excel_row.get("year"),
@@ -120,8 +131,12 @@ def translate_year(excel_row: dict[str, Any]) -> dict[str, Any]:
         "knockdown": KNOCKDOWN_LABELS.get(
             str(excel_row.get("knock_down") or "").strip(), "None"
         ),
-        "pre_emergent": "Yes" if _present(excel_row.get("pre_emergent")) else "No",
-        "post_emergent": "Yes" if post_em_selected else "No",
+        # The workbook names its herbicides and rates each per crop, and so does
+        # the app now, so these carry across unchanged instead of collapsing to
+        # a boolean. 2.Strategy row 8, and rows 11-13.
+        "pre_emergent": _product(excel_row.get("pre_emergent")),
+        **{f"post_emergent_{i}": _product(excel_row.get(f"post_emergent_{i}"))
+           for i in (1, 2, 3)},
         "spring_option": SPRING_LABELS.get(spring_raw, "None"),
         "grazing_intensity": str(excel_row.get("grazing_intensity") or "None").strip(),
         "harvest_option": HARVEST_LABELS.get(

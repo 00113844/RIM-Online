@@ -6,6 +6,7 @@ import streamlit as st
 
 from rim.defaults import DEFAULT_OPTIONS, DEFAULT_PRICES, DEFAULT_PROFILE, build_default_strategy
 from rim.engine import simulate_strategy
+from rim.herbicides import upgrade_strategy
 
 
 def init_state() -> None:
@@ -296,7 +297,10 @@ def freeze_results(slot: str) -> None:
 # server's memory: closing the tab or restarting the server loses them. These
 # helpers are the only way to keep work beyond a session.
 
-SAVE_FORMAT_VERSION = 1
+# 2 named the herbicides: pre_emergent holds a product rather than "Yes"/"No",
+# and the single post_emergent became the workbook's three slots. Version 1
+# files still load -- rim.herbicides.upgrade_strategy carries them across.
+SAVE_FORMAT_VERSION = 2
 
 
 def export_bundle() -> dict:
@@ -340,7 +344,7 @@ def import_bundle(data: dict) -> tuple[bool, str]:
     st.session_state.profile_current = deepcopy(data["profile"])
     st.session_state.prices_current = deepcopy(data["prices"])
     st.session_state.options_current = deepcopy(data["options"])
-    st.session_state.strategy_current = deepcopy(data["strategy"])
+    st.session_state.strategy_current = upgrade_strategy(deepcopy(data["strategy"]))
 
     # Slot keys come back from JSON as strings.
     if isinstance(data.get("profile_slots"), dict):
@@ -349,11 +353,19 @@ def import_bundle(data: dict) -> tuple[bool, str]:
         }
     if isinstance(data.get("strategy_slots"), dict):
         st.session_state.strategy_slots = {
-            int(k): v for k, v in data["strategy_slots"].items()
+            int(k): (upgrade_strategy(v) if v else v)
+            for k, v in data["strategy_slots"].items()
         }
 
     st.session_state.results_current = None
     reset_editor_widgets()
     reset_profile_widgets()
     years = len(st.session_state.strategy_current)
-    return True, f"Loaded a {years}-year strategy and its paddock profile."
+    message = f"Loaded a {years}-year strategy and its paddock profile."
+    if int(data.get("version", 1)) < SAVE_FORMAT_VERSION:
+        message += (
+            " It was saved before herbicides had names, so each “Yes” became "
+            "the first product that works on that year’s crop — check the "
+            "pre- and post-emergent columns."
+        )
+    return True, message
