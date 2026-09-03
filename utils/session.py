@@ -23,6 +23,12 @@ def init_state() -> None:
     if "profile_slots" not in st.session_state:
         st.session_state.profile_slots = {1: None, 2: None, 3: None, 4: None}
 
+    # Names are kept beside the slots rather than inside them: import_bundle
+    # and rim/scenario.py both put a slot's value through upgrade_strategy,
+    # which expects a list of years and nothing else.
+    if "strategy_slot_names" not in st.session_state:
+        st.session_state.strategy_slot_names = {}
+
     if "strategy_slots" not in st.session_state:
         st.session_state.strategy_slots = {0: deepcopy(st.session_state.strategy_current), 1: None, 2: None, 3: None, 4: None, 5: None, 6: None}
 
@@ -204,8 +210,49 @@ def load_profile_slot(slot: int) -> bool:
     return True
 
 
-def save_strategy_slot(slot: int) -> None:
+# The read-only starting point. Loading it is allowed; saving over it is not.
+DEFAULT_STRATEGY_SLOT = 0
+
+
+def save_strategy_slot(slot: int, name: str = "") -> None:
+    """Keep the current plan in a slot, under a name of the user's choosing.
+
+    A ten-year plan has nothing to derive a name from -- unlike a paddock, which
+    has a farm and a paddock name -- so the name is typed. An empty one leaves
+    the slot showing its number, which is what it did before names existed.
+    """
     st.session_state.strategy_slots[slot] = deepcopy(st.session_state.strategy_current)
+    cleaned = " ".join(str(name).split())
+    if cleaned:
+        st.session_state.strategy_slot_names[slot] = cleaned
+    else:
+        st.session_state.strategy_slot_names.pop(slot, None)
+
+
+def strategy_slot_name(slot: int) -> str:
+    """Whatever the user called this slot, or "" if they did not."""
+    return str(st.session_state.strategy_slot_names.get(slot, "") or "")
+
+
+def strategy_slot_label(slot: int) -> str:
+    """"Slot 2 — No glyphosate", or that it is still empty."""
+    if slot == DEFAULT_STRATEGY_SLOT:
+        return "Default strategy"
+    if not st.session_state.strategy_slots.get(slot):
+        return f"Slot {slot} — empty"
+    name = strategy_slot_name(slot)
+    return f"Slot {slot} — {name}" if name else f"Slot {slot}"
+
+
+def strategy_slot_labels() -> dict[int, str]:
+    """Every slot's label, resolved once.
+
+    The picker formats through this mapping rather than calling
+    :func:`strategy_slot_label` per option, so its ``format_func`` is a plain
+    lookup with no hidden read of session state behind it -- which is what broke
+    the profile picker under AppTest.
+    """
+    return {slot: strategy_slot_label(slot) for slot in st.session_state.strategy_slots}
 
 
 def load_strategy_slot(slot: int) -> bool:
@@ -311,10 +358,11 @@ def freeze_results(slot: str) -> None:
 # 2 named the herbicides and split post_emergent into the workbook's three
 # slots. 3 added the three decisions RIM has that the app lacked -- spring
 # swathe, spring others, harvest others. 4 gave every option a readable name in
-# place of the workbook's abbreviation. Older files still load, and always
-# will: every name any version used is an alias in rim.control_options, so
-# rim.herbicides.upgrade_strategy resolves rather than translates.
-SAVE_FORMAT_VERSION = 4
+# place of the workbook's abbreviation. 5 let strategy slots carry a name.
+# Older files still load, and always will: every name any version used is an
+# alias in rim.control_options, so rim.herbicides.upgrade_strategy resolves
+# rather than translates.
+SAVE_FORMAT_VERSION = 5
 
 
 def export_bundle() -> dict:
@@ -333,6 +381,7 @@ def export_bundle() -> dict:
         "strategy": deepcopy(st.session_state.strategy_current),
         "profile_slots": deepcopy(st.session_state.profile_slots),
         "strategy_slots": deepcopy(st.session_state.strategy_slots),
+        "strategy_slot_names": deepcopy(st.session_state.strategy_slot_names),
     }
 
 
@@ -375,6 +424,12 @@ def import_bundle(data: dict) -> tuple[bool, str]:
                 if v else v)
             for k, v in data["strategy_slots"].items()
         }
+
+    # Slot keys come back from JSON as strings here too. A file saved before
+    # slots had names simply has none, and they stay numbered.
+    st.session_state.strategy_slot_names = {
+        int(k): str(v) for k, v in (data.get("strategy_slot_names") or {}).items()
+    }
 
     st.session_state.results_current = None
     reset_editor_widgets()

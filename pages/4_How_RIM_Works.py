@@ -3,8 +3,11 @@ from __future__ import annotations
 import os, sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import json
+
 import streamlit as st
 
+from utils.custom_options_ui import EXAMPLE
 from utils.theme import inject_uwa_theme, section, uwa_footer, uwa_page_header, uwa_sidebar_logo
 
 st.set_page_config(page_title="How RIM works | RIM Online", page_icon="🌾", layout="wide")
@@ -189,6 +192,63 @@ ground is beyond reach.</td></tr>
 """, unsafe_allow_html=True)
 
 # ── 4. Competition ────────────────────────────────────────────────────────────
+section("Options of your own")
+
+st.markdown("""
+RIM ships with the operations Australian growers actually use, but it has always left room
+for one you invent, or one that is specific to your district. In the spreadsheet that room is
+four cells &mdash; two spring, two harvest &mdash; because four cells is what fits.
+
+**Here there is no limit.** Define as many as you need. The reason the spreadsheet stops at
+four is that it had to reserve rows in advance; nothing in the model cares. Spring and harvest
+each have a single **Other** column in the plan, so you still choose one per year &mdash; a
+longer list, not a wider model.
+
+### How to define them
+On the **Strategy** page, open *Spring and harvest options of your own*. Download the example,
+edit it, load it back. It is a small JSON file:
+""", unsafe_allow_html=True)
+
+st.code(json.dumps(EXAMPLE, indent=2), language="json")
+
+st.markdown("""
+<table class="rim-tbl">
+<thead><tr><th>Field</th><th>What it means</th></tr></thead>
+<tbody>
+<tr><td><code>for</code></td><td><code>spring</code> or <code>harvest</code> &mdash; which
+<b>Other</b> dropdown it appears in.</td></tr>
+<tr><td><code>name</code></td><td>What you will see in the dropdown. Two options of the same
+kind cannot share a name.</td></tr>
+<tr><td><code>control</code></td><td>The share of ryegrass it kills, 0 to 1. Compare with
+RIM's own: a knock-down is 0.95, crop topping 0.75, whole-paddock burning 0.60.</td></tr>
+<tr><td><code>cost_per_ha</code></td><td>Dollars per hectare, including the operation.</td></tr>
+</tbody></table>
+
+`control` and `cost_per_ha` each take a `default` plus any per-crop exceptions, written with
+the crop names the app uses. In the example, the grazing crash costs $12/ha everywhere and
+kills 55% of the ryegrass &mdash; except in canola, where it does nothing.
+
+### A control of zero is a real answer
+Set a crop's control to `0` and RIM stops offering that option for that crop, exactly as it
+does for its own: Topik is not offered in canola because the workbook rates it at zero there.
+This is better than letting you pick something that quietly costs money and does nothing.
+
+### Where they live
+Loading any spring options replaces RIM's two spring placeholders, and the same for harvest.
+Everything else on those dropdowns &mdash; whole-paddock burning, for one &mdash; stays.
+
+Your options are saved inside the scenario's `.rim.json`, so keeping your work keeps them,
+and a colleague who loads that file gets them too. The same file also works with the
+command-line runner, if you are comparing many paddocks at once.
+
+<div class="rim-keypoint">
+These are <b>your</b> numbers, not RIM's. Everything else in the model is traceable to the
+RIM-2013b workbook; an option you define is only as good as the control rate you give it.
+Treat a made-up rate as a question &mdash; "what would this need to achieve to pay?" &mdash;
+rather than as an answer.
+</div>
+""", unsafe_allow_html=True)
+
 section("Competition is a control too")
 
 st.markdown("""
@@ -264,19 +324,22 @@ save it to a <b>file</b>.
 <tr><td>Profile slots 1–4</td><td>Paddock profile page</td>
 <td>The paddock details, prices and options <i>together</i>, as one bundle.</td></tr>
 <tr><td>Strategy slots 1–6</td><td>Strategy page</td>
-<td>The ten-year plan only. Not the paddock it was built for.</td></tr>
+<td>The ten-year plan only, under a name you type &mdash; "No glyphosate", say. Not the
+paddock it was built for.</td></tr>
 <tr><td>Default strategy</td><td>Strategy page</td>
 <td>Read-only starting point. Load it to begin again; you cannot save over it.</td></tr>
 </tbody></table>
 
 Use slots to try a variation without losing what you had: save to a slot, experiment, load
-it back if the experiment was worse.
+it back if the experiment was worse. Name a strategy slot as you save it &mdash; the box sits
+beside the picker &mdash; and the name shows in the list, so you can tell six plans apart.
 
 ### Files — permanent, portable
 Both pages have a **Keep this work** panel.
 
 - **Save to a file** downloads everything as one `.rim.json` — the paddock profile, prices,
-  options, the current ten-year plan, *and* every slot you have filled.
+  options, any options you defined yourself, the current ten-year plan, *and* every slot you
+  have filled, with its name.
 - **Load a saved file** restores all of it. Drop the file on the uploader.
 
 Files are how you keep a plan between sessions, move it to another computer, or send it to

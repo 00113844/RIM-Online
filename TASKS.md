@@ -131,7 +131,31 @@ to check the app against a fixture rather than only a convenience.
 
 ---
 
-## 6. Smaller items
+## 6. A generator for spring and harvest options — a separate app
+
+The app now *reads* option packs (`rim/custom_options.py`) and there is no limit on how many
+an operator can define. It does not *author* them, and it should not: writing JSON by hand is
+fine for two or three options and poor for twenty, and the moment you are comparing option
+sets you want something this app is not.
+
+**The tool** — a small separate app that builds and validates a pack:
+
+- name, per-crop control and per-crop cost, entered as a grid rather than as JSON;
+- a sanity check against RIM's own rates, so a 99%-control option that costs $5/ha is
+  questioned rather than accepted;
+- a preview: load a `.rim.json`, apply the draft option, and show what it does to the seed
+  bank and the margin, so the rate can be argued with before it is committed;
+- export the `rim-online-options` JSON this app consumes.
+
+`rim/custom_options.py` is the contract between the two, and `parse()` is the whole of it —
+a generator that produces a file `parse()` accepts needs nothing else from this repo.
+
+**Not this app's job.** RIM Online simulates a plan; it is not an editor for the parameters
+of one. Keeping the generator separate is what stops this app growing a second, worse purpose.
+
+---
+
+## 7. Smaller items
 
 - **`data/defaults.json` is dead.** Unread at runtime and deliberately untracked.
   Replace `rim/defaults.py`'s hand-transcribed scalars with a loader over generated
@@ -176,6 +200,9 @@ to check the app against a fixture rather than only a convenience.
   rename cannot strand a saved plan.
 - RIM's four user-definable options, described in an uploaded JSON file.
 - A headless CLI over the app's own export (`tools/run_scenario.py`).
+- No cap on user-defined spring and harvest options, and the panel that loads them
+  sits on the Strategy page beside the dropdowns it fills.
+- Strategy slots carry a name the user types, shown in the picker.
 - Scenario export carries its inputs, not only its results (`utils/export.py`).
 - Profile slots save the farm on screen, and say which farm they hold. The page
   no longer batches its fields behind `st.form`; see

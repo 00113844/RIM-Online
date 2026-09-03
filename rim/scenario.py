@@ -30,7 +30,7 @@ SAVE_FORMAT = "rim-online-save"
 
 # The newest format this build writes. Older ones are read and carried forward;
 # see rim/herbicides.py for what changed at each step.
-SAVE_FORMAT_VERSION = 4
+SAVE_FORMAT_VERSION = 5
 
 
 class ScenarioError(ValueError):
@@ -49,6 +49,7 @@ class Scenario:
     source_version: int = SAVE_FORMAT_VERSION
     profile_slots: dict = field(default_factory=dict)
     strategy_slots: dict = field(default_factory=dict)
+    strategy_slot_names: dict = field(default_factory=dict)
 
     @property
     def custom_options(self):
@@ -70,6 +71,7 @@ class Scenario:
             "strategy": self.strategy,
             "profile_slots": self.profile_slots,
             "strategy_slots": self.strategy_slots,
+            "strategy_slot_names": self.strategy_slot_names,
         }
 
 
@@ -142,6 +144,7 @@ def from_payload(payload: Any, *, name: str = "scenario") -> Scenario:
         source_version=version,
         profile_slots=dict(payload.get("profile_slots") or {}),
         strategy_slots=dict(payload.get("strategy_slots") or {}),
+        strategy_slot_names=dict(payload.get("strategy_slot_names") or {}),
     )
 
 

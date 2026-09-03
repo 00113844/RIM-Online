@@ -139,13 +139,29 @@ def test_a_defined_option_replaces_the_workbooks_placeholder() -> None:
     assert co.cost("spring_others", "Spring grazing crash", WHEAT, overrides) == 12.0
 
 
-def test_defining_one_slot_leaves_the_others_alone() -> None:
+def test_defining_an_option_displaces_the_placeholders() -> None:
+    """They were only ever stand-ins for exactly this."""
     overrides = custom.parse(_pack(spring_1={"name": "Mine"}))
 
-    names = co.names("spring_others", overrides)
-    assert names == ["None", "Mine", "Custom spring option 2"]
+    assert co.names("spring_others", overrides) == ["None", "Mine"]
+
+
+def test_a_keyed_slot_keeps_the_workbook_values_it_does_not_set() -> None:
+    overrides = custom.parse(_pack(spring_1={"name": "Mine"}))
+
     assert co.control("spring_others", "Mine", WHEAT, overrides) == \
            co.control("spring_others", "Custom spring option 1", WHEAT)
+    assert co.cost("spring_others", "Mine", WHEAT, overrides) == \
+           co.cost("spring_others", "Custom spring option 1", WHEAT)
+
+
+def test_a_real_option_beside_the_placeholders_survives() -> None:
+    """Whole-paddock burning shares the harvest-others row and is not a slot."""
+    overrides = custom.parse(_pack(harvest_1={"name": "Impact mill"}))
+
+    assert co.names("harvest_others", overrides) == [
+        "None", "Whole paddock burn", "Impact mill",
+    ]
 
 
 def test_a_defined_option_never_leaks_into_the_default_registry() -> None:
@@ -371,7 +387,7 @@ def test_the_file_the_app_saves_is_the_file_the_runner_reads(monkeypatch, tmp_pa
                          "custom_options": {str(r): s for r, s in overrides.items()}},
         strategy_current=[dict(row, harvest_others="Impact mill")
                           for row in build_default_strategy(10)],
-        profile_slots={}, strategy_slots={},
+        profile_slots={}, strategy_slots={}, strategy_slot_names={},
     )
     monkeypatch.setattr(session.st, "session_state", state)
 

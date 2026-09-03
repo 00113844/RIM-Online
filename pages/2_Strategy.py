@@ -7,6 +7,7 @@ import pandas as pd
 import streamlit as st
 
 from rim.control_options import names
+from utils.custom_options_ui import custom_options_controls
 from utils.session import custom_options
 from rim.options import (
     CROP_OPTIONS,
@@ -27,10 +28,14 @@ from utils.session import (
     compute_current_results,
     freeze_results,
     init_state,
+    DEFAULT_STRATEGY_SLOT,
     load_strategy_slot,
     reset_editor_widgets,
     reset_strategy_current,
     save_strategy_slot,
+    strategy_slot_label,
+    strategy_slot_labels,
+    strategy_slot_name,
 )
 from utils.applicability import neutralise
 from utils.validation import problem_panel, problems
@@ -179,28 +184,55 @@ else:
 # ── Saving and comparing: one row, not thirteen buttons ───────────────────────
 tools_left, tools_right = st.columns([3, 2])
 
+# Handled as `on_click` callbacks, not in the script body: the picker's labels
+# carry the names, so they have to be right the moment it draws. A button
+# handled below it acts after it has already rendered, and Streamlit then shows
+# the label from before the save. See
+# .claude/memory/streamlit-widget-state-staleness.md.
+def _save_plan_slot() -> None:
+    chosen = st.session_state.strategy_slot_pick
+    save_strategy_slot(chosen, st.session_state.get("strategy_slot_name", ""))
+    st.session_state.strategy_slot_message = f"Saved to {strategy_slot_label(chosen)}"
+
+
+def _load_plan_slot() -> None:
+    chosen = st.session_state.strategy_slot_pick
+    label = strategy_slot_label(chosen)
+    if load_strategy_slot(chosen):
+        st.session_state.strategy_slot_name = strategy_slot_name(chosen)
+        st.session_state.strategy_slot_message = f"Loaded {label}"
+    else:
+        st.session_state.strategy_slot_message = (
+            f"Slot {chosen} is empty — save a plan to it first"
+        )
+
+
 with tools_left:
-    slot_col, load_col, save_col, reset_col = st.columns([2, 1, 1, 1.2])
+    slot_labels = strategy_slot_labels()
+    slot_col, name_col, load_col, save_col, reset_col = st.columns([2, 2, 1, 1, 1.2])
     with slot_col:
         slot = st.selectbox(
             "Strategy slot",
-            options=list(range(7)),
-            format_func=lambda s: "Default strategy" if s == 0 else f"Slot {s}",
+            options=list(slot_labels),
+            format_func=slot_labels.__getitem__,
             key="strategy_slot_pick",
+        )
+    with name_col:
+        st.text_input(
+            "Name this plan",
+            key="strategy_slot_name",
+            placeholder="e.g. No glyphosate",
+            disabled=slot == DEFAULT_STRATEGY_SLOT,
+            help="Shown in the slot list, so you can tell your plans apart. "
+                 "Saved with the slot.",
         )
     with load_col:
         st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
-        if st.button("Load", use_container_width=True):
-            if load_strategy_slot(slot):
-                st.toast(f"Loaded {'default strategy' if slot == 0 else f'slot {slot}'}")
-                st.rerun()
-            else:
-                st.toast(f"Slot {slot} is empty — save a strategy to it first")
+        st.button("Load", use_container_width=True, on_click=_load_plan_slot)
     with save_col:
         st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
-        if st.button("Save", use_container_width=True, disabled=slot == 0):
-            save_strategy_slot(slot)
-            st.toast(f"Saved to slot {slot}")
+        st.button("Save", use_container_width=True, on_click=_save_plan_slot,
+                  disabled=slot == DEFAULT_STRATEGY_SLOT)
     with reset_col:
         st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
         if st.button("Clear plan", use_container_width=True):
@@ -230,6 +262,16 @@ with tools_right:
             st.session_state.results_B = None
             st.rerun()
 
+# What each slot holds, spelled out. The picker carries the same names, but
+# Streamlit keeps a keyed widget's rendered label when only its options change,
+# so the closed box can read a beat behind. This line is plain markdown and is
+# right on every run.
+st.caption(" · ".join(slot_labels.values()))
+
+_message = st.session_state.pop("strategy_slot_message", None)
+if _message:
+    st.toast(_message)
+
 held = ", ".join(name for name, ok in (("A", held_a), ("B", held_b)) if ok)
 if found:
     st.caption("Resolve the plan above before holding it for comparison.")
@@ -239,6 +281,9 @@ else:
         if held else
         "Hold two strategies as A and B to compare them on the results pages."
     )
+
+with st.expander("Spring and harvest options of your own"):
+    custom_options_controls()
 
 with st.expander("Keep this work"):
     save_load_controls("strategy")

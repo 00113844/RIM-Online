@@ -44,14 +44,15 @@ into ``cost_by_crop_code``, so nothing downstream has to know. See
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Mapping, Optional
 
-# A user's own definitions for RIM's four definable slots, keyed by Calcs row.
-# See rim/custom_options.py. None means "the workbook's values, unchanged".
-Custom = Optional[Mapping[int, Mapping]]
+# A user's own option definitions, as {field: [spec, ...]} -- see
+# rim/custom_options.py. A field present replaces that decision's whole list;
+# None means "the workbook's values, unchanged".
+Custom = Optional[Mapping[str, list]]
 
 _DATA = Path(__file__).resolve().parents[1] / "data"
 SURVIVAL_PATH = _DATA / "calcs_survival_table.json"
@@ -59,6 +60,21 @@ COST_PATH = _DATA / "calcs_cost_table.json"
 
 # The workbook prices an option's cost row 50 below its control row.
 COST_ROW_OFFSET = 50
+
+# The rows RIM leaves for a user to define -- 1.Profile C32:C35. These are the
+# only ones a loaded pack displaces; every other option on the same decision is
+# a real RIM operation and stays. Whole paddock burn (row 95) sits on
+# harvest_others beside the two placeholders, and must survive.
+DEFINABLE_ROWS: dict[str, tuple[int, ...]] = {
+    "spring_others": (85, 86),
+    "harvest_others": (96, 97),
+}
+
+# Ids for options a user defined, which have no Calcs row behind them. Kept
+# clear of the workbook's 55-97 so nothing that branches on a row -- see
+# `row_of` and its callers in rim/ryegrass.py, rim/economics.py and
+# rim/yields.py -- can ever match one by accident.
+CUSTOM_ROW_BASE = 10_000
 
 # What "this decision was not taken" reads as in a strategy row. Harvest is the
 # exception: the paddock is always harvested, just without seed control.
@@ -173,6 +189,7 @@ class ControlOption:
     workbook_label: str           # "Pre-E: Sakura"
     control: dict[int, float]     # crop code -> proportion of ryegrass killed
     cost: dict[int, float]        # crop code -> $/ha
+    extra_aliases: tuple[str, ...] = ()   # names inherited from a row it replaces
 
     def works_on(self, crop_code: int) -> bool:
         """Does this do anything at all to ryegrass in this crop?"""
@@ -196,6 +213,7 @@ class ControlOption:
             (self.name, DISPLAY_NAMES.get(self.row, self.workbook_name),
              self.workbook_name, self.workbook_label)
             + LEGACY_NAMES.get(self.row, ())
+            + self.extra_aliases
         ))
 
 
@@ -248,28 +266,55 @@ def _workbook_options_for(field: str) -> tuple[ControlOption, ...]:
 
 
 def options_for(field: str, custom: Custom = None) -> tuple[ControlOption, ...]:
-    """The options this decision can hold, in the workbook's order.
+    """The options this decision can hold, in order.
 
-    ``custom`` holds a user's own definitions for RIM's four definable slots,
-    keyed by Calcs row -- see :mod:`rim.custom_options`. It is passed in rather
-    than held here because one Streamlit server serves many browsers, and a
-    user's options must not leak into anyone else's session.
+    ``custom`` holds a user's own definitions -- see :mod:`rim.custom_options`.
+    Where it names this decision, the user's options displace RIM's placeholder
+    slots for it -- those were only ever stand-ins for exactly this, so once a
+    user has defined their own the stand-ins are noise. Everything else on that
+    decision stays: whole-paddock burning is a real RIM operation that happens
+    to sit beside the two harvest placeholders, not one of them.
+
+    It is passed in rather than held here because one Streamlit server serves
+    many browsers, and one user's options must not appear in another's session.
     """
-    options = _workbook_options_for(field)
-    if not custom:
-        return options
-    return tuple(_apply(option, custom.get(option.row)) for option in options)
+    specs = (custom or {}).get(field)
+    if not specs:
+        return _workbook_options_for(field)
+
+    displaced = DEFINABLE_ROWS.get(field, ())
+    kept = tuple(option for option in _workbook_options_for(field)
+                 if option.row not in displaced)
+    return kept + tuple(_defined(field, position, spec)
+                        for position, spec in enumerate(specs))
 
 
-def _apply(option: ControlOption, override: Mapping | None) -> ControlOption:
-    """One workbook option with a user's name, control or cost in place of it."""
-    if not override:
-        return option
-    return replace(
-        option,
-        name=override.get("name", option.name),
-        control=dict(override.get("control", option.control)),
-        cost=dict(override.get("cost", option.cost)),
+def _defined(field: str, position: int, spec: Mapping) -> ControlOption:
+    """One option a user defined, with an id of its own rather than a Calcs row.
+
+    ``spec["replaces"]`` names a placeholder row this option stands in for, and
+    only the keyed form of the file sets it -- there ``spring_1`` *is* row 85, so
+    a plan that said "Custom spring option 1" should keep working after it is
+    renamed. A list of options carries no such mapping and gets no alias: which
+    of five new options a placeholder became is not something to guess at, and
+    the gate reports the stale choice instead.
+    """
+    name = str(spec["name"]).strip()
+    replaced = spec.get("replaces")
+    inherited: tuple[str, ...] = ()
+    if replaced is not None:
+        stand_in = _rows().get(int(replaced))
+        if stand_in is not None:
+            inherited = stand_in.aliases
+
+    return ControlOption(
+        row=CUSTOM_ROW_BASE + FIELDS.index(field) * 1_000 + position,
+        name=name,
+        workbook_name=name,
+        workbook_label=name,
+        control=dict(spec["control"]),
+        cost=dict(spec["cost"]),
+        extra_aliases=inherited,
     )
 
 
@@ -376,11 +421,11 @@ def custom_from(options: Mapping | None) -> Custom:
     Stored under ``custom_options`` so it saves with the scenario and reaches
     the engine as a parameter like any other.
 
-    JSON has no integer keys. A round trip through a save file turns both the
-    row numbers and the crop codes into strings, and a crop code that arrives as
-    ``"0"`` never matches a lookup by ``0`` -- the option silently reads as
-    controlling nothing and costing nothing. So both levels are put back here,
-    which is the one place every reader passes through.
+    JSON has no integer keys. A round trip through a save file turns the crop
+    codes into strings, and a crop code that arrives as ``"0"`` never matches a
+    lookup by ``0`` -- the option silently reads as controlling nothing and
+    costing nothing. So they are put back here, in the one place every reader
+    passes through.
     """
     if not options:
         return None
@@ -388,12 +433,16 @@ def custom_from(options: Mapping | None) -> Custom:
     if not raw:
         return None
 
-    out: dict[int, dict] = {}
-    for row, spec in raw.items():
-        restored = dict(spec)
-        for key in ("control", "cost"):
-            if isinstance(restored.get(key), Mapping):
-                restored[key] = {int(code): float(value)
-                                 for code, value in restored[key].items()}
-        out[int(row)] = restored
-    return out
+    out: dict[str, list[dict]] = {}
+    for field, specs in raw.items():
+        restored = []
+        for spec in specs:
+            entry = dict(spec)
+            for key in ("control", "cost"):
+                if isinstance(entry.get(key), Mapping):
+                    entry[key] = {int(code): float(value)
+                                  for code, value in entry[key].items()}
+            restored.append(entry)
+        if restored:
+            out[str(field)] = restored
+    return out or None

@@ -10,4 +10,5 @@ Durable facts a fresh session needs. One line per entry; the detail lives in the
 - [The 25-item audit tuned the wrong structure](audit-tuned-wrong-structure.md) — why INCONSISTENCIES.md fixes are mostly moot.
 - [Measured parity gap](measured-parity-gap.md) — the baseline numbers, so you can tell whether later work converges.
 - [Streamlit widget state goes stale](streamlit-widget-state-staleness.md) — has cost this project twice; the pattern that avoids it, and why AppTest cannot see the st.form half.
+- [Raw HTML in st.markdown is fragile](streamlit-raw-html-blocks.md) — a blank line silently truncates the block; prefer st.code over a hand-rolled <pre>.
 - [Outstanding work](../../TASKS.md) — the backlog in dependency order; product vocabulary blocks most of it.

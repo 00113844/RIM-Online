@@ -237,6 +237,7 @@ def test_a_renamed_farm_relabels_its_slot(state) -> None:
 def test_slots_survive_a_save_file(state) -> None:
     state["strategy_current"] = [{"year": 1, "crop": "Wheat"}]
     state["strategy_slots"] = {0: None}
+    state["strategy_slot_names"] = {}
     state[field("pf_farm_name")] = "Broomehill"
     session.save_profile_slot(1)
     state[field("pf_farm_name")] = "Kojonup"
@@ -246,8 +247,8 @@ def test_slots_survive_a_save_file(state) -> None:
 
     fresh = FakeState(
         profile_current={}, prices_current={}, options_current={},
-        profile_slots={}, strategy_slots={}, strategy_current=[],
-        results_current="stale",
+        profile_slots={}, strategy_slots={}, strategy_slot_names={},
+        strategy_current=[], results_current="stale",
     )
     session.st.session_state = fresh
     ok, _ = session.import_bundle(payload)

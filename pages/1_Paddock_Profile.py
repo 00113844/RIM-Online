@@ -17,7 +17,6 @@ from utils.session import (
     reset_profile_bundle,
     save_profile_slot,
 )
-from utils.custom_options_ui import custom_options_controls
 from utils.save_load import save_load_controls
 from utils.theme import (
     inject_uwa_theme,
@@ -115,8 +114,6 @@ with st.expander("Keep this work"):
     save_load_controls("profile")
     st.page_link("pages/4_How_RIM_Works.py", label="How saving and loading works")
 
-with st.expander("Your own spring and harvest options"):
-    custom_options_controls()
 
 if st.session_state.get("confirm_clear_profile"):
     st.warning(
