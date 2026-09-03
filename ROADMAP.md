@@ -60,20 +60,16 @@ Needs a translation from the app's strategy dicts to the workbook's own labels.
 **Done when:** `pytest -q` is fully green and the Population page shows the seed bank
 actually collapsing under a real herbicide programme.
 
-### Phase 2 — Product-level vocabulary *(part landed)*
+### Phase 2 — ~~Product-level vocabulary~~ *(done 2026-09-03)*
 
-The strategy editor offered generic options where the workbook names products. As of
-2026-09-03 the herbicides that matter most are named: five pre-emergent and five
-post-emergent products, each rated per crop from `Calcs!N54:T97`, across the workbook's
-three post-emergent slots. Two of the six `TRANSLATION_LOSSES` entries are gone.
+Every weed-control decision now uses the workbook's own vocabulary and is rated
+*and priced* per crop from `Calcs` rows 55-97 and 105-147, including the three
+decisions the app used to lack -- spring swathe, spring others, harvest others.
+`TRANSLATION_LOSSES` is down to one entry, stage timing, which Phase 1 owns.
 
-Still generic: knock-down products (Glyphosate / Paraquat / DoubleK), the three missing
-decision rows (spring swathe, spring others, harvest others), and RIM's two user-definable
-spring and two harvest options. Per-product *costs* are also outstanding — control now
-comes from the workbook while cost is still a flat sprayer pass.
-
-**Done when:** every option in `data/strategy_vocabulary.json` is selectable, and
-`TRANSLATION_LOSSES` is empty.
+What remains is RIM's user-definable slots: two spring and two harvest options a
+user can name and price themselves (`1.Profile` C32:C35). The app offers them at
+the workbook's saved values but cannot edit them.
 
 ### Phase 3 — Verify the workflow
 

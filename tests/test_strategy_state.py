@@ -26,6 +26,8 @@ def _year(**overrides) -> dict:
         "pre_tillage": "None", "knockdown": "None", "pre_emergent": "None",
         "post_emergent_1": "None", "post_emergent_2": "None",
         "post_emergent_3": "None", "spring_option": "None",
+        "spring_swathe": "None", "spring_others": "None",
+        "harvest_others": "None",
         "grazing_intensity": "None", "harvest_option": "Standard",
     }
     base.update(overrides)
@@ -53,8 +55,8 @@ def test_a_settled_plan_survives_an_editor_round_trip() -> None:
     """If this ever changes a clean plan, the page starts rerunning forever."""
     plan = [
         _year(year=1, crop="Wheat", seeding_timing="Delayed (1-2 wks)",
-              knockdown="Single knock-down", pre_emergent="Sakura",
-              harvest_option="Narrow windrow burn"),
+              knockdown="Glyphosate", pre_emergent="Sakura",
+              harvest_option="Narr+B."),
         _year(year=2, crop="Sub-Clover pasture", grazing_intensity="Standard"),
         _year(year=3, crop="Canola", post_emergent_1="Clethodim"),
     ]
@@ -117,7 +119,8 @@ def test_the_year_editor_covers_every_decision_the_grid_does() -> None:
         "seeding_timing", "seeding_technique", "seeding_rate", "pre_tillage",
         "knockdown", "pre_emergent",
         "post_emergent_1", "post_emergent_2", "post_emergent_3",
-        "spring_option", "grazing_intensity", "harvest_option",
+        "spring_option", "spring_swathe", "spring_others",
+        "grazing_intensity", "harvest_option", "harvest_others",
     }
     year_fields = {field for _group, fields in GROUPS for field, _label, _opts in fields}
 

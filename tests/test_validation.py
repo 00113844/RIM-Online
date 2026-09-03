@@ -19,6 +19,8 @@ def _year(**overrides) -> dict:
         "pre_tillage": "None", "knockdown": "None", "pre_emergent": "None",
         "post_emergent_1": "None", "post_emergent_2": "None",
         "post_emergent_3": "None", "spring_option": "None",
+        "spring_swathe": "None", "spring_others": "None",
+        "harvest_others": "None",
         "grazing_intensity": "None", "harvest_option": "Standard",
     }
     base.update(overrides)
@@ -28,8 +30,8 @@ def _year(**overrides) -> dict:
 def test_a_consistent_plan_opens_the_gate() -> None:
     plan = [
         _year(year=1, crop="Wheat", seeding_timing="Delayed (1-2 wks)",
-              knockdown="Single knock-down", pre_emergent="Sakura",
-              harvest_option="Narrow windrow burn"),
+              knockdown="Glyphosate", pre_emergent="Sakura",
+              harvest_option="Narr+B."),
         _year(year=2, crop="Sub-Clover pasture", grazing_intensity="Standard"),
     ]
 
@@ -68,7 +70,7 @@ def test_every_problem_has_a_remedy_to_show() -> None:
     plan = [
         _year(year=1, crop="Canola", grazing_intensity="Standard"),
         _year(year=2, crop="Volunteer pasture", harvest_option="HSD", pre_emergent="Triazine"),
-        _year(year=3, crop="Wheat", knockdown="Single knock-down"),
+        _year(year=3, crop="Wheat", knockdown="Glyphosate"),
     ]
 
     for problem in problems(plan):

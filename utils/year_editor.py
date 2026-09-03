@@ -18,13 +18,10 @@ import streamlit as st
 from rim.options import (
     CROP_OPTIONS,
     GRAZING_OPTIONS,
-    HARVEST_OPTIONS,
-    KNOCKDOWN_OPTIONS,
     PRE_TILLAGE_OPTIONS,
     SEEDING_RATE_OPTIONS,
     SEEDING_TECHNIQUE_OPTIONS,
     SEEDING_TIMING_OPTIONS,
-    SPRING_OPTIONS,
 )
 from rim.herbicides import NONE as NO_SPRAY, POST_EMERGENT_FIELDS
 from utils.applicability import (
@@ -52,17 +49,22 @@ GROUPS: tuple[tuple[str, tuple[tuple[str, str, list], ...]], ...] = (
     # product the workbook rates at zero for that crop is left out rather than
     # offered and quietly ignored. See utils.applicability.product_options.
     ("Weed control", (
-        ("knockdown", "Knock-down", KNOCKDOWN_OPTIONS),
+        ("knockdown", "Knock-down", partial(_for_crop, "knockdown")),
         ("pre_emergent", "Pre-emergent", partial(_for_crop, "pre_emergent")),
     )),
     ("Post-emergent sprays", tuple(
         (field, f"Spray {n}", partial(_for_crop, field))
         for n, field in enumerate(POST_EMERGENT_FIELDS, start=1)
     )),
-    ("Spring and harvest", (
-        ("spring_option", "Spring option", SPRING_OPTIONS),
+    ("Spring", (
+        ("spring_option", "Spring option", partial(_for_crop, "spring_option")),
+        ("spring_swathe", "Swathe", partial(_for_crop, "spring_swathe")),
+        ("spring_others", "Other", partial(_for_crop, "spring_others")),
         ("grazing_intensity", "Grazing", GRAZING_OPTIONS),
-        ("harvest_option", "Harvest control", HARVEST_OPTIONS),
+    )),
+    ("Harvest", (
+        ("harvest_option", "Harvest control", partial(_for_crop, "harvest_option")),
+        ("harvest_others", "Other", partial(_for_crop, "harvest_others")),
     )),
 )
 

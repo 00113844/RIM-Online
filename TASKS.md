@@ -7,40 +7,48 @@ Port status: [`.claude/memory/engine-port-status.md`](.claude/memory/engine-port
 
 ---
 
-## 1. Product-level vocabulary — herbicides named, knock-down still generic
+## 1. ~~Product-level vocabulary~~ — DONE
 
-**Done 2026-09-03.** Pre- and post-emergent herbicides are named, and each one's
-effect is read per crop from `Calcs!N54:T97` via `data/calcs_survival_table.json`
-(`rim/herbicides.py`). The single post-emergent boolean became the workbook's three
-slots, `2.Strategy` rows 11-13. Flat invented rates -- pre-em 0.45, post-em 0.50 --
-are gone from `rim/defaults.py`.
+**Done 2026-09-03.** Every weed-control decision now uses the workbook's own
+vocabulary, rated and priced per crop from `Calcs` rows 55-97 and 105-147 -- the
+same option list twice, paired at `r + 50`. `rim/control_options.py` is the one
+place that knows which rows belong to which decision on `2.Strategy`; nothing is
+typed.
 
 | Decision | Excel | App |
 |---|---|---|
-| Pre-emergent | 5 named products | **5 named products** |
-| Post-emergent | 5 named products across **3 slots** | **5 products, 3 slots** |
-| Knock-down | Glyphosate, Paraquat, DoubleK | None / Single / Double |
-| Spring — swathe | W/o Spray, With Spray | column missing |
-| Spring — others | Define 1st, Define 2nd | column missing |
-| Harvest — others | B.all, Define 1st, Define 2nd | column missing |
+| Knock-down | Glyphosate, Paraquat, DoubleK | **the same three** |
+| Pre-emergent | 5 named products | **the same five** |
+| Post-emergent | 5 products across 3 slots | **the same, 3 slots** |
+| Spring option | 6 named operations | **the same six** |
+| Spring — swathe | W/o Spray, With Spray | **present** |
+| Spring — others | Define 1st, Define 2nd | **present** |
+| Harvest | 5 named systems | **the same five** |
+| Harvest — others | B.all, Define 1st, Define 2nd | **present** |
 
-**What is left**
+Costs come from `Calcs!N105:T147` per option per crop -- Glyphosate is $26/ha in
+a crop and $22/ha in a pasture, Sakura $48 against Triazine's $8. The flat
+sprayer-pass charge is gone, and so are the invented control rates and the
+hand-written cost table in `rim/defaults.py`.
 
-- Knock-down products. Rows 55-57 hold Glyphosate 0.95, Paraquat 0.95 and
-  Glyphosate/Paraquat 1.00; the app still offers Single/Double against invented
-  0.55/0.75. Same shape as the work just done, so it is now small.
-- The three missing columns (`spring_swathe`, `spring_others`, `harvest_others`)
-  and RIM's two user-definable spring and two harvest options.
-- Per-product **costs**. Control now comes from the workbook; cost is still a flat
-  sprayer pass per application (`rim/economics.py`), where `Calcs!N105:T147` prices
-  each product separately. Note the column-swap trap recorded in item 4.
+`TRANSLATION_LOSSES` is down from six entries to one: stage timing, which is
+`Calcs!C75:C83` applying each control at a named point in the season where the
+app applies one combined annual fraction. That is item 3's business, not a
+vocabulary problem.
+
+**Still outstanding:** RIM lets a user *define* the two spring and two harvest
+slots (`1.Profile` C32:C35) with their own name, cost and control. The app
+offers them under the workbook's placeholder names at the workbook's saved
+values; it cannot yet edit them.
 
 ---
 
-## 2. ~~Per-product applicability rules~~ — DONE for herbicides
+## 2. ~~Per-product applicability rules~~ — DONE
 
-Done 2026-09-03 alongside item 1. A control of 0 in `data/calcs_survival_table.json`
-means the product does nothing on that crop, and the app now reads it that way:
+Done 2026-09-03 alongside item 1, and now covering every weed-control decision
+rather than only the herbicides. A control of 0 in
+`data/calcs_survival_table.json` means the option does nothing on that crop, and
+the app reads it that way:
 
 - Topik and Hussar do nothing on canola, legume or any pasture.
 - Clethodim and post-emergent Glyphosate work only on canola and legume.
@@ -51,8 +59,8 @@ means the product does nothing on that crop, and the app now reads it that way:
 and `product_mismatch` catches a choice arriving from the grid, which cannot vary its
 options per row. `tests/test_herbicides.py` re-reads the generated table for every rule.
 
-Outstanding only for the decisions item 1 has not reached yet — knock-down products and
-the three missing columns.
+Swathing joins them: `Calcs` rows 87-88 are zero on every pasture, because there
+is nothing to swathe.
 
 ---
 
@@ -162,6 +170,8 @@ to check the app against a fixture, not just a convenience.
 - `ROADMAP.md` rewritten as the delivery roadmap.
 - Named herbicides: five pre-emergent and five post-emergent products, rated per
   crop from the workbook, across its three post-emergent slots.
+- The whole weed-control vocabulary, rated *and priced* per crop from the
+  workbook, including the three decisions the app used to lack.
 - Scenario export carries its inputs, not only its results (`utils/export.py`).
 - Profile slots save the farm on screen, and say which farm they hold. The page
   no longer batches its fields behind `st.form`; see

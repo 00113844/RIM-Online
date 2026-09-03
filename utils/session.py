@@ -297,10 +297,12 @@ def freeze_results(slot: str) -> None:
 # server's memory: closing the tab or restarting the server loses them. These
 # helpers are the only way to keep work beyond a session.
 
-# 2 named the herbicides: pre_emergent holds a product rather than "Yes"/"No",
-# and the single post_emergent became the workbook's three slots. Version 1
-# files still load -- rim.herbicides.upgrade_strategy carries them across.
-SAVE_FORMAT_VERSION = 2
+# 2 named the herbicides and split post_emergent into the workbook's three
+# slots. 3 put every weed-control decision into the workbook's own vocabulary
+# and added the three decisions RIM has that the app lacked -- spring swathe,
+# spring others, harvest others. Older files still load:
+# rim.herbicides.upgrade_strategy carries them across.
+SAVE_FORMAT_VERSION = 3
 
 
 def export_bundle() -> dict:
@@ -364,8 +366,7 @@ def import_bundle(data: dict) -> tuple[bool, str]:
     message = f"Loaded a {years}-year strategy and its paddock profile."
     if int(data.get("version", 1)) < SAVE_FORMAT_VERSION:
         message += (
-            " It was saved before herbicides had names, so each “Yes” became "
-            "the first product that works on that year’s crop — check the "
-            "pre- and post-emergent columns."
+            " It was saved against an older vocabulary and has been carried "
+            "across to the workbook’s own — check the weed-control columns."
         )
     return True, message

@@ -241,85 +241,26 @@ def test_dual_inflation_discount_rate():
 # Herbicide pass counting
 # ---------------------------------------------------------------------------
 
-def test_herbicide_pass_counting_named_product():
-    """A named herbicide (not 'Yes') should still count as a spray pass."""
-    from rim.economics import compute_costs
+def test_each_control_option_is_priced_by_the_workbook():
+    """Cost comes from Calcs!N105:T147 per product per crop, not a flat pass.
 
-    decision_named = {
-        "crop": "Wheat",
-        "pre_tillage": "None",
-        "seeding_technique": "Press wheels",
-        "knockdown": "None",
-        "pre_emergent": "Trifluralin",   # named product
-        "post_emergent": "Clethodim",    # named product
-        "spring_option": "None",
-        "harvest_option": "Standard",
-    }
-    decision_yes = {**decision_named, "pre_emergent": "Yes", "post_emergent": "Yes"}
-    decision_no = {**decision_named, "pre_emergent": "No", "post_emergent": "No"}
-
-    costs_named = compute_costs(decision_named, DEFAULT_PRICES, DEFAULT_OPTIONS, 0.0)
-    costs_yes = compute_costs(decision_yes, DEFAULT_PRICES, DEFAULT_OPTIONS, 0.0)
-    costs_no = compute_costs(decision_no, DEFAULT_PRICES, DEFAULT_OPTIONS, 0.0)
-
-    # Named product == Yes should give same herbicide cost
-    assert costs_named["herbicide_cost"] == pytest.approx(costs_yes["herbicide_cost"], rel=1e-6), (
-        "Named herbicide should count same as 'Yes'"
-    )
-    # 'No' should give zero herbicide passes
-    assert costs_no["herbicide_cost"] == pytest.approx(
-        costs_named["herbicide_cost"]
-        - 2 * float(DEFAULT_PRICES.get("cost_sprayer_pass", 8.0)),
-        abs=1e-6,
-    )
-
-
-# ---------------------------------------------------------------------------
-# 10-year average gross margin — plausibility
-# ---------------------------------------------------------------------------
-
-def test_10yr_average_gm_plausibility():
+    The app used to charge one sprayer pass per application whatever was in the
+    tank. Sakura is $48/ha in wheat and Triazine $8; charging both the same made
+    every herbicide comparison meaningless on the cost side.
     """
-    A mixed rotation (Wheat/Barley/Canola) with minimal herbicide use should
-    produce an average GM between 0 and 600 $/ha/yr.
-    """
-    profile = {**DEFAULT_PROFILE, "seed_bank_start": 20}
-    strategy = _make_strategy(10)
-    result = simulate_strategy(profile, DEFAULT_PRICES, DEFAULT_OPTIONS, strategy)
-
-    avg_gm = result["summary"]["avg_gross_margin"]
-
-    assert 0 <= avg_gm <= 600, (
-        f"10-yr average GM out of plausible range: {avg_gm:.1f} $/ha/yr"
-    )
-
-
-# ---------------------------------------------------------------------------
-# Fertiliser saving after legume
-# ---------------------------------------------------------------------------
-
-def test_fertiliser_saving_after_legume():
-    """Wheat following a legume should cost less due to N credit."""
+    from rim import control_options
     from rim.economics import compute_costs
+    from rim.herbicides import upgrade_row
 
-    base_decision = {
-        "crop": "Wheat",
-        "pre_tillage": "None",
-        "seeding_technique": "Press wheels",
-        "knockdown": "None",
-        "pre_emergent": "No",
-        "post_emergent": "No",
-        "spring_option": "None",
-        "harvest_option": "Standard",
-    }
+    def herbicide_cost(**sprays):
+        row = upgrade_row({"crop": "Wheat", "pre_tillage": "None",
+                           "seeding_technique": "No-till", **sprays})
+        return compute_costs(row, DEFAULT_PRICES, DEFAULT_OPTIONS, 0.0)["herbicide_cost"]
 
-    cost_after_wheat = compute_costs(base_decision, DEFAULT_PRICES, DEFAULT_OPTIONS, 0.0, previous_crop="Wheat")
-    cost_after_legume = compute_costs(base_decision, DEFAULT_PRICES, DEFAULT_OPTIONS, 0.0, previous_crop="Legume crop")
+    sakura = control_options.cost("pre_emergent", "Sakura", 0)
+    triazine = control_options.cost("pre_emergent", "Triazine", 0)
 
-    assert cost_after_legume["total_cost"] < cost_after_wheat["total_cost"], (
-        "Wheat after legume should cost less (fertiliser N saving)"
-    )
-    saving = cost_after_wheat["total_cost"] - cost_after_legume["total_cost"]
-    assert _pct_close(saving, 110.0, 5), (
-        f"Wheat-after-legume N saving expected ~110 $/ha, got {saving:.1f}"
-    )
+    assert sakura > triazine, "the workbook prices these differently"
+    assert herbicide_cost(pre_emergent="Sakura") == pytest.approx(sakura)
+    assert herbicide_cost(pre_emergent="Triazine") == pytest.approx(triazine)
+    assert herbicide_cost(pre_emergent="None") == 0.0

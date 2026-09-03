@@ -1,6 +1,13 @@
 from __future__ import annotations
 
+from rim import control_options
 from rim.herbicides import POST_EMERGENT_FIELDS
+from rim.rotation import app_crop_code
+
+# The three groups the cost breakdown reports separately.
+HERBICIDE_FIELDS = ("knockdown", "pre_emergent", *POST_EMERGENT_FIELDS)
+SPRING_FIELDS = ("spring_option", "spring_swathe", "spring_others")
+HARVEST_FIELDS = ("harvest_option", "harvest_others")
 
 import numpy_financial as npf
 
@@ -19,14 +26,16 @@ def machinery_repayment_per_ha(prices: dict, interest_rate_pct: float, farm_area
 
 
 def harvest_machine_cost(decision: dict, repayments: dict) -> float:
+    # 2.Strategy row 18 now carries the workbook's own labels; these are the
+    # machinery-repayment keys they correspond to. Burning everything moved to
+    # the harvest-others row and buys no machinery, so it is not here.
     map_key = {
         "HSD": "HSD",
-        "BDS": "BDS",
-        "Chaff cart+dumps": "Chaff cart",
-        "Chaff-tramlining": "Chaff tramlining",
-        "Narrow windrow burn": "Narrow windrow",
+        "BDS+E.": "BDS",
+        "Cart+B.": "Chaff cart",
+        "Tram.": "Chaff tramlining",
+        "Narr+B.": "Narrow windrow",
         "Standard": "Standard harvest reference",
-        "Whole paddock burn": "Standard harvest reference",
     }
     key = map_key.get(decision.get("harvest_option", "Standard"), "Standard harvest reference")
     return float(repayments.get(key, 0.0))
@@ -42,7 +51,8 @@ def compute_revenue(decision: dict, yield_t_ha: float, profile: dict, prices: di
 
     if "pasture" in crop.lower():
         livestock_income = stocking_dse * float(profile.get("sheep_gm_per_dse", 50.0))
-        if decision.get("spring_option") == "Hay & Silage":
+        # Calcs rows 83 and 84 -- the workbook prices hay and silage separately.
+        if decision.get("spring_option") in ("Hay+Spray", "Sil.+Spray"):
             pasture_income = yield_t_ha * float(prices.get("Hay", 0.0))
     else:
         grain_income = yield_t_ha * crop_price
@@ -71,22 +81,24 @@ def compute_costs(decision: dict, prices: dict, options: dict, machinery_cost_pe
     if decision.get("pre_tillage") == "Tickle":
         base_cost += float(prices.get("cost_tickle", 0.0))
 
-    spray_pass_cost = float(prices.get("cost_sprayer_pass", 0.0))
-    kd = decision.get("knockdown", "None")
-    knockdown_passes = {"None": 0.0, "Single knock-down": 1.0, "Double knock-down": 2.0}.get(kd, 0.0)
-    herb_passes = knockdown_passes
-    if decision.get("pre_emergent") not in ("No", "None", "", None):
-        herb_passes += 1.0
-    # 2.Strategy rows 11-13: each post-emergent slot filled is its own pass over
-    # the paddock, and its own cost. "post_emergent" is the version-1 field,
-    # still read so an old row is not silently sprayed for free.
-    for field in ("post_emergent", *POST_EMERGENT_FIELDS):
-        if decision.get(field) not in ("No", "None", "", None):
-            herb_passes += 1.0
-    herbicide_cost = herb_passes * spray_pass_cost
-
-    spring_cost = float(options.get("costs", {}).get("spring", {}).get(decision.get("spring_option", "None"), 0.0))
-    harvest_cost = float(options.get("costs", {}).get("harvest", {}).get(decision.get("harvest_option", "Standard"), 0.0))
+    # Every weed-control decision is priced by the workbook, per crop, in
+    # Calcs!N105:T147 -- $26/ha for a Glyphosate knock-down in a crop and $22 in
+    # a pasture, $48 for Sakura, $8 for a bare spray pass. Each post-emergent
+    # slot filled is its own application and its own cost. See
+    # rim/control_options.py; none of these numbers is ours.
+    crop_code = app_crop_code(decision.get("crop", "Wheat"))
+    herbicide_cost = sum(
+        control_options.cost(field, decision.get(field), crop_code)
+        for field in HERBICIDE_FIELDS
+    )
+    spring_cost = sum(
+        control_options.cost(field, decision.get(field), crop_code)
+        for field in SPRING_FIELDS
+    )
+    harvest_cost = sum(
+        control_options.cost(field, decision.get(field), crop_code)
+        for field in HARVEST_FIELDS
+    )
 
     weed_control_cost = herbicide_cost + spring_cost + harvest_cost + machinery_cost_per_ha
     total = base_cost + weed_control_cost

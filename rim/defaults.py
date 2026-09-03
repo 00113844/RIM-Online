@@ -87,89 +87,21 @@ DEFAULT_OPTIONS = {
         "standard": 4.5,
         "high": 6.5,
     },
+    # Weed control is no longer rated here. Each option has its own effect and
+    # its own cost, and both depend on the crop, so both are read from the
+    # workbook's tables -- rim/control_options.py, Calcs rows 55-97 and
+    # 105-147. Only tillage stays, which those tables treat as a seeding
+    # operation rather than a control option.
     "control_effect": {
         "pre_tillage": {
             "None": 0.00,
             "Tickle": 0.15,
             "Mouldboard plough": 0.98,
         },
-        "knockdown": {
-            "None": 0.00,
-            "Single knock-down": 0.55,
-            "Double knock-down": 0.75,
-        },
-        # Pre- and post-emergent control is no longer a flat rate here. Each
-        # product has its own effect, and it differs per crop, so it is read
-        # from the workbook's own table -- rim/herbicides.py, Calcs rows 58-62
-        # and 71-75. Leaving invented numbers here would have them silently
-        # disagree with the table.
-        "spring": {
-            "None": 0.00,
-            "Green manuring": 1.00,
-            "Brown manuring": 1.00,
-            "Mowing": 0.90,
-            "Hay & Silage": 0.90,
-            "Topping": 0.40,
-            "Swathing": 0.45,
-        },
-        "harvest": {
-            "Standard": 0.30,
-            "Whole paddock burn": 0.85,
-            "Narrow windrow burn": 0.85,
-            "Chaff-tramlining": 0.85,
-            "Chaff cart+dumps": 0.85,
-            "HSD": 0.85,
-            "BDS": 0.85,
-        },
     },
-    "timing_factor": {
-        "Dry": 1.00,
-        "Wet": 1.02,
-        "Delayed (1-2 wks)": 0.96,
-        "+Delayed (3 wks)": 0.90,
-    },
-    "seeding_rate_factor": {
-        "Standard": 1.00,
-        "High": 1.04,
-    },
-    "spring_yield_factor": {
-        "None": 1.00,
-        "Green manuring": 0.05,
-        "Brown manuring": 0.10,
-        "Mowing": 0.85,
-        "Hay & Silage": 0.80,
-        "Topping": 0.95,
-        "Swathing": 0.97,
-    },
-    "rotation_factor": {
-        "default": 1.00,
-        "cereal_after_legume": 1.20,
-        "cereal_after_green_legume": 1.30,
-        "cereal_after_canola": 1.05,
-        "canola_after_legume": 1.06,
-        "short_break_penalty": 0.90,
-        "mouldboard_benefit": 1.15,
-    },
-    "costs": {
-        "spring": {
-            "None": 0.0,
-            "Green manuring": 100.0,
-            "Brown manuring": 8.0,
-            "Mowing": 100.0,
-            "Hay & Silage": 35.0,
-            "Topping": 8.0,
-            "Swathing": 35.0,
-        },
-        "harvest": {
-            "Standard": 0.0,
-            "Whole paddock burn": 12.0,
-            "Narrow windrow burn": 10.0,
-            "Chaff-tramlining": 14.0,
-            "Chaff cart+dumps": 16.0,
-            "HSD": 20.0,
-            "BDS": 18.0,
-        },
-    },
+    # Weed-control costs are no longer listed here either. The workbook prices
+    # every option per crop in Calcs!N105:T147, paired to its control row 50
+    # above; rim/control_options.py reads both.
 }
 
 DEFAULT_STRATEGY_ROW = {
@@ -187,8 +119,11 @@ DEFAULT_STRATEGY_ROW = {
     "post_emergent_2": "None",
     "post_emergent_3": "None",
     "spring_option": "None",
+    "spring_swathe": "None",
+    "spring_others": "None",
     "grazing_intensity": "None",
     "harvest_option": "Standard",
+    "harvest_others": "None",
 }
 
 

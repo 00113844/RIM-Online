@@ -18,6 +18,9 @@ from rim.options import (
     SPRING_OPTIONS,
     PRE_EMERGENT_OPTIONS,
     POST_EMERGENT_OPTIONS,
+    SPRING_SWATHE_OPTIONS,
+    SPRING_OTHERS_OPTIONS,
+    HARVEST_OTHERS_OPTIONS,
 )
 from utils.charts import gross_margin_and_ryegrass_chart, income_breakdown_chart, weed_cost_chart
 from utils.session import (
@@ -140,7 +143,8 @@ else:
             "seeding_timing", "seeding_technique", "seeding_rate", "pre_tillage",
             "knockdown", "pre_emergent",
             "post_emergent_1", "post_emergent_2", "post_emergent_3",
-            "spring_option", "grazing_intensity", "harvest_option",
+            "spring_option", "spring_swathe", "spring_others",
+            "grazing_intensity", "harvest_option", "harvest_others",
         ],
         column_config={
             "year": st.column_config.NumberColumn("Yr", width="small", disabled=True),
@@ -160,8 +164,11 @@ else:
             "post_emergent_2": st.column_config.SelectboxColumn("Post-em 2", options=POST_EMERGENT_OPTIONS),
             "post_emergent_3": st.column_config.SelectboxColumn("Post-em 3", options=POST_EMERGENT_OPTIONS),
             "spring_option": st.column_config.SelectboxColumn("Spring", options=SPRING_OPTIONS),
+            "spring_swathe": st.column_config.SelectboxColumn("Swathe", options=SPRING_SWATHE_OPTIONS),
+            "spring_others": st.column_config.SelectboxColumn("Spring other", options=SPRING_OTHERS_OPTIONS),
             "grazing_intensity": st.column_config.SelectboxColumn("Grazing", options=GRAZING_OPTIONS, width="small"),
             "harvest_option": st.column_config.SelectboxColumn("Harvest", options=HARVEST_OPTIONS, width="small"),
+            "harvest_others": st.column_config.SelectboxColumn("Harvest other", options=HARVEST_OTHERS_OPTIONS),
         },
         key="strategy_editor",
     )

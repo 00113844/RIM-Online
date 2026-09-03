@@ -1,205 +1,191 @@
-"""Named herbicides, and what each one controls on each crop.
+"""The herbicide view of :mod:`rim.control_options`, and the schema migration.
 
-RIM does not ask whether you sprayed. It asks *what* you sprayed, because a
-product's effect depends on the crop it is sprayed into: Topik takes 90% of the
-ryegrass in wheat and nothing at all in canola, while Clethodim is the other way
-round. A yes/no answer cannot express that, and the flat control rate it implies
-is wrong for every product.
+Herbicides were the first decisions to get their real names, so this module is
+where the rest of the app reaches for them. The table it reads is now the
+general one -- every weed-control decision, control and cost together -- and
+lives in :mod:`rim.control_options`.
 
-The numbers live in ``Calcs!N54:T97`` -- one row per control option, one column
-per crop code -- and are already generated into
-``data/calcs_survival_table.json`` by ``tools/extract_params.py``. Nothing here
-is typed; this module only names the rows and reads them.
+It also carries :func:`upgrade_row`, which brings a strategy row written by an
+earlier version up to the current schema. There have been three:
 
-    Pre-emergent   Calcs rows 58-62   Triflur+Triallate .. Triazine
-    Post-emergent  Calcs rows 71-75   Topik .. Paraquat
+    1  ``pre_emergent`` / ``post_emergent`` held "Yes" or "No"; the knock-down
+       was "Single knock-down" / "Double knock-down"; spring and harvest used
+       names of our own ("Green manuring", "Narrow windrow burn").
+    2  Herbicides named as the workbook names them, and ``post_emergent`` split
+       into the three slots the workbook has.
+    3  Every weed-control decision uses the workbook's own vocabulary, and the
+       three decisions RIM has that the app lacked -- spring swathe, spring
+       others, harvest others -- exist.
 
-**A zero is a statement, not a gap.** Where the table holds 0 for a crop the
-product does nothing there, and the workbook means it: Topik and Hussar are
-grass-selective cereal herbicides, so they read 0 on canola, legume and every
-pasture. :func:`works_on` is that reading, and ``utils/applicability.py`` turns
-it into a disabled control rather than a silent no-op.
-
-The workbook offers three post-emergent slots (``2.Strategy`` rows 11-13), so a
-year can carry up to three applications. They are independent rows in the same
-table; nothing here privileges one slot over another.
+A row already at the current schema passes through untouched, so upgrading is
+safe to apply to anything.
 """
 from __future__ import annotations
 
-import json
-from dataclasses import dataclass
-from functools import lru_cache
-from pathlib import Path
+from rim import control_options
+from rim.control_options import NONE, ControlOption
 
-DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "calcs_survival_table.json"
+# The herbicide-facing names for what are now generic option rows.
+Herbicide = ControlOption
+DATA_PATH = control_options.SURVIVAL_PATH
 
-# Calcs!N54:T97 row numbers. The order is the workbook's own, and it is the
-# order the dropdowns show, so the app reads like 1.Profile does.
-PRE_EMERGENT_ROWS: tuple[int, ...] = (58, 59, 60, 61, 62)
-POST_EMERGENT_ROWS: tuple[int, ...] = (71, 72, 73, 74, 75)
+KNOCKDOWN_ROWS = control_options.FIELD_ROWS["knockdown"]
+PRE_EMERGENT_ROWS = control_options.FIELD_ROWS["pre_emergent"]
+POST_EMERGENT_ROWS = control_options.FIELD_ROWS["post_emergent_1"]
 
-# The three post-emergent decisions, 2.Strategy rows 11, 12 and 13.
 POST_EMERGENT_FIELDS: tuple[str, ...] = (
-    "post_emergent_1",
-    "post_emergent_2",
-    "post_emergent_3",
+    "post_emergent_1", "post_emergent_2", "post_emergent_3",
 )
 
-# What "nothing sprayed" reads as in a strategy row.
-NONE = "None"
+# The herbicide slots, and the strategy field each one reads.
+_SLOT_FIELD = {
+    "knockdown": "knockdown",
+    "pre": "pre_emergent",
+    "post": "post_emergent_1",
+}
 
 
-@dataclass(frozen=True)
-class Herbicide:
-    """One row of the control table, under the name 1.Profile gives it."""
-
-    row: int                      # Calcs row, for citation
-    name: str                     # "Sakura"
-    control: dict[int, float]     # crop code -> proportion of ryegrass killed
-
-    def works_on(self, crop_code: int) -> bool:
-        """Does this product do anything at all to ryegrass in this crop?"""
-        return self.control.get(crop_code, 0.0) > 0.0
-
-    @property
-    def crops_it_works_on(self) -> tuple[int, ...]:
-        return tuple(code for code, value in sorted(self.control.items()) if value > 0.0)
+def _field(slot: str) -> str:
+    return _SLOT_FIELD[slot]
 
 
-@lru_cache(maxsize=1)
-def _table() -> dict:
-    if not DATA_PATH.is_file():
-        raise FileNotFoundError(
-            f"{DATA_PATH} is missing. Regenerate it with:\n"
-            r"    .venv\Scripts\python -m tools.extract_params"
-        )
-    return json.loads(DATA_PATH.read_text(encoding="utf-8"))
+def knockdowns() -> tuple[Herbicide, ...]:
+    """Calcs rows 55-57 — Glyphosate, Paraquat, and the double knock."""
+    return control_options.options_for("knockdown")
 
 
-def _read(rows: tuple[int, ...]) -> tuple[Herbicide, ...]:
-    options = _table()["options"]
-    out = []
-    for row in rows:
-        entry = options[str(row)]
-        # Labels arrive as "Pre-E: Sakura" / "Post-E: Topik"; the prefix says
-        # which slot, which the row number already tells us.
-        name = entry["label"].split(":", 1)[-1].strip()
-        out.append(Herbicide(
-            row=row,
-            name=name,
-            control={int(code): float(value)
-                     for code, value in entry["by_crop_code"].items()},
-        ))
-    return tuple(out)
-
-
-@lru_cache(maxsize=1)
 def pre_emergents() -> tuple[Herbicide, ...]:
     """Calcs rows 58-62, in workbook order."""
-    return _read(PRE_EMERGENT_ROWS)
+    return control_options.options_for("pre_emergent")
 
 
-@lru_cache(maxsize=1)
 def post_emergents() -> tuple[Herbicide, ...]:
     """Calcs rows 71-75, in workbook order."""
-    return _read(POST_EMERGENT_ROWS)
+    return control_options.options_for("post_emergent_1")
 
 
-def _by_name(products: tuple[Herbicide, ...]) -> dict[str, Herbicide]:
-    return {product.name: product for product in products}
+def knockdown_names() -> list[str]:
+    return control_options.names("knockdown")
 
 
 def pre_emergent_names() -> list[str]:
-    """The pre-emergent dropdown: no spray, then the workbook's five."""
-    return [NONE] + [product.name for product in pre_emergents()]
+    return control_options.names("pre_emergent")
 
 
 def post_emergent_names() -> list[str]:
-    """One post-emergent slot's dropdown: no spray, then the workbook's five."""
-    return [NONE] + [product.name for product in post_emergents()]
+    return control_options.names("post_emergent_1")
 
 
 def find(name: object, *, slot: str) -> Herbicide | None:
-    """The named product in ``slot`` ("pre" or "post"), or None.
-
-    Returns None for "None", for a blank, and for a name this build does not
-    know -- a strategy saved by a later version, say. A caller that treats None
-    as "nothing sprayed" degrades safely.
-    """
-    if name in (None, "", NONE):
-        return None
-    products = pre_emergents() if slot == "pre" else post_emergents()
-    return _by_name(products).get(str(name).strip())
+    """The named product in ``slot``, or None for "not sprayed"/unknown."""
+    return control_options.find(_field(slot), name)
 
 
 def control(name: object, crop_code: int, *, slot: str) -> float:
-    """Proportion of germinated ryegrass this product kills in this crop.
-
-    Zero when nothing is sprayed, and zero when the product does nothing to
-    this crop -- which is the workbook's own value, not a fallback.
-    """
-    product = find(name, slot=slot)
-    return 0.0 if product is None else product.control.get(crop_code, 0.0)
+    """Proportion of germinated ryegrass this product kills in this crop."""
+    return control_options.control(_field(slot), name, crop_code)
 
 
 def works_on(name: object, crop_code: int, *, slot: str) -> bool:
     """Would this selection have any effect in this crop?"""
-    return control(name, crop_code, slot=slot) > 0.0
+    return control_options.works_on(_field(slot), name, crop_code)
 
 
 def first_that_works(crop_code: int, *, slot: str) -> str:
     """The first product in workbook order that does anything in this crop.
 
-    Used only to carry forward a plan saved before products existed, where the
-    decision recorded was the bare "Yes". Returns ``NONE`` when no product in
-    this slot works on the crop, which is the honest answer for a pasture with
-    no pre-emergent.
+    Used to carry a plan forward from a schema that recorded only "Yes".
+    Returns ``NONE`` when nothing in this slot works on the crop, which is the
+    honest answer for a pasture with no pre-emergent.
     """
-    products = pre_emergents() if slot == "pre" else post_emergents()
-    for product in products:
+    for product in control_options.options_for(_field(slot)):
         if product.works_on(crop_code):
             return product.name
     return NONE
 
 
+# ── Carrying older plans forward ──────────────────────────────────────────────
+
+# Version 1 named the knock-down by how many passes it was, which the workbook
+# never does. A single knock becomes the first single product it lists; the
+# double becomes the row that *is* the double.
+LEGACY_KNOCKDOWN = {
+    "Single knock-down": "Glyphosate",
+    "Double knock-down": "Glyphosate/Paraquat",
+}
+
+# Version 1 spring and harvest names, against the workbook rows they meant.
+LEGACY_SPRING = {
+    "Green manuring": "Green M.",
+    "Brown manuring": "Brown M",
+    "Mowing": "Mow+Spray",
+    "Hay & Silage": "Hay+Spray",
+    "Topping": "Topping",
+}
+LEGACY_HARVEST = {
+    "Narrow windrow burn": "Narr+B.",
+    "Chaff-tramlining": "Tram.",
+    "Chaff cart+dumps": "Cart+B.",
+    "HSD": "HSD",
+    "BDS": "BDS+E.",
+}
+
+# Two version-1 choices sat in the wrong column: the workbook keeps burning
+# everything on the harvest-others row, and swathing on a row of its own.
+LEGACY_MOVED = {
+    ("harvest_option", "Whole paddock burn"): ("harvest_others", "B.all"),
+    ("spring_option", "Swathing"): ("spring_swathe", "W/o Spray"),
+}
+
+
+def _text(value: object) -> str:
+    return str(value).strip() if value is not None else ""
+
+
 def upgrade_row(row: dict) -> dict:
-    """Carry a strategy row written before herbicides had names.
-
-    Version 1 of the strategy schema asked only whether you sprayed:
-    ``pre_emergent`` and ``post_emergent`` held "Yes" or "No". A bare "Yes"
-    does not say which product, and no product can be inferred from it, so it
-    becomes the first one the workbook lists that works on that year's crop --
-    a deterministic rule, not a guess at intent. "No" becomes ``NONE``.
-
-    Rows already using product names pass through untouched, so this is safe to
-    apply to anything.
-    """
+    """Bring one strategy row up to the current schema. Idempotent."""
     from rim.rotation import app_crop_code
 
     out = dict(row)
     code = app_crop_code(out.get("crop", "Wheat"))
 
+    # A bare "Yes" does not say which product, and none can be inferred from it,
+    # so it becomes the first the workbook lists that works on this crop -- a
+    # rule rather than a guess at intent.
     def resolve(value: object, slot: str) -> str:
-        text = str(value).strip()
+        text = _text(value)
         if text == "Yes":
             return first_that_works(code, slot=slot)
-        if text in ("No", ""):
-            return NONE
-        return text
+        return NONE if text in ("No", "") else text
 
-    if str(out.get("pre_emergent", "")).strip() in ("Yes", "No", ""):
+    if _text(out.get("pre_emergent")) in ("Yes", "No", ""):
         out["pre_emergent"] = resolve(out.get("pre_emergent"), "pre")
 
-    # The single old slot becomes the first of the workbook's three.
     if "post_emergent" in out:
         legacy = out.pop("post_emergent")
-        if str(out.get("post_emergent_1", NONE)).strip() in (NONE, ""):
+        if _text(out.get("post_emergent_1")) in (NONE, ""):
             out["post_emergent_1"] = resolve(legacy, "post")
 
     for field in POST_EMERGENT_FIELDS:
-        if str(out.get(field, "")).strip() in ("", "No", "Yes"):
+        if _text(out.get(field)) in ("", "No", "Yes"):
             out[field] = resolve(out.get(field, NONE), "post")
-        out.setdefault(field, NONE)
+
+    for field, legacy_names in (("knockdown", LEGACY_KNOCKDOWN),
+                                ("spring_option", LEGACY_SPRING),
+                                ("harvest_option", LEGACY_HARVEST)):
+        current = _text(out.get(field))
+        out[field] = legacy_names.get(
+            current, current or control_options.INERT[field]
+        )
+
+    for (field, old), (target, new) in LEGACY_MOVED.items():
+        if _text(out.get(field)) == old:
+            out[field] = control_options.INERT[field]
+            if _text(out.get(target)) in (NONE, ""):
+                out[target] = new
+
+    for field in control_options.FIELDS:
+        out.setdefault(field, control_options.INERT[field])
 
     return out
 

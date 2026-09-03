@@ -265,11 +265,15 @@ def test_the_old_single_slot_becomes_the_first_of_three() -> None:
     assert upgraded["post_emergent_3"] == herbicides.NONE
 
 
-def test_a_row_that_already_names_products_is_untouched() -> None:
-    row = {"crop": "Wheat", "pre_emergent": "Sakura", "post_emergent_1": "Hussar",
-           "post_emergent_2": "None", "post_emergent_3": "None"}
+def test_a_row_at_the_current_schema_is_untouched() -> None:
+    """Upgrading must be idempotent, or it would rewrite live plans."""
+    row = herbicides.upgrade_row(
+        {"crop": "Wheat", "pre_emergent": "Sakura", "post_emergent_1": "Hussar"}
+    )
 
     assert herbicides.upgrade_row(row) == row
+    assert row["pre_emergent"] == "Sakura"
+    assert row["post_emergent_1"] == "Hussar"
 
 
 def test_the_engine_still_runs_a_version_one_plan() -> None:
@@ -316,18 +320,45 @@ def _herbicide_cost(**sprays) -> float:
     return compute_costs(row, DEFAULT_PRICES, DEFAULT_OPTIONS, 0.0)["herbicide_cost"]
 
 
-def test_every_slot_filled_is_a_pass_that_gets_paid_for() -> None:
-    """Three post-emergent sprays are three trips over the paddock, not one."""
-    nothing = _herbicide_cost()
-    one = _herbicide_cost(post_emergent_1="Topik")
-    three = _herbicide_cost(post_emergent_1="Topik", post_emergent_2="Hussar",
-                            post_emergent_3="Topik")
+def test_each_product_is_charged_at_the_workbook_s_own_price() -> None:
+    """Calcs!N105:T147, not a flat pass: Topik is $13/ha in wheat, Hussar $38."""
+    from rim import control_options
 
-    assert nothing == 0.0
-    assert one > nothing
-    assert three == pytest.approx(nothing + 3 * (one - nothing))
+    topik = control_options.cost("post_emergent_1", "Topik", WHEAT)
+    hussar = control_options.cost("post_emergent_1", "Hussar", WHEAT)
+
+    assert topik != hussar, "the whole point of pricing per product"
+    assert _herbicide_cost() == 0.0
+    assert _herbicide_cost(post_emergent_1="Topik") == pytest.approx(topik)
+    assert _herbicide_cost(post_emergent_1="Hussar") == pytest.approx(hussar)
+
+
+def test_every_slot_filled_is_charged(WHEAT=WHEAT) -> None:
+    """Three post-emergent sprays are three applications, each at its own price."""
+    from rim import control_options
+
+    priced = sum(control_options.cost("post_emergent_1", name, WHEAT)
+                 for name in ("Topik", "Hussar", "Topik"))
+
+    assert _herbicide_cost(post_emergent_1="Topik", post_emergent_2="Hussar",
+                           post_emergent_3="Topik") == pytest.approx(priced)
+
+
+def test_the_same_product_costs_differently_by_crop() -> None:
+    """Glyphosate knock-down is $26/ha in a crop and $22/ha in a pasture."""
+    from rim import control_options
+
+    in_crop = control_options.cost("knockdown", "Glyphosate", WHEAT)
+    in_pasture = control_options.cost("knockdown", "Glyphosate", VOLUNTEER)
+
+    assert in_crop != in_pasture
+    assert _herbicide_cost(knockdown="Glyphosate") == pytest.approx(in_crop)
 
 
 def test_a_version_one_row_is_still_charged_for_its_spray() -> None:
     """Otherwise an old plan would spray for free the moment the field moved."""
-    assert _herbicide_cost(post_emergent="Yes") > _herbicide_cost()
+    old = herbicides.upgrade_row({**build_default_strategy(1)[0],
+                                  "pre_emergent": "No", "post_emergent": "Yes"})
+
+    assert _herbicide_cost(**{k: v for k, v in old.items()
+                              if k in herbicides.POST_EMERGENT_FIELDS}) > 0.0

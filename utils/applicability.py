@@ -22,7 +22,7 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
-from rim import herbicides
+from rim import control_options, herbicides
 from rim.activation import is_sown
 from rim.rotation import app_crop_code
 
@@ -35,9 +35,7 @@ NO_GAP_SOWING = {"Dry", "Wet"}
 # already reads as "nothing selected". A field mapped to None has no meaningful
 # "off": the model simply does not read it, so it is left as it is.
 INERT_VALUE: dict[str, str | None] = {
-    "knockdown": "None",
-    "pre_emergent": herbicides.NONE,
-    **{field: herbicides.NONE for field in herbicides.POST_EMERGENT_FIELDS},
+    **control_options.INERT,
     "grazing_intensity": "None",
     "harvest_option": "Standard",
     "seeding_technique": None,
@@ -56,6 +54,9 @@ FIELD_LABEL = {
     "post_emergent_1": "Post-emergent 1",
     "post_emergent_2": "Post-emergent 2",
     "post_emergent_3": "Post-emergent 3",
+    "spring_swathe": "Swathe",
+    "spring_others": "Other spring option",
+    "harvest_others": "Other harvest option",
     "spring_option": "Spring option",
     "grazing_intensity": "Grazing",
     "harvest_option": "Harvest control",
@@ -64,7 +65,8 @@ FIELD_LABEL = {
 SOURCE = {
     "knockdown": "2.Strategy!D65",
     "pre_emergent": "2.Strategy!D66",
-    **{field: "Calcs rows 71-75" for field in herbicides.POST_EMERGENT_FIELDS},
+    **{field: f"Calcs rows {rows[0]}-{rows[-1]}"
+       for field, rows in control_options.FIELD_ROWS.items()},
     "seeding_technique": "2.Strategy!D66",
     "seeding_rate": "2.Strategy!D66",
     "seeding_timing": "2.Strategy!D66",
@@ -78,8 +80,9 @@ def _chosen(field: str, value: Any) -> bool:
     if value in ("", None):
         return False
     text = str(value).strip()
-    if field == "harvest_option":
-        return text != "Standard"
+    inert = control_options.INERT.get(field)
+    if inert is not None:
+        return text != inert
     return text not in ("None", "No")
 
 
@@ -87,29 +90,26 @@ def crop_code(label: Any) -> int:
     return app_crop_code(label)
 
 
-HERBICIDE_SLOT = {"pre_emergent": "pre",
-                  **{field: "post" for field in herbicides.POST_EMERGENT_FIELDS}}
+# Every decision the workbook rates per crop. A choice in any of these can be
+# the wrong one for the year's crop without being structurally impossible.
+CONTROL_FIELDS: tuple[str, ...] = control_options.FIELDS
 
 
 def product_options(field: str, crop: Any) -> list[str]:
-    """The products worth offering for this field in this crop.
+    """The choices worth offering for this decision in this crop.
 
-    Calcs rows 58-62 and 71-75 hold 0 where a product does nothing to ryegrass
-    in a crop, so those products are left out of the list rather than offered
-    and quietly ignored. "None" is always there; a crop with no working product
-    is left with only that, which is the workbook's answer.
+    Calcs rows 55-97 hold 0 where an option does nothing to ryegrass in a crop,
+    so those are left out of the list rather than offered and quietly ignored.
+    Doing nothing is always there; a crop with no working option is left with
+    only that, which is the workbook's own answer.
     """
-    slot = HERBICIDE_SLOT[field]
-    products = (herbicides.pre_emergents() if slot == "pre"
-                else herbicides.post_emergents())
-    code = crop_code(crop)
-    return [herbicides.NONE] + [p.name for p in products if p.works_on(code)]
+    return control_options.usable_names(field, crop_code(crop))
 
 
 def product_mismatch(row: dict, code: int) -> dict[str, str]:
-    """Herbicides chosen here that do nothing to ryegrass in this crop.
+    """Choices made here that do nothing to ryegrass in this crop.
 
-    Calcs rows 58-62 and 71-75 hold 0 where a product has no effect on a crop.
+    Calcs rows 55-97 hold 0 where an option has no effect on a crop.
     Topik and Hussar are grass-selective cereal herbicides and read 0 on canola,
     legume and every pasture; Clethodim and post-emergent Glyphosate are the
     other way round; post-emergent Paraquat works only on pasture. Spraying one
@@ -121,11 +121,11 @@ def product_mismatch(row: dict, code: int) -> dict[str, str]:
     should stay live with the products that do work.
     """
     out: dict[str, str] = {}
-    for field, slot in HERBICIDE_SLOT.items():
+    for field in CONTROL_FIELDS:
         chosen = row.get(field)
         if not _chosen(field, chosen):
             continue
-        if not herbicides.works_on(chosen, code, slot=slot):
+        if not control_options.works_on(field, chosen, code):
             out[field] = (
                 f"{str(chosen).strip()} does nothing to ryegrass in "
                 f"{str(row.get('crop', '')).strip().lower()} — the workbook "

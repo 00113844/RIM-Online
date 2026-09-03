@@ -27,6 +27,8 @@ def _year(**overrides) -> dict:
         "pre_tillage": "None", "knockdown": "None", "pre_emergent": "None",
         "post_emergent_1": "None", "post_emergent_2": "None",
         "post_emergent_3": "None", "spring_option": "None",
+        "spring_swathe": "None", "spring_others": "None",
+        "harvest_others": "None",
         "grazing_intensity": "None", "harvest_option": "Standard",
     }
     base.update(overrides)
@@ -78,12 +80,12 @@ def test_knockdown_is_gated_by_dry_or_wet_sowing() -> None:
     """2.Strategy!D65 — no gap before seeding, so it is not counted twice."""
     for timing in ("Dry", "Wet"):
         findings = ineffective_choices(
-            [_year(seeding_timing=timing, knockdown="Single knock-down")]
+            [_year(seeding_timing=timing, knockdown="Glyphosate")]
         )
         assert "Knock-down" in _fields(findings), timing
 
     delayed = ineffective_choices(
-        [_year(seeding_timing="Delayed (1-2 wks)", knockdown="Single knock-down")]
+        [_year(seeding_timing="Delayed (1-2 wks)", knockdown="Glyphosate")]
     )
     assert "Knock-down" not in _fields(delayed)
 
@@ -135,8 +137,8 @@ def test_standard_harvest_is_not_flagged() -> None:
 def test_a_clean_plan_raises_nothing() -> None:
     findings = ineffective_choices([
         _year(year=1, crop="Wheat", seeding_timing="Delayed (1-2 wks)",
-              knockdown="Single knock-down", pre_emergent="Sakura",
-              harvest_option="Narrow windrow burn"),
+              knockdown="Glyphosate", pre_emergent="Sakura",
+              harvest_option="Narr+B."),
     ])
 
     assert findings == []
@@ -145,7 +147,7 @@ def test_a_clean_plan_raises_nothing() -> None:
 
 def test_summary_counts_distinct_problems_not_rows() -> None:
     """The same mistake repeated for ten years is one problem, not ten."""
-    plan = [_year(year=n, knockdown="Single knock-down") for n in range(1, 11)]
+    plan = [_year(year=n, knockdown="Glyphosate") for n in range(1, 11)]
 
     assert summarise(ineffective_choices(plan)).startswith("One choice was cleared")
 
@@ -169,10 +171,10 @@ def test_neutralise_leaves_no_impossible_value_behind() -> None:
 
 def test_neutralise_leaves_valid_choices_alone() -> None:
     plan = [_year(crop="Sub-Clover pasture", grazing_intensity="High",
-                  seeding_timing="Delayed (1-2 wks)", knockdown="Double knock-down")]
+                  seeding_timing="Delayed (1-2 wks)", knockdown="Glyphosate/Paraquat")]
 
     cleaned, changes = neutralise(plan)
 
     assert changes == []
     assert cleaned[0]["grazing_intensity"] == "High"
-    assert cleaned[0]["knockdown"] == "Double knock-down"
+    assert cleaned[0]["knockdown"] == "Glyphosate/Paraquat"

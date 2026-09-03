@@ -63,21 +63,24 @@ def compute_actual_yield(
 
     rate_factor = float(options.get("seeding_rate_factor", {}).get(decision.get("seeding_rate", "Standard"), 1.0))
 
-    # Crop-specific spring yield factor — swathing benefits canola (no penalty)
+    # Crop-specific spring yield factor — swathing benefits canola (no penalty).
+    # Swathing is its own decision now (2.Strategy row 16), not a spring option.
     spring_option = decision.get("spring_option", "None")
+    swathed = str(decision.get("spring_swathe", "None")).strip() != "None"
     spring_yield_factors = options.get("spring_yield_factor", {})
-    if isinstance(spring_yield_factors.get("Swathing"), dict):
+    if swathed and isinstance(spring_yield_factors.get("Swathing"), dict):
         spring_factor = float(spring_yield_factors.get("Swathing", {}).get(crop, 1.0))
-    else:
+    elif swathed:
         # Canola benefits from swathing (even ripening) — no yield penalty
-        if spring_option == "Swathing" and crop == "Canola":
-            spring_factor = 1.0
-        else:
-            spring_factor = float(spring_yield_factors.get(spring_option, 1.0))
+        spring_factor = 1.0 if crop == "Canola" else float(
+            spring_yield_factors.get("Swathing", 1.0)
+        )
+    else:
+        spring_factor = float(spring_yield_factors.get(spring_option, 1.0))
 
     # Determine if previous crop was green-manured legume
     green_manured = (
-        previous_spring_option in ("Green manuring",)
+        previous_spring_option in ("Green M.",)
         and _is_legume(previous_crop or "")
     )
     rot_factor = rotation_factor(crop, previous_crop, options, green_manured)

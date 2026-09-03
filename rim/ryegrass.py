@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from rim import herbicides
+from rim import control_options
 from rim.rotation import app_crop_code
 
 
@@ -21,22 +21,18 @@ def total_control_fraction(decision: dict, options: dict, years_since_mouldboard
     if pre_tillage_name == "Mouldboard plough" and years_since_mouldboard is not None and years_since_mouldboard < 3:
         pre_tillage_control = 0.30
 
-    # A herbicide's effect depends on the crop it goes into -- Topik takes 90%
-    # of the ryegrass in wheat and nothing in canola -- so it comes from the
-    # workbook's per-crop table rather than a flat rate in `options`. The three
-    # post-emergent slots are 2.Strategy rows 11-13.
+    # Every weed-control decision's effect depends on the crop it is applied
+    # to -- Topik takes 90% of the ryegrass in wheat and nothing in canola,
+    # swathing does nothing at all on pasture -- so all of them are read from
+    # the workbook's own table rather than a flat rate in `options`. The only
+    # one left in `options` is tillage, which that table treats as a seeding
+    # operation. See rim/control_options.py.
     crop_code = app_crop_code(decision.get("crop", "Wheat"))
 
-    parts = [
-        pre_tillage_control,
-        control.get("knockdown", {}).get(decision.get("knockdown", "None"), 0.0),
-        herbicides.control(decision.get("pre_emergent"), crop_code, slot="pre"),
-        control.get("spring", {}).get(decision.get("spring_option", "None"), 0.0),
-        control.get("harvest", {}).get(decision.get("harvest_option", "Standard"), 0.0),
-    ]
+    parts = [pre_tillage_control]
     parts += [
-        herbicides.control(decision.get(field), crop_code, slot="post")
-        for field in herbicides.POST_EMERGENT_FIELDS
+        control_options.control(field, decision.get(field), crop_code)
+        for field in control_options.FIELDS
     ]
 
     if decision.get("seeding_technique") == "Full-cut (wide points)":
@@ -69,20 +65,40 @@ def seed_production(
     options: dict,
     crop: str,
     spring_option: str,
+    spring_swathe: str = "None",
 ) -> float:
+    """How much seed the survivors set, after what spring did to them.
+
+    These multipliers are the pre-port engine's own and have no workbook cell
+    behind them; TASKS item 3 replaces the whole of this with Bio results
+    D17:D20. They are keyed by the workbook's spring vocabulary so that at
+    least the *labels* are real -- green manuring incorporates the plants before
+    they seed, so nothing sets; swathing and topping cut seed set without
+    ending it. Hay and silage are a single figure here where the workbook
+    prices and rates them separately.
+    """
     fecundity = float(options.get("fecundity_base", 12.0))
-    # Multiplier reflects fraction of seeds that set after spring management.
-    # Green/Brown manuring = 0: all plants incorporated before seed set.
-    # Swathing/Topping reduce seed set but don't eliminate it entirely.
     spring_multiplier = {
         "None": 1.0,
-        "Green manuring": 0.0,
-        "Brown manuring": 0.0,
-        "Mowing": 0.05,
-        "Hay & Silage": 0.10,
+        "Green M.": 0.0,
+        "Brown M": 0.0,
+        "Mow+Spray": 0.05,
+        "Hay+Spray": 0.10,
+        "Sil.+Spray": 0.10,
         "Topping": 0.25,
-        "Swathing": 0.30,
     }.get(spring_option, 1.0)
 
+    # Swathing is its own decision (2.Strategy row 16), not a spring option, and
+    # can be taken alongside one. Whichever cuts seed set harder governs.
+    swathe_multiplier = {
+        "None": 1.0,
+        "W/o Spray": 0.30,
+        "With Spray": 0.30,
+    }.get(spring_swathe, 1.0)
+
     competition_effect = 1.0 - crop_competition_strength(crop)
-    return max(survivors * fecundity * max(competition_effect, 0.15) * spring_multiplier, 0.0)
+    return max(
+        survivors * fecundity * max(competition_effect, 0.15)
+        * min(spring_multiplier, swathe_multiplier),
+        0.0,
+    )

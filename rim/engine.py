@@ -83,6 +83,7 @@ def simulate_strategy(profile: dict, prices: dict, options: dict, strategy_rows:
             options=options,
             crop=decision.get("crop", "Wheat"),
             spring_option=decision.get("spring_option", "None"),
+            spring_swathe=decision.get("spring_swathe", "None"),
         )
 
         seed_bank_end = replenish_seed_bank(

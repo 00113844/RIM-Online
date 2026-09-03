@@ -43,12 +43,6 @@ SOIL_PREP_LABELS: dict[str, str] = {
     "Mouldb.": "Mouldboard plough",
 }
 
-# 2.Strategy row 7. Excel names the product; Python knows only single/double.
-KNOCKDOWN_LABELS: dict[str, str] = {
-    "Glyphosate": "Single knock-down",
-    "Paraquat": "Single knock-down",
-    "DoubleK": "Double knock-down",
-}
 
 # 2.Strategy row 9.
 ESTABLISHMENT_LABELS: dict[str, str] = {
@@ -56,34 +50,8 @@ ESTABLISHMENT_LABELS: dict[str, str] = {
     "Full-cut": "Full-cut (wide points)",
 }
 
-# 2.Strategy row 15.
-SPRING_LABELS: dict[str, str] = {
-    "Green man.": "Green manuring",
-    "Brown man.": "Brown manuring",
-    "Mowing": "Mowing",
-    "Hay": "Hay & Silage",
-    "Silage": "Hay & Silage",
-    "Topping": "Topping",
-    "Swathing": "Swathing",
-}
-
-# 2.Strategy row 18.
-HARVEST_LABELS: dict[str, str] = {
-    "Standard": "Standard",
-    "Burn": "Whole paddock burn",
-    "Narr+B.": "Narrow windrow burn",
-    "Tramline": "Chaff-tramlining",
-    "Cart+B.": "Chaff cart+dumps",
-    "HSD": "HSD",
-    "BDS": "BDS",
-}
 
 TRANSLATION_LOSSES: tuple[str, ...] = (
-    "Knock-down products collapse to Single/Double; Excel distinguishes "
-    "Glyphosate from Paraquat in both cost and control.",
-    "Spring sub-options (rows 16 'Swathe' and 17 'Others', e.g. 'With Spray') "
-    "are dropped; Excel treats them as separate priced operations.",
-    "Harvest-options-others (row 19) is dropped; only the crops row is mapped.",
     "Stage timing is lost: Calcs!C75:C83 applies each control at a named "
     "seasonal stage, whereas Python applies one combined annual fraction.",
 )
@@ -99,6 +67,13 @@ def _present(value: Any) -> bool:
 # listed; an unrecognised label is passed through rather than silently dropped.
 STRATEGY_PRODUCT_LABELS: dict[str, str] = {
     "Triflur+Tria": "Triflur+Triallate",
+    "DoubleK": "Glyphosate/Paraquat",
+    "Green man.": "Green M.",
+    "Brown man.": "Brown M",
+    "Hay": "Hay+Spray",
+    "Silage": "Sil.+Spray",
+    "Mowing": "Mow+Spray",
+    "Burn": "B.all",
 }
 
 
@@ -128,19 +103,22 @@ def translate_year(excel_row: dict[str, Any]) -> dict[str, Any]:
         "pre_tillage": SOIL_PREP_LABELS.get(
             str(excel_row.get("soil_preparation") or "").strip(), "None"
         ),
-        "knockdown": KNOCKDOWN_LABELS.get(
-            str(excel_row.get("knock_down") or "").strip(), "None"
-        ),
-        # The workbook names its herbicides and rates each per crop, and so does
-        # the app now, so these carry across unchanged instead of collapsing to
-        # a boolean. 2.Strategy row 8, and rows 11-13.
+        # Every weed-control decision now uses the workbook's own vocabulary,
+        # rated and priced per crop, so these carry across as they are rather
+        # than collapsing into names of ours. 2.Strategy rows 7, 8, 11-13,
+        # 15-19.
+        "knockdown": _product(excel_row.get("knock_down")),
         "pre_emergent": _product(excel_row.get("pre_emergent")),
         **{f"post_emergent_{i}": _product(excel_row.get(f"post_emergent_{i}"))
            for i in (1, 2, 3)},
-        "spring_option": SPRING_LABELS.get(spring_raw, "None"),
+        "spring_option": _product(spring_raw),
+        "spring_swathe": _product(excel_row.get("spring_swathe")),
+        "spring_others": _product(excel_row.get("spring_others")),
+        "harvest_others": _product(excel_row.get("harvest_others")),
         "grazing_intensity": str(excel_row.get("grazing_intensity") or "None").strip(),
-        "harvest_option": HARVEST_LABELS.get(
-            str(excel_row.get("harvest_crops") or "Standard").strip(), "Standard"
+        "harvest_option": (
+            _product(excel_row.get("harvest_crops"))
+            if _present(excel_row.get("harvest_crops")) else "Standard"
         ),
     }
 
