@@ -44,9 +44,14 @@ into ``cost_by_crop_code``, so nothing downstream has to know. See
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from functools import lru_cache
 from pathlib import Path
+from typing import Mapping, Optional
+
+# A user's own definitions for RIM's four definable slots, keyed by Calcs row.
+# See rim/custom_options.py. None means "the workbook's values, unchanged".
+Custom = Optional[Mapping[int, Mapping]]
 
 _DATA = Path(__file__).resolve().parents[1] / "data"
 SURVIVAL_PATH = _DATA / "calcs_survival_table.json"
@@ -182,9 +187,14 @@ class ControlOption:
 
     @property
     def aliases(self) -> tuple[str, ...]:
-        """Every name this option answers to, current and historical."""
+        """Every name this option answers to, current and historical.
+
+        A user-renamed slot keeps its default name here too, so a plan written
+        before the rename still selects the right row.
+        """
         return tuple(dict.fromkeys(
-            (self.name, self.workbook_name, self.workbook_label)
+            (self.name, DISPLAY_NAMES.get(self.row, self.workbook_name),
+             self.workbook_name, self.workbook_label)
             + LEGACY_NAMES.get(self.row, ())
         ))
 
@@ -232,10 +242,35 @@ def _rows() -> dict[int, ControlOption]:
 
 
 @lru_cache(maxsize=None)
-def options_for(field: str) -> tuple[ControlOption, ...]:
-    """The options this decision can hold, in the workbook's order."""
+def _workbook_options_for(field: str) -> tuple[ControlOption, ...]:
     rows = _rows()
     return tuple(rows[row] for row in FIELD_ROWS[field])
+
+
+def options_for(field: str, custom: Custom = None) -> tuple[ControlOption, ...]:
+    """The options this decision can hold, in the workbook's order.
+
+    ``custom`` holds a user's own definitions for RIM's four definable slots,
+    keyed by Calcs row -- see :mod:`rim.custom_options`. It is passed in rather
+    than held here because one Streamlit server serves many browsers, and a
+    user's options must not leak into anyone else's session.
+    """
+    options = _workbook_options_for(field)
+    if not custom:
+        return options
+    return tuple(_apply(option, custom.get(option.row)) for option in options)
+
+
+def _apply(option: ControlOption, override: Mapping | None) -> ControlOption:
+    """One workbook option with a user's name, control or cost in place of it."""
+    if not override:
+        return option
+    return replace(
+        option,
+        name=override.get("name", option.name),
+        control=dict(override.get("control", option.control)),
+        cost=dict(override.get("cost", option.cost)),
+    )
 
 
 def _key(name: object) -> str:
@@ -243,28 +278,30 @@ def _key(name: object) -> str:
     return " ".join(str(name).split()).casefold()
 
 
-@lru_cache(maxsize=None)
-def _index(field: str) -> dict[str, ControlOption]:
+def _index(field: str, custom: Custom = None) -> dict[str, ControlOption]:
     """Every name each option answers to, folded.
 
     Display names are indexed first so that one option's current name always
-    beats another option's historical alias.
+    beats another option's historical alias. A renamed custom slot keeps its
+    workbook name as an alias too, so a plan that used the old name still
+    resolves.
     """
     index: dict[str, ControlOption] = {}
-    for option in options_for(field):
+    options = options_for(field, custom)
+    for option in options:
         index.setdefault(_key(option.name), option)
-    for option in options_for(field):
+    for option in options:
         for alias in option.aliases:
             index.setdefault(_key(alias), option)
     return index
 
 
-def names(field: str) -> list[str]:
-    """The dropdown for this decision: doing nothing, then the workbook's list."""
-    return [INERT[field]] + [option.name for option in options_for(field)]
+def names(field: str, custom: Custom = None) -> list[str]:
+    """The dropdown for this decision: doing nothing, then the list."""
+    return [INERT[field]] + [o.name for o in options_for(field, custom)]
 
 
-def find(field: str, name: object) -> ControlOption | None:
+def find(field: str, name: object, custom: Custom = None) -> ControlOption | None:
     """The named option for this decision, or None.
 
     None covers not choosing, a blank, and a name this build does not know -- a
@@ -273,38 +310,38 @@ def find(field: str, name: object) -> ControlOption | None:
     """
     if field not in FIELD_ROWS or name in (None, "", INERT[field]):
         return None
-    return _index(field).get(_key(name))
+    return _index(field, custom).get(_key(name))
 
 
-def control(field: str, name: object, crop_code: int) -> float:
+def control(field: str, name: object, crop_code: int, custom: Custom = None) -> float:
     """Proportion of germinated ryegrass this choice kills in this crop."""
-    option = find(field, name)
+    option = find(field, name, custom)
     return 0.0 if option is None else option.control.get(crop_code, 0.0)
 
 
-def cost(field: str, name: object, crop_code: int) -> float:
+def cost(field: str, name: object, crop_code: int, custom: Custom = None) -> float:
     """$/ha this choice costs in this crop, from Calcs!N105:T147."""
-    option = find(field, name)
+    option = find(field, name, custom)
     return 0.0 if option is None else option.cost_in(crop_code)
 
 
-def works_on(field: str, name: object, crop_code: int) -> bool:
+def works_on(field: str, name: object, crop_code: int, custom: Custom = None) -> bool:
     """Would this choice have any effect on ryegrass in this crop?"""
-    return control(field, name, crop_code) > 0.0
+    return control(field, name, crop_code, custom) > 0.0
 
 
-def row_of(field: str, name: object) -> int | None:
+def row_of(field: str, name: object, custom: Custom = None) -> int | None:
     """The Calcs row this choice is, or None if nothing is chosen.
 
     Behaviour that depends on *which* option was picked should branch on this
     rather than on the name. A row number is what the workbook actually keys
     on, and it survives every rename.
     """
-    option = find(field, name)
+    option = find(field, name, custom)
     return None if option is None else option.row
 
 
-def canonical(field: str, name: object) -> str:
+def canonical(field: str, name: object, custom: Custom = None) -> str:
     """The current display name for whatever this choice used to be called.
 
     Resolves the workbook's abbreviation and every historical app name onto the
@@ -312,21 +349,51 @@ def canonical(field: str, name: object) -> str:
     still selects. Anything unrecognised comes back as the field's inert value
     rather than a name no dropdown offers.
     """
-    option = find(field, name)
+    option = find(field, name, custom)
     return INERT[field] if option is None else option.name
 
 
-def usable_names(field: str, crop_code: int) -> list[str]:
+def usable_names(field: str, crop_code: int, custom: Custom = None) -> list[str]:
     """The dropdown narrowed to choices that do something in this crop."""
     return [INERT[field]] + [
-        option.name for option in options_for(field) if option.works_on(crop_code)
+        o.name for o in options_for(field, custom) if o.works_on(crop_code)
     ]
 
 
-def total_cost(decision: dict, crop_code: int) -> float:
+def total_cost(decision: dict, crop_code: int, custom: Custom = None) -> float:
     """What this year's weed-control decisions cost, $/ha.
 
     Every decision this module owns, priced from the workbook's own table. Each
     filled post-emergent slot is its own application and its own cost.
     """
-    return sum(cost(field, decision.get(field), crop_code) for field in FIELDS)
+    return sum(cost(field, decision.get(field), crop_code, custom)
+               for field in FIELDS)
+
+
+def custom_from(options: Mapping | None) -> Custom:
+    """A user's own option definitions, out of the options bundle.
+
+    Stored under ``custom_options`` so it saves with the scenario and reaches
+    the engine as a parameter like any other.
+
+    JSON has no integer keys. A round trip through a save file turns both the
+    row numbers and the crop codes into strings, and a crop code that arrives as
+    ``"0"`` never matches a lookup by ``0`` -- the option silently reads as
+    controlling nothing and costing nothing. So both levels are put back here,
+    which is the one place every reader passes through.
+    """
+    if not options:
+        return None
+    raw = options.get("custom_options")
+    if not raw:
+        return None
+
+    out: dict[int, dict] = {}
+    for row, spec in raw.items():
+        restored = dict(spec)
+        for key in ("control", "cost"):
+            if isinstance(restored.get(key), Mapping):
+                restored[key] = {int(code): float(value)
+                                 for code, value in restored[key].items()}
+        out[int(row)] = restored
+    return out

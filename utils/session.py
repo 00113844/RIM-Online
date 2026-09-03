@@ -6,6 +6,7 @@ import streamlit as st
 
 from rim.defaults import DEFAULT_OPTIONS, DEFAULT_PRICES, DEFAULT_PROFILE, build_default_strategy
 from rim.engine import simulate_strategy
+from rim import control_options
 from rim.herbicides import upgrade_strategy
 
 
@@ -155,6 +156,16 @@ def profile_slot_labels() -> dict[int, str]:
     lookup with no hidden read of session state behind it.
     """
     return {slot: profile_slot_label(slot) for slot in st.session_state.profile_slots}
+
+
+def custom_options() -> dict | None:
+    """This session's own option definitions, if a pack has been loaded.
+
+    Kept in the options bundle rather than anywhere module-level: one Streamlit
+    server serves many browsers, and one user's definitions must never appear in
+    another's session.
+    """
+    return control_options.custom_from(st.session_state.options_current)
 
 
 def snapshot_profile_bundle() -> dict:
@@ -347,7 +358,10 @@ def import_bundle(data: dict) -> tuple[bool, str]:
     st.session_state.profile_current = deepcopy(data["profile"])
     st.session_state.prices_current = deepcopy(data["prices"])
     st.session_state.options_current = deepcopy(data["options"])
-    st.session_state.strategy_current = upgrade_strategy(deepcopy(data["strategy"]))
+    st.session_state.strategy_current = upgrade_strategy(
+        deepcopy(data["strategy"]),
+        control_options.custom_from(st.session_state.options_current),
+    )
 
     # Slot keys come back from JSON as strings.
     if isinstance(data.get("profile_slots"), dict):
@@ -356,7 +370,9 @@ def import_bundle(data: dict) -> tuple[bool, str]:
         }
     if isinstance(data.get("strategy_slots"), dict):
         st.session_state.strategy_slots = {
-            int(k): (upgrade_strategy(v) if v else v)
+            int(k): (upgrade_strategy(
+                v, control_options.custom_from(st.session_state.options_current))
+                if v else v)
             for k, v in data["strategy_slots"].items()
         }
 

@@ -30,9 +30,15 @@ REMEDY = {
 }
 
 
-def problems(strategy_rows) -> list[dict]:
-    """Every decision in the plan the model cannot act on."""
-    return neutralise(strategy_rows)[1]
+def problems(strategy_rows, custom=None) -> list[dict]:
+    """Every decision in the plan the model cannot act on.
+
+    ``custom`` carries a user's own option definitions when they have loaded
+    any, so their names are recognised rather than reported as impossible. It
+    is a parameter rather than a session lookup so this stays callable outside
+    Streamlit -- the command-line runner checks a plan the same way.
+    """
+    return neutralise(strategy_rows, custom)[1]
 
 
 def problem_panel(found: list[dict], *, on_fix_key: str) -> bool:

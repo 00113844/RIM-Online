@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import streamlit as st
 
 from utils.export import tables_to_excel_bytes
-from utils.session import ensure_current_results, init_state
+from utils.session import custom_options, ensure_current_results, init_state
 from utils.validation import held_results_notice, problems
 from utils.theme import (
     inject_uwa_theme,
@@ -75,7 +75,7 @@ def show(frame) -> None:
     )
 
 
-found = problems(st.session_state.strategy_current)
+found = problems(st.session_state.strategy_current, custom_options())
 if found and st.session_state.get("results_A") is None:
     held_results_notice(found)
     uwa_footer()

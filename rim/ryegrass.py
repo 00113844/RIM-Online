@@ -29,9 +29,11 @@ def total_control_fraction(decision: dict, options: dict, years_since_mouldboard
     # operation. See rim/control_options.py.
     crop_code = app_crop_code(decision.get("crop", "Wheat"))
 
+    custom = control_options.custom_from(options)
+
     parts = [pre_tillage_control]
     parts += [
-        control_options.control(field, decision.get(field), crop_code)
+        control_options.control(field, decision.get(field), crop_code, custom)
         for field in control_options.FIELDS
     ]
 

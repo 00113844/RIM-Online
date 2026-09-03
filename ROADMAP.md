@@ -67,9 +67,10 @@ Every weed-control decision now uses the workbook's own vocabulary and is rated
 decisions the app used to lack -- spring swathe, spring others, harvest others.
 `TRANSLATION_LOSSES` is down to one entry, stage timing, which Phase 1 owns.
 
-What remains is RIM's user-definable slots: two spring and two harvest options a
-user can name and price themselves (`1.Profile` C32:C35). The app offers them at
-the workbook's saved values but cannot edit them.
+RIM's four user-definable slots are defined by uploading a JSON file, which
+travels with the scenario and reaches the command-line runner too. Option names
+are readable rather than the workbook's abbreviations, with every earlier
+spelling kept as an alias so renaming cannot strand a saved plan.
 
 ### Phase 3 — Verify the workflow
 

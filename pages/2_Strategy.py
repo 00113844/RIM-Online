@@ -6,6 +6,8 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pandas as pd
 import streamlit as st
 
+from rim.control_options import names
+from utils.session import custom_options
 from rim.options import (
     CROP_OPTIONS,
     GRAZING_OPTIONS,
@@ -19,8 +21,6 @@ from rim.options import (
     PRE_EMERGENT_OPTIONS,
     POST_EMERGENT_OPTIONS,
     SPRING_SWATHE_OPTIONS,
-    SPRING_OTHERS_OPTIONS,
-    HARVEST_OTHERS_OPTIONS,
 )
 from utils.charts import gross_margin_and_ryegrass_chart, income_breakdown_chart, weed_cost_chart
 from utils.session import (
@@ -58,10 +58,12 @@ uwa_page_header(
 )
 
 # ── The plan is checked before anything is computed ───────────────────────────
-found = problems(st.session_state.strategy_current)
+found = problems(st.session_state.strategy_current, custom_options())
 
 if problem_panel(found, on_fix_key="fix_all_top"):
-    st.session_state.strategy_current = neutralise(st.session_state.strategy_current)[0]
+    st.session_state.strategy_current = neutralise(
+        st.session_state.strategy_current, custom_options()
+    )[0]
     st.session_state.results_current = None
     reset_editor_widgets()
     st.rerun()
@@ -165,10 +167,10 @@ else:
             "post_emergent_3": st.column_config.SelectboxColumn("Post-em 3", options=POST_EMERGENT_OPTIONS),
             "spring_option": st.column_config.SelectboxColumn("Spring", options=SPRING_OPTIONS),
             "spring_swathe": st.column_config.SelectboxColumn("Swathe", options=SPRING_SWATHE_OPTIONS),
-            "spring_others": st.column_config.SelectboxColumn("Spring other", options=SPRING_OTHERS_OPTIONS),
+            "spring_others": st.column_config.SelectboxColumn("Spring other", options=names("spring_others", custom_options())),
             "grazing_intensity": st.column_config.SelectboxColumn("Grazing", options=GRAZING_OPTIONS, width="small"),
             "harvest_option": st.column_config.SelectboxColumn("Harvest", options=HARVEST_OPTIONS, width="small"),
-            "harvest_others": st.column_config.SelectboxColumn("Harvest other", options=HARVEST_OTHERS_OPTIONS),
+            "harvest_others": st.column_config.SelectboxColumn("Harvest other", options=names("harvest_others", custom_options())),
         },
         key="strategy_editor",
     )

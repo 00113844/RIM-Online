@@ -91,16 +91,17 @@ def compute_costs(decision: dict, prices: dict, options: dict, machinery_cost_pe
     # slot filled is its own application and its own cost. See
     # rim/control_options.py; none of these numbers is ours.
     crop_code = app_crop_code(decision.get("crop", "Wheat"))
+    custom = control_options.custom_from(options)
     herbicide_cost = sum(
-        control_options.cost(field, decision.get(field), crop_code)
+        control_options.cost(field, decision.get(field), crop_code, custom)
         for field in HERBICIDE_FIELDS
     )
     spring_cost = sum(
-        control_options.cost(field, decision.get(field), crop_code)
+        control_options.cost(field, decision.get(field), crop_code, custom)
         for field in SPRING_FIELDS
     )
     harvest_cost = sum(
-        control_options.cost(field, decision.get(field), crop_code)
+        control_options.cost(field, decision.get(field), crop_code, custom)
         for field in HARVEST_FIELDS
     )
 

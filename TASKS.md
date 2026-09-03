@@ -36,10 +36,16 @@ hand-written cost table in `rim/defaults.py`.
 app applies one combined annual fraction. That is item 3's business, not a
 vocabulary problem.
 
-**Still outstanding:** RIM lets a user *define* the two spring and two harvest
-slots (`1.Profile` C32:C35) with their own name, cost and control. The app
-offers them under the workbook's placeholder names at the workbook's saved
-values; it cannot yet edit them.
+Names are readable rather than the workbook's abbreviations -- "Whole paddock
+burn", not "B.all" -- with every earlier spelling kept as an alias, so renaming
+cannot strand a saved plan. Behaviour branches on the `Calcs` row rather than the
+name, for the same reason.
+
+RIM's four definable slots (`1.Profile` C32:C35) are defined by uploading a small
+JSON file: name, cost and control, with per-crop exceptions. See
+`rim/custom_options.py`. The pack travels in the options bundle, so it saves with
+the scenario and reaches the command-line runner too, and it is never
+process-wide state -- one Streamlit server serves many browsers.
 
 ---
 
@@ -100,34 +106,28 @@ model. That is item 3.
 
 ---
 
-## 5. A headless CLI, so scenarios can be run without the browser
+## 5. ~~A headless CLI~~ — DONE
 
-Everything the model does is reachable only through Streamlit today. There is no
-way to run a profile and a strategy from the command line, which makes three
-things awkward: comparing several farms, regression-testing the app's numbers
-against the workbook, and reproducing a user's report from the `.rim.json` they
-send.
-
-The pieces already exist. `.rim.json` holds a whole scenario
-(`utils/session.py`, `export_bundle()`); `utils/export.py` writes the same
-scenario to a workbook; `rim.engine.simulate_strategy()` takes plain dicts and
-imports no Streamlit.
-
-**The work** — a `tools/run_scenario.py` that takes one or more `.rim.json`
-files, runs each, and writes results as CSV, JSON or an Excel workbook:
+Done 2026-09-03. `tools/run_scenario.py` runs the `.rim.json` files the app
+exports, with no Streamlit anywhere in the path:
 
 ```console
-.venv\Scripts\python -m tools.run_scenario scenarios/*.rim.json --out results/
-.venv\Scripts\python -m tools.run_scenario broomehill.rim.json --compare kojonup.rim.json
+.venv\Scripts\python -m tools.run_scenario                       # the shipped default
+.venv\Scripts\python -m tools.run_scenario broomehill.rim.json kojonup.rim.json
+.venv\Scripts\python -m tools.run_scenario plan.rim.json --options mine.json
+.venv\Scripts\python -m tools.run_scenario *.rim.json --format excel --out results/
 ```
 
-Needs a loader that reads a save file **without** `st.session_state` — the
-current `import_bundle()` writes straight into session state, so the reading and
-the applying have to come apart first. That split is small and makes the save
-format testable on its own.
+`rim/scenario.py` is the reading, split from the applying that `utils/session.py`
+does, which is what makes the save format testable on its own. It fills missing
+sections from the defaults, so a hand-written scenario need not restate
+everything, and carries an older vocabulary forward on read.
 
-Worth doing after item 3: run through `rim/calcs.py` and the CLI becomes a way
-to check the app against a fixture, not just a convenience.
+The runner warns about decisions the model would ignore and `--strict` refuses
+them. Output is a plain table, CSV, JSON or a workbook.
+
+**Worth doing after item 3:** run it through `rim/calcs.py` and it becomes a way
+to check the app against a fixture rather than only a convenience.
 
 ---
 
@@ -172,6 +172,10 @@ to check the app against a fixture, not just a convenience.
   crop from the workbook, across its three post-emergent slots.
 - The whole weed-control vocabulary, rated *and priced* per crop from the
   workbook, including the three decisions the app used to lack.
+- Readable option names, with every earlier spelling kept as an alias so a
+  rename cannot strand a saved plan.
+- RIM's four user-definable options, described in an uploaded JSON file.
+- A headless CLI over the app's own export (`tools/run_scenario.py`).
 - Scenario export carries its inputs, not only its results (`utils/export.py`).
 - Profile slots save the farm on screen, and say which farm they hold. The page
   no longer batches its fields behind `st.form`; see

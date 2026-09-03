@@ -122,7 +122,7 @@ def _text(value: object) -> str:
     return str(value).strip() if value is not None else ""
 
 
-def upgrade_row(row: dict) -> dict:
+def upgrade_row(row: dict, custom: control_options.Custom = None) -> dict:
     """Bring one strategy row up to the current schema. Idempotent.
 
     Names resolve through :func:`rim.control_options.canonical`, which knows the
@@ -162,8 +162,8 @@ def upgrade_row(row: dict) -> dict:
         value = out.get(field)
         if _text(value) in ("", control_options.INERT[field]):
             continue
-        if control_options.find(field, value) is None:
-            moved = control_options.find(target, value)
+        if control_options.find(field, value, custom) is None:
+            moved = control_options.find(target, value, custom)
             if moved is not None:
                 out[field] = control_options.INERT[field]
                 if _text(out.get(target)) in (NONE, ""):
@@ -173,11 +173,17 @@ def upgrade_row(row: dict) -> dict:
         value = out.get(field, control_options.INERT[field])
         out[field] = (control_options.INERT[field]
                       if _text(value) in ("", control_options.INERT[field])
-                      else control_options.canonical(field, value))
+                      else control_options.canonical(field, value, custom))
 
     return out
 
 
-def upgrade_strategy(rows: list[dict]) -> list[dict]:
-    """:func:`upgrade_row` across a whole plan."""
-    return [upgrade_row(row) for row in rows]
+def upgrade_strategy(rows: list[dict],
+                     custom: control_options.Custom = None) -> list[dict]:
+    """:func:`upgrade_row` across a whole plan.
+
+    ``custom`` must be passed wherever a user's own option definitions are in
+    play, or their names would be unrecognised here and cleared as if they had
+    never been chosen.
+    """
+    return [upgrade_row(row, custom) for row in rows]

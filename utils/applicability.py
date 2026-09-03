@@ -95,7 +95,7 @@ def crop_code(label: Any) -> int:
 CONTROL_FIELDS: tuple[str, ...] = control_options.FIELDS
 
 
-def product_options(field: str, crop: Any) -> list[str]:
+def product_options(field: str, crop: Any, custom: Any = None) -> list[str]:
     """The choices worth offering for this decision in this crop.
 
     Calcs rows 55-97 hold 0 where an option does nothing to ryegrass in a crop,
@@ -103,10 +103,10 @@ def product_options(field: str, crop: Any) -> list[str]:
     Doing nothing is always there; a crop with no working option is left with
     only that, which is the workbook's own answer.
     """
-    return control_options.usable_names(field, crop_code(crop))
+    return control_options.usable_names(field, crop_code(crop), custom)
 
 
-def product_mismatch(row: dict, code: int) -> dict[str, str]:
+def product_mismatch(row: dict, code: int, custom: Any = None) -> dict[str, str]:
     """Choices made here that do nothing to ryegrass in this crop.
 
     Calcs rows 55-97 hold 0 where an option has no effect on a crop.
@@ -125,7 +125,7 @@ def product_mismatch(row: dict, code: int) -> dict[str, str]:
         chosen = row.get(field)
         if not _chosen(field, chosen):
             continue
-        if not control_options.works_on(field, chosen, code):
+        if not control_options.works_on(field, chosen, code, custom):
             out[field] = (
                 f"{str(chosen).strip()} does nothing to ryegrass in "
                 f"{str(row.get('crop', '')).strip().lower()} — the workbook "
@@ -134,13 +134,14 @@ def product_mismatch(row: dict, code: int) -> dict[str, str]:
     return out
 
 
-def product_mismatches(strategy_rows: Iterable[dict]) -> list[dict[str, str]]:
+def product_mismatches(strategy_rows: Iterable[dict],
+                       custom: Any = None) -> list[dict[str, str]]:
     """:func:`product_mismatch` for each year of a plan."""
-    return [product_mismatch(row, crop_code(row.get("crop")))
+    return [product_mismatch(row, crop_code(row.get("crop")), custom)
             for row in strategy_rows]
 
 
-def gates(strategy_rows: Iterable[dict]) -> list[dict[str, str]]:
+def gates(strategy_rows: Iterable[dict], custom: Any = None) -> list[dict[str, str]]:
     """For each year, the decisions the model cannot act on, and why.
 
     Returns one dict per year mapping a field name to a plain-language reason.
@@ -195,7 +196,7 @@ def gates(strategy_rows: Iterable[dict]) -> list[dict[str, str]]:
                 "control to treat."
             )
 
-        for field, reason in product_mismatch(row, code).items():
+        for field, reason in product_mismatch(row, code, custom).items():
             blocked.setdefault(field, reason)
 
         out.append(blocked)
@@ -203,7 +204,8 @@ def gates(strategy_rows: Iterable[dict]) -> list[dict[str, str]]:
     return out
 
 
-def neutralise(strategy_rows: Iterable[dict]) -> tuple[list[dict], list[dict]]:
+def neutralise(strategy_rows: Iterable[dict],
+               custom: Any = None) -> tuple[list[dict], list[dict]]:
     """Clear any selection the model cannot act on.
 
     Returns ``(rows, changes)``, where ``changes`` describes each clearing so
@@ -212,7 +214,7 @@ def neutralise(strategy_rows: Iterable[dict]) -> tuple[list[dict], list[dict]]:
     rows = [dict(row) for row in strategy_rows]
     changes: list[dict] = []
 
-    for index, (row, blocked) in enumerate(zip(rows, gates(rows))):
+    for index, (row, blocked) in enumerate(zip(rows, gates(rows, custom))):
         for field, reason in blocked.items():
             inert = INERT_VALUE.get(field)
             if inert is None or not _chosen(field, row.get(field)):
@@ -229,9 +231,10 @@ def neutralise(strategy_rows: Iterable[dict]) -> tuple[list[dict], list[dict]]:
     return rows, changes
 
 
-def ineffective_choices(strategy_rows: Iterable[dict]) -> list[dict]:
+def ineffective_choices(strategy_rows: Iterable[dict],
+                        custom: Any = None) -> list[dict]:
     """Selections the model would ignore, without changing them."""
-    return neutralise(strategy_rows)[1]
+    return neutralise(strategy_rows, custom)[1]
 
 
 def summarise(findings: list[dict]) -> str:

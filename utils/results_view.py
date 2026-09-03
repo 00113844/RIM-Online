@@ -10,7 +10,7 @@ from typing import Any
 
 import streamlit as st
 
-from utils.session import ensure_current_results
+from utils.session import custom_options, ensure_current_results
 from utils.validation import held_results_notice, problems
 
 
@@ -44,7 +44,7 @@ def views() -> list[tuple[str, dict[str, Any]]]:
     if a is not None and b is not None:
         return [("Strategy A", a), ("Strategy B", b)]
 
-    found = problems(st.session_state.strategy_current)
+    found = problems(st.session_state.strategy_current, custom_options())
     if found:
         held_results_notice(found)
         st.stop()

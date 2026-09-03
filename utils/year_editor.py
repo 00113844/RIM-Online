@@ -30,10 +30,11 @@ from utils.applicability import (
     product_mismatches,
     product_options,
 )
+from utils.session import custom_options
 
 def _for_crop(field: str, row: dict) -> list[str]:
-    """The products worth offering for ``field`` in this row's crop."""
-    return product_options(field, row.get("crop"))
+    """The options worth offering for ``field`` in this row's crop."""
+    return product_options(field, row.get("crop"), custom_options())
 
 
 # Grouped the way the season runs, not the way the columns happen to sit.
@@ -104,7 +105,7 @@ def year_editor(rows: list[dict], key: str = "year_editor") -> list[dict]:
 
     rows = [dict(row) for row in rows]
     row = rows[picked]
-    blocked = gates(rows)[picked]
+    blocked = gates(rows, custom_options())[picked]
 
     crop_col, _ = st.columns([1, 3])
     with crop_col:
@@ -118,7 +119,7 @@ def year_editor(rows: list[dict], key: str = "year_editor") -> list[dict]:
 
     # The crop may have just changed, so re-derive the gates before drawing.
     rows[picked] = row
-    blocked = gates(rows)[picked]
+    blocked = gates(rows, custom_options())[picked]
 
     for group, fields in GROUPS:
         # Re-derive before each group so a decision gates the ones below it in
@@ -126,7 +127,7 @@ def year_editor(rows: list[dict], key: str = "year_editor") -> list[dict]:
         # the knock-down in Weed control can do anything; computing the gates
         # once up front left that reason a full interaction out of date.
         rows[picked] = row
-        blocked = gates(rows)[picked]
+        blocked = gates(rows, custom_options())[picked]
 
         # A product that does nothing in this year's crop is dropped and the
         # control left live, its options already narrowed to what works. Change
@@ -134,7 +135,7 @@ def year_editor(rows: list[dict], key: str = "year_editor") -> list[dict]:
         # dead because Topik was in the box. The grid cannot do this -- it has
         # one option list for the whole column -- so there the mismatch stays a
         # gate, reported and cleared by utils.validation.
-        for field in product_mismatches(rows)[picked]:
+        for field in product_mismatches(rows, custom_options())[picked]:
             row[field] = NO_SPRAY
             blocked.pop(field, None)
 
