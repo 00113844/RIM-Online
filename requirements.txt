@@ -1,3 +1,15 @@
+# Runtime dependencies for the deployed Streamlit app.
+#
+# Developed and tested against Python 3.12 locally; Streamlit Community Cloud
+# currently builds on 3.14. Keep the floors low enough that both resolve.
+#
+# Editing this file also forces Streamlit Cloud to rebuild the environment
+# rather than warm-restart the container. That matters: a warm restart keeps
+# already-imported modules in sys.modules while re-executing page files from
+# disk, so a deploy that changes a page and a utils/ module together can run the
+# new page against the old module and die on import. See TASKS.md and
+# .claude/memory/streamlit-widget-state-staleness.md.
+
 streamlit>=1.42.0
 pandas>=2.2.0
 numpy>=1.26.0
