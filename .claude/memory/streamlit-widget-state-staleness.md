@@ -58,6 +58,19 @@ the form therefore reads the last-submitted values, not what is on screen.
   fails with a bare `AttributeError: _widget_state`. Precompute the labels and
   format through a plain dict.
 
+## It also bites on deploy
+
+Streamlit reloads page files but not deeply-imported modules, and that holds on
+Streamlit Cloud. A deploy touching a page and a `utils/` module together can run
+the new page against the old module, which fails at import and shows a traceback
+that reads like broken code:
+
+    ImportError: cannot import name 'commit_profile_widgets' from 'utils.session'
+
+Seen 2026-09-03 after `3f9cf53`, with the name present on `origin/main` the whole
+time. Check the remote before debugging; if the name is there, reboot the app
+(Manage app -> Reboot) rather than changing anything.
+
 ## Testing it
 
 `streamlit.testing.v1.AppTest` drives real pages. Enter through `app.py` and

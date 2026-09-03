@@ -133,6 +133,18 @@ to check the app against a fixture, not just a convenience.
 - **Streamlit only reloads pages, not deeply-imported modules.** Editing anything under
   `utils/` needs a server restart; the file watcher will not pick it up. Worth a line in
   the README when one exists.
+
+  This reaches **Streamlit Cloud too**, and there it looks like a bug in the code. A
+  deploy that changes a page and a `utils/` module together can leave the new page
+  running against the old module, and the page dies on import:
+
+  ```
+  ImportError: cannot import name 'commit_profile_widgets' from 'utils.session'
+  ```
+
+  Seen on 2026-09-03 after `3f9cf53`, with the correct code on `origin/main`. The fix is
+  Manage app -> Reboot; nothing in the repo needs changing. Check `origin/main` before
+  believing the traceback -- if the name is there, it is the deployment that is stale.
 - **The UWA/AHRI branding was reworked** in the redesign. The navy and gold came from an
   explicit AHRI request, so the new treatment should be shown to whoever owns that.
 
