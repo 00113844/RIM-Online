@@ -27,7 +27,7 @@ def save_load_controls(key: str) -> None:
             data=export_bytes(),
             file_name=filename,
             mime="application/json",
-            use_container_width=True,
+            width="stretch",
             key=f"{key}_download",
             help="Downloads the paddock profile, prices, options, the current "
                  "strategy and every filled slot as one file.",

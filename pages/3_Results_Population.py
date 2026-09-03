@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import streamlit as st
 
 from utils.charts import seedbank_population_chart
-from utils.results_view import comparison_note, scale_toggle, views
+from utils.results_view import panel_key, comparison_note, scale_toggle, views
 from utils.session import init_state
 from utils.theme import (
     inject_uwa_theme, metric_row, seedbank_spine, section, uwa_footer,
@@ -65,7 +65,8 @@ for column, (label, result) in zip(columns, panels):
             st.caption(label)
         st.plotly_chart(
             seedbank_population_chart(result["yearly"], fixed_scale=fixed),
-            use_container_width=True,
+            width="stretch",
+            key=panel_key("seedbank", label),
         )
 
 st.caption(

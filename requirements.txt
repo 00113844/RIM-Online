@@ -10,7 +10,9 @@
 # new page against the old module and die on import. See TASKS.md and
 # .claude/memory/streamlit-widget-state-staleness.md.
 
-streamlit>=1.42.0
+# 1.50 is the floor for the `width=` layout argument, which replaced
+# `use_container_width` (removed after 2025-12-31). Developed against 1.56.
+streamlit>=1.50.0
 pandas>=2.2.0
 numpy>=1.26.0
 numpy-financial>=1.0.0

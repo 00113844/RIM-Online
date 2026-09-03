@@ -27,6 +27,7 @@ from utils.charts import gross_margin_and_ryegrass_chart, income_breakdown_chart
 from utils.session import (
     compute_current_results,
     freeze_results,
+    release_results,
     init_state,
     DEFAULT_STRATEGY_SLOT,
     load_strategy_slot,
@@ -141,7 +142,7 @@ else:
     )
     edited = st.data_editor(
         pd.DataFrame(st.session_state.strategy_current),
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         num_rows="fixed",
         height=420,
@@ -228,14 +229,14 @@ with tools_left:
         )
     with load_col:
         st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
-        st.button("Load", use_container_width=True, on_click=_load_plan_slot)
+        st.button("Load", width="stretch", on_click=_load_plan_slot)
     with save_col:
         st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
-        st.button("Save", use_container_width=True, on_click=_save_plan_slot,
+        st.button("Save", width="stretch", on_click=_save_plan_slot,
                   disabled=slot == DEFAULT_STRATEGY_SLOT)
     with reset_col:
         st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
-        if st.button("Clear plan", use_container_width=True):
+        if st.button("Clear plan", width="stretch"):
             reset_strategy_current()
             st.rerun()
 
@@ -246,20 +247,19 @@ with tools_right:
     with a_col:
         st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
         if st.button("Hold as A" if not held_a else "Replace A",
-                     use_container_width=True, disabled=bool(found)):
+                     width="stretch", disabled=bool(found)):
             freeze_results("A")
             st.toast("Held current results as A")
     with b_col:
         st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
         if st.button("Hold as B" if not held_b else "Replace B",
-                     use_container_width=True, disabled=bool(found)):
+                     width="stretch", disabled=bool(found)):
             freeze_results("B")
             st.toast("Held current results as B")
     with clear_col:
         st.markdown('<div style="height:1.62rem"></div>', unsafe_allow_html=True)
-        if st.button("Release", use_container_width=True, disabled=not (held_a or held_b)):
-            st.session_state.results_A = None
-            st.session_state.results_B = None
+        if st.button("Release", width="stretch", disabled=not (held_a or held_b)):
+            release_results()
             st.rerun()
 
 # What each slot holds, spelled out. The picker carries the same names, but
@@ -310,10 +310,13 @@ fixed = st.session_state.strategy_scale_mode == "Fixed"
 
 margin_tab, cost_tab, income_tab = st.tabs(["Margin and ryegrass", "Weed control cost", "Income sources"])
 with margin_tab:
-    st.plotly_chart(gross_margin_and_ryegrass_chart(yearly, fixed_scale=fixed), use_container_width=True)
+    st.plotly_chart(gross_margin_and_ryegrass_chart(yearly, fixed_scale=fixed),
+                    width="stretch", key="strategy_margin")
 with cost_tab:
-    st.plotly_chart(weed_cost_chart(yearly, fixed_scale=fixed), use_container_width=True)
+    st.plotly_chart(weed_cost_chart(yearly, fixed_scale=fixed),
+                    width="stretch", key="strategy_weed_cost")
 with income_tab:
-    st.plotly_chart(income_breakdown_chart(yearly, fixed_scale=fixed), use_container_width=True)
+    st.plotly_chart(income_breakdown_chart(yearly, fixed_scale=fixed),
+                    width="stretch", key="strategy_income")
 
 uwa_footer()

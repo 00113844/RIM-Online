@@ -6,6 +6,7 @@ figures, then the detail. The A/B mechanic works identically on each.
 """
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import streamlit as st
@@ -52,12 +53,43 @@ def views() -> list[tuple[str, dict[str, Any]]]:
     return [("Current plan", ensure_current_results())]
 
 
+def panel_key(chart: str, label: str) -> str:
+    """A key of this chart's own, so two identical panels can coexist.
+
+    Streamlit gives an element an id derived from its type and its arguments.
+    Hold the same plan as both A and B and the two figures are identical, so
+    both charts want the same id and the page dies with
+    ``StreamlitDuplicateElementId``. Naming the panel makes them distinct
+    regardless of what they contain.
+    """
+    return f"{chart}_" + re.sub(r"[^a-z0-9]+", "_", label.lower()).strip("_")
+
+
+def held_plans_are_the_same() -> bool:
+    """Are A and B the same ten-year plan?
+
+    Comparing a plan with itself is a mistake worth naming rather than a state
+    worth rendering twice. The plans are compared, not the results: two plans
+    could in principle agree on every number, and it is still two plans.
+    """
+    a = st.session_state.get("results_A_strategy")
+    b = st.session_state.get("results_B_strategy")
+    return a is not None and a == b
+
+
 def comparison_note() -> None:
     """Say plainly which strategies are on screen, and how to get two."""
     a = st.session_state.get("results_A") is not None
     b = st.session_state.get("results_B") is not None
     if a and b:
-        st.caption("Comparing the two strategies you held on the Strategy page.")
+        if held_plans_are_the_same():
+            st.warning(
+                "**A and B hold the same plan**, so both columns show the same "
+                "run. Change the plan on the Strategy page and hold it as B to "
+                "compare two."
+            )
+        else:
+            st.caption("Comparing the two strategies you held on the Strategy page.")
     elif a or b:
         held = "A" if a else "B"
         missing = "B" if a else "A"

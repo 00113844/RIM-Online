@@ -81,16 +81,16 @@ with slot_col:
     )
 with load_col:
     st.markdown(_spacer, unsafe_allow_html=True)
-    st.button("Load", use_container_width=True, on_click=_load_slot)
+    st.button("Load", width="stretch", on_click=_load_slot)
 with save_col:
     st.markdown(_spacer, unsafe_allow_html=True)
-    st.button("Save", use_container_width=True, on_click=_save_slot)
+    st.button("Save", width="stretch", on_click=_save_slot)
 with reset_col:
     st.markdown(_spacer, unsafe_allow_html=True)
-    st.button("Reset all", use_container_width=True, on_click=_reset_all)
+    st.button("Reset all", width="stretch", on_click=_reset_all)
 with clear_col:
     st.markdown(_spacer, unsafe_allow_html=True)
-    if st.button("Clear names", use_container_width=True):
+    if st.button("Clear names", width="stretch"):
         st.session_state.confirm_clear_profile = True
 
 _message = st.session_state.pop("profile_slot_message", None)

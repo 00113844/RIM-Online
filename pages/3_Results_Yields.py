@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from utils.charts import _base, yield_comparison_chart
-from utils.results_view import comparison_note, views
+from utils.results_view import panel_key, comparison_note, views
 from utils.session import init_state
 from utils.theme import (
     RYE,
@@ -79,7 +79,8 @@ with yield_tab:
         with column:
             if len(panels) > 1:
                 st.caption(label)
-            st.plotly_chart(yield_comparison_chart(result["yearly"]), use_container_width=True)
+            st.plotly_chart(yield_comparison_chart(result["yearly"]),
+                            width="stretch", key=panel_key("yield", label))
     st.caption(
         "The loss is stacked on top of what was harvested, so the pale band is the "
         "yield the ryegrass took rather than a gap you have to measure."
@@ -90,6 +91,7 @@ with penalty_tab:
         with column:
             if len(panels) > 1:
                 st.caption(label)
-            st.plotly_chart(penalty_chart(result["yearly"]), use_container_width=True)
+            st.plotly_chart(penalty_chart(result["yearly"]),
+                            width="stretch", key=panel_key("penalty", label))
 
 uwa_footer()

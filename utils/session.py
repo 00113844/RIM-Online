@@ -342,12 +342,25 @@ def ensure_current_results() -> dict:
     return st.session_state.results_current
 
 
+def release_results() -> None:
+    """Stop holding A and B — the plans as well as the numbers."""
+    for slot in ("A", "B"):
+        st.session_state[f"results_{slot}"] = None
+        st.session_state.pop(f"results_{slot}_strategy", None)
+
+
 def freeze_results(slot: str) -> None:
+    """Hold the current run for side-by-side comparison.
+
+    The plan is kept beside the results, not just the numbers: the results
+    pages need to know whether A and B are the same *plan*, and two different
+    plans could in principle agree on every figure.
+    """
     result = ensure_current_results()
-    if slot == "A":
-        st.session_state.results_A = deepcopy(result)
-    if slot == "B":
-        st.session_state.results_B = deepcopy(result)
+    st.session_state[f"results_{slot}"] = deepcopy(result)
+    st.session_state[f"results_{slot}_strategy"] = deepcopy(
+        st.session_state.strategy_current
+    )
 
 
 # ── Saving to a file ──────────────────────────────────────────────────────────

@@ -67,7 +67,7 @@ def show(frame) -> None:
     ordered += [c for c in frame.columns if c not in ordered]
     st.dataframe(
         frame,
-        use_container_width=True,
+        width="stretch",
         hide_index=True,
         height=430,
         column_order=ordered,
@@ -114,7 +114,7 @@ with left:
         data=tables_to_excel_bytes(tables),
         file_name="RIM_tables.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        use_container_width=True,
+        width="stretch",
     )
 with right:
     sheets = ", ".join(tables)

@@ -97,7 +97,7 @@ def problem_panel(found: list[dict], *, on_fix_key: str) -> bool:
         pressed = st.button(
             f"Clear {'it' if count == 1 else 'all ' + str(count)} and run",
             type="primary",
-            use_container_width=True,
+            width="stretch",
             key=on_fix_key,
         )
     with hint_col:

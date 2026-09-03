@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import streamlit as st
 
 from utils.charts import gross_margin_and_ryegrass_chart, income_breakdown_chart, weed_cost_chart
-from utils.results_view import comparison_note, scale_toggle, views
+from utils.results_view import panel_key, comparison_note, scale_toggle, views
 from utils.session import init_state
 from utils.theme import (
     inject_uwa_theme, metric_row, section, uwa_footer, uwa_page_header, uwa_sidebar_logo,
@@ -62,7 +62,8 @@ for tab, builder in (
                     st.caption(label)
                 st.plotly_chart(
                     builder(result["yearly"], fixed_scale=fixed),
-                    use_container_width=True,
+                    width="stretch",
+                    key=panel_key(builder.__name__, label),
                 )
 
 uwa_footer()
