@@ -20,6 +20,7 @@ import streamlit as st
 
 from rim import custom_options as custom
 from utils.session import reset_editor_widgets
+from utils.uploads import is_new_upload, mark_handled
 
 EXAMPLE = {
     "format": custom.FORMAT,
@@ -86,7 +87,8 @@ def custom_options_controls(key: str = "custom_options") -> None:
         key=f"{key}_upload",
         label_visibility="collapsed",
     )
-    if uploaded is not None:
+    # Once per file, not once per run -- see utils/uploads.py.
+    if is_new_upload(uploaded, key=key):
         try:
             payload = json.loads(uploaded.getvalue().decode("utf-8"))
         except (UnicodeDecodeError, json.JSONDecodeError):
@@ -102,6 +104,7 @@ def custom_options_controls(key: str = "custom_options") -> None:
                 st.session_state.options_current["custom_options"] = parsed
                 st.session_state.results_current = None
                 reset_editor_widgets()
+                mark_handled(uploaded, key=key)
                 st.toast(f"Loaded {sum(len(v) for v in parsed.values())} "
                          f"option(s) of your own")
                 st.rerun()

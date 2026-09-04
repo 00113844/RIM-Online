@@ -94,6 +94,30 @@ the page still resolves. Copy that test rather than rediscovering the failure.
 Clearing a container that is already stale still needs a reboot, or a change to
 `requirements.txt`, which forces a cold rebuild rather than a warm restart.
 
+## st.file_uploader keeps returning the file — rerunning on it never stops
+
+Not staleness, but the same family: a widget's value persisting across runs when
+the code assumes it is an event.
+
+    uploaded = st.file_uploader(...)
+    if uploaded is not None:
+        apply(uploaded); st.rerun()      # loops forever
+
+The uploader hands the same file back on every run, so this re-applies and
+re-runs without end. Nothing raises. The page just re-runs, re-simulating the
+whole ten years each time, until the tab or the server gives out — it took a
+dev server down for memory before it was understood, and reached a user as
+"loading a 10 year strategy non-stop on a loop".
+
+Guard on the file's identity, not on its presence: `utils/uploads.py`
+(`is_new_upload` / `mark_handled`) keys off Streamlit's own `file_id`. Mark a
+file handled only once it has been applied, so a file that fails to parse keeps
+showing its error and still cannot loop, because the failure path never reruns.
+
+`tests/test_uploads.py` pins both the guard and the shape — it fails on
+`if uploaded is not None:` wrapped around an `st.rerun()`, naming the file and
+line.
+
 ## Testing it
 
 `streamlit.testing.v1.AppTest` drives real pages. Enter through `app.py` and

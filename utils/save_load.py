@@ -12,6 +12,7 @@ from datetime import datetime
 import streamlit as st
 
 from utils.session import export_bytes, import_bundle
+from utils.uploads import is_new_upload, mark_handled
 
 
 def save_load_controls(key: str) -> None:
@@ -39,7 +40,9 @@ def save_load_controls(key: str) -> None:
             key=f"{key}_upload",
             label_visibility="collapsed",
         )
-        if uploaded is not None:
+        # Once per file, not once per run: the uploader keeps handing the same
+        # file back, and rerunning on it would never stop. See utils/uploads.py.
+        if is_new_upload(uploaded, key=key):
             try:
                 payload = json.loads(uploaded.getvalue().decode("utf-8"))
             except (UnicodeDecodeError, json.JSONDecodeError):
@@ -47,6 +50,7 @@ def save_load_controls(key: str) -> None:
             else:
                 ok, message = import_bundle(payload)
                 if ok:
+                    mark_handled(uploaded, key=key)
                     st.toast(message)
                     st.rerun()
                 else:
