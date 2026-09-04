@@ -284,3 +284,55 @@ def test_a_structural_gate_still_applies_after_migrating() -> None:
     _, changes = neutralise([{**row, "year": 1}])
 
     assert [c["field"] for c in changes if c["field"] == "Pre-emergent"] == ["Pre-emergent"]
+
+
+# -- The three sprays are explained where they are chosen --------------------
+
+
+def test_the_editor_explains_what_the_three_slots_are() -> None:
+    """They read as timings unless something says otherwise, and they are not.
+
+    The mechanism is Calcs!P35:P39 counting how many of the three slots name a
+    product and Calcs!C168 raising that product's survival to the power of the
+    count -- so a second spray of the same thing compounds rather than adds a
+    stage. A user cannot infer that from three boxes labelled Spray 1/2/3.
+    """
+    from utils.year_editor import FIELD_HELP, GROUP_NOTES
+    from rim.herbicides import POST_EMERGENT_FIELDS
+
+    note = GROUP_NOTES["Post-emergent sprays"]
+    assert "not three timings" in note
+    assert "same point" in note
+
+    for field in POST_EMERGENT_FIELDS:
+        assert field in FIELD_HELP, f"{field} has no tooltip"
+        assert "same point in the season" in FIELD_HELP[field]
+
+
+def test_the_grid_explains_them_the_same_way() -> None:
+    """One string, so the two editors cannot drift apart."""
+    import pathlib
+
+    page = pathlib.Path("pages/2_Strategy.py").read_text(encoding="utf-8")
+
+    assert page.count("help=POST_EMERGENT_HELP") == 3
+    assert '_YEAR_FIELD_HELP["post_emergent_1"]' in page
+
+
+def test_the_compounding_matches_the_workbooks_own_arithmetic() -> None:
+    """The claim the tooltip makes: twice takes survival from 10% to 1%."""
+    from rim.defaults import DEFAULT_OPTIONS, build_default_strategy
+    from rim.ryegrass import total_control_fraction
+
+    base = {**build_default_strategy(1)[0], "crop": "Wheat", "pre_emergent": "None",
+            "post_emergent_1": "None", "post_emergent_2": "None",
+            "post_emergent_3": "None"}
+
+    def survival(**sprays) -> float:
+        return 1.0 - total_control_fraction({**base, **sprays}, DEFAULT_OPTIONS, None)
+
+    once = survival(post_emergent_1="Topik")
+    twice = survival(post_emergent_1="Topik", post_emergent_2="Topik")
+
+    assert once == pytest.approx(0.10)
+    assert twice == pytest.approx(once ** 2), "a repeat squares survival, per Calcs!C168"

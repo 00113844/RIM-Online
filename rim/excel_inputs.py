@@ -52,8 +52,19 @@ ESTABLISHMENT_LABELS: dict[str, str] = {
 
 
 TRANSLATION_LOSSES: tuple[str, ...] = (
-    "Stage timing is lost: Calcs!C75:C83 applies each control at a named "
-    "seasonal stage, whereas Python applies one combined annual fraction.",
+    # An earlier version of this entry said Calcs!C75:C83 "applies each control
+    # at a named seasonal stage". Those cells do no such thing -- they are
+    # survival factors for post-emergent Paraquat, the two grazing intensities
+    # and the spring options, looked up like every other row. The claim was
+    # right in substance and wrong in its citation, which is worse than saying
+    # nothing: it sends the next reader to cells that do not support it.
+    "Stage timing is lost. Calcs rows 55-97 turn each active option into a "
+    "survival factor by HLOOKUP into the control table at Calcs!N54:T97, and "
+    "the cascade applies each one where it belongs in the season -- Calcs!C168 "
+    "combines the three post-emergent slots, and Calcs!C177 carries the result "
+    "into the plant and seed-set model. Python multiplies one combined annual "
+    "fraction instead, so both the ordering and which cohorts a control can "
+    "still reach are lost.",
 )
 
 

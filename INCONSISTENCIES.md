@@ -88,7 +88,7 @@ These items are noted for future development but are outside the Phase 1 scope:
 
 - **Measured default-strategy mismatch:** With the workbook's Year 1 selections (`Wheat`, `Wet`, `Glyphosate`, `Triflur+Tria`, `Topik`, `No-till`, `Standard`, `Narr+B.`), recalculated Excel reports gross margin **$22.45/ha**, herbicide cost **$43.00/ha**, mechanical cost **$15.29/ha**, and mature ryegrass **52.60 plants/m2**. Python, supplied the same labels, reports **$282.14/ha**, **$26.44/ha**, and **16.00 plants/m2**. This is diagnostic evidence, not an approved parity fixture, because the Python input schema cannot represent the Excel decisions faithfully.
 - **Option vocabulary and UI contract:** Excel uses product-specific knock-down, pre-emergent, post-emergent, and harvest labels (for example `Glyphosate`, `Triflur+Tria`, `Topik`, and `Narr+B.`). `rim/options.py` and the Streamlit strategy editor expose generic `Single knock-down`/`Yes`/`Standard` values instead, so the default workbook strategy cannot be entered without translation. The active Excel profile stores wheat values at `1.Profile!E16/H16` for Glyphosate ($18/ha, 95%), `E20/H20` for Triflur+Triallate ($22/ha, 80%), and `E26/H26` for Topik ($5/ha, 90%).
-- **Control timing:** A label-only adapter would still be incorrect. `Calcs!C7:C27` activates product selections, with `Calcs!C23:C27` checking all three post-emergent slots. `Calcs!C75:C83` converts active options to stage-specific survival factors through `HLOOKUP`; `Bio results!D24:D33` applies those factors through the seasonal plant model. The Python engine's one combined annual control fraction cannot reproduce this ordering.
+- **Control timing:** A label-only adapter would still be incorrect. `Calcs!C7:C27` activates product selections, with `Calcs!C23:C27` checking all three post-emergent slots. Rows 55–97 turn each active option into a survival factor by `HLOOKUP` into the control table at `Calcs!N54:T97`, and the cascade applies each one where it belongs in the season — `Calcs!C168` combines the three post-emergent slots, `Calcs!C177` carries the result into the plant and seed-set model. The Python engine's one combined annual control fraction cannot reproduce this ordering. *(Corrected 2026-09-04: this bullet previously cited `Calcs!C75:C83` as stage-specific and `Bio results!D24:D33` as the plant model. C75:C83 are survival factors for post-emergent Paraquat, the two grazing intensities and the spring options; `Bio results!D24:D33` are yield adjustments. The claim was right, the citations were not.)*
 - **Within-season model:** Excel `TabSum` exposes six ryegrass-plant stages and nine seed-bank stages per year. The Python engine currently calculates one annual germination/control/seed-return cycle, so its annual results cannot yet establish period-level parity.
 - **Herbicide decision model:** The Excel strategy grid has three separate post-emergent herbicide slots. Python has one `post_emergent` decision, so it cannot represent combinations or their product-specific effects.
 - **Input ownership:** `data/defaults.json` is not read at runtime and contains pre-audit defaults. `rim/defaults.py` is the active default source until the JSON artifact is retired or generated from it.
@@ -154,3 +154,36 @@ gives the crops different manuring benefits.
 
 Both are stated in `rim/yield_model.py` as `WORKBOOK_DEFECTS`, and a test asserts they stay
 documented.
+
+---
+
+## Combined control is capped at 99.5% — 2026-09-04
+
+Found while answering a user's question about the three post-emergent spray slots.
+
+**The workbook.** `Calcs!P35:P39` count how many of the three slots (`2.Strategy` rows 11, 12
+and 13) name each product, and `Calcs!C168 = C71^P35 * C72^P36 * C73^P37 * C74^P38 * C75^P39`
+raises each product's **survival** to that count. `C71:C75` are `1 − control` per crop, so
+naming a product twice squares its survival. There is no ceiling on the result.
+
+**The app.** `rim/ryegrass._combined_fraction` clamps the combined control fraction to
+`0.995`. Two sprays still agree exactly; three do not.
+
+| Wheat, Topik | Workbook survival | App survival |
+|---|---|---|
+| ×1 | 0.100 | 0.100 ✓ |
+| ×2 | 0.010 | 0.010 ✓ |
+| ×3 | 0.001 | 0.005 ✗ |
+
+Anything reaching 99.5% combined control is clipped, so the app understates the hardest
+programmes — three sprays, or a stack of knock-down plus pre-em plus two post-ems. It never
+overstates them.
+
+**Not fixed, deliberately.** The cap lives in the pre-port engine that TASKS item 3 replaces
+wholesale with `rim/calcs.py`, which has no such clamp. Removing it from `rim/ryegrass.py`
+would change every number the app currently shows for a benefit that lasts only until the
+rewire. Recorded so the rewire can confirm it is gone rather than rediscover it.
+
+The three slots are explained to users in the strategy editor, and in
+`docs/USER_GUIDE.md`. The cap is not mentioned there — it is an implementation defect, not a
+model feature, and it will not survive item 3.

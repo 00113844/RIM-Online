@@ -37,6 +37,27 @@ def _for_crop(field: str, row: dict) -> list[str]:
     return product_options(field, row.get("crop"), custom_options())
 
 
+# A line under a group heading, where the grouping itself needs explaining.
+GROUP_NOTES: dict[str, str] = {
+    "Post-emergent sprays": (
+        "Three sprays in the same season — not three timings. All three act at "
+        "the same point, so these are extra passes rather than earlier or later "
+        "ones. Naming one product twice compounds it: Topik twice leaves 1% of "
+        "the ryegrass where once leaves 10%. Each spray is a pass you pay for."
+    ),
+}
+
+# Tooltips, for a decision whose name does not carry its meaning.
+FIELD_HELP: dict[str, str] = {
+    field: (
+        "One post-emergent application. The three sprays all act at the same "
+        "point in the season; repeat a product to compound its effect, or name "
+        "two to cover different weeds. Leave as None if you are not spraying."
+    )
+    for field in POST_EMERGENT_FIELDS
+}
+
+
 # Grouped the way the season runs, not the way the columns happen to sit.
 GROUPS: tuple[tuple[str, tuple[tuple[str, str, list], ...]], ...] = (
     ("Establishment", (
@@ -143,6 +164,9 @@ def year_editor(rows: list[dict], key: str = "year_editor") -> list[dict]:
             f'<div class="rim-section" style="margin-top:1.1rem">{group}</div>',
             unsafe_allow_html=True,
         )
+        note = GROUP_NOTES.get(group)
+        if note:
+            st.caption(note)
         columns = st.columns(len(fields))
         for column, (field, label, options) in zip(columns, fields):
             choices = options(row) if callable(options) else options
@@ -170,6 +194,7 @@ def year_editor(rows: list[dict], key: str = "year_editor") -> list[dict]:
                         options=choices,
                         index=_index(choices, row.get(field)),
                         key=f"{key}_{field}_{picked}",
+                        help=FIELD_HELP.get(field),
                     )
 
     rows[picked] = row

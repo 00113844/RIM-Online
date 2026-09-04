@@ -40,7 +40,7 @@ from utils.session import (
 )
 from utils.applicability import neutralise
 from utils.validation import problem_panel, problems
-from utils.year_editor import year_editor
+from utils.year_editor import FIELD_HELP as _YEAR_FIELD_HELP, year_editor
 from utils.save_load import save_load_controls
 from utils.theme import (
     inject_uwa_theme,
@@ -51,6 +51,10 @@ from utils.theme import (
     uwa_page_header,
     uwa_sidebar_logo,
 )
+
+# The grid and the year editor explain the three sprays the same way, from one
+# string, so they cannot drift apart.
+POST_EMERGENT_HELP = _YEAR_FIELD_HELP["post_emergent_1"]
 
 st.set_page_config(page_title="Strategy | RIM Online", page_icon="🌾", layout="wide")
 
@@ -168,9 +172,12 @@ else:
             # reported, rather than left to look effective. The year editor,
             # which can vary per row, never offers it in the first place.
             "pre_emergent": st.column_config.SelectboxColumn("Pre-em", options=PRE_EMERGENT_OPTIONS),
-            "post_emergent_1": st.column_config.SelectboxColumn("Post-em 1", options=POST_EMERGENT_OPTIONS),
-            "post_emergent_2": st.column_config.SelectboxColumn("Post-em 2", options=POST_EMERGENT_OPTIONS),
-            "post_emergent_3": st.column_config.SelectboxColumn("Post-em 3", options=POST_EMERGENT_OPTIONS),
+            "post_emergent_1": st.column_config.SelectboxColumn(
+                "Post-em 1", options=POST_EMERGENT_OPTIONS, help=POST_EMERGENT_HELP),
+            "post_emergent_2": st.column_config.SelectboxColumn(
+                "Post-em 2", options=POST_EMERGENT_OPTIONS, help=POST_EMERGENT_HELP),
+            "post_emergent_3": st.column_config.SelectboxColumn(
+                "Post-em 3", options=POST_EMERGENT_OPTIONS, help=POST_EMERGENT_HELP),
             "spring_option": st.column_config.SelectboxColumn("Spring", options=SPRING_OPTIONS),
             "spring_swathe": st.column_config.SelectboxColumn("Swathe", options=SPRING_SWATHE_OPTIONS),
             "spring_others": st.column_config.SelectboxColumn("Spring other", options=names("spring_others", custom_options())),

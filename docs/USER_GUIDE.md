@@ -85,8 +85,30 @@ Each of the ten years runs the same sequence:
 | Harvest control | Standard, Chaff cart + burn dumps, Narrow windrow burn, Harrington Seed Destructor, Chaff tramlining, Bale Direct System |
 | Harvest — other | None, Whole paddock burn, plus anything you define yourself |
 
-Three post-emergent slots means you can spray up to three times in a year, and you pay for
-three passes.
+### The three post-emergent sprays are not three timings
+
+This trips people up. All three act at the **same point** in the season — they are three
+applications, not an early, middle and late one. The timing lever in RIM is sowing time, which
+changes how much ryegrass is up when you spray at all.
+
+What the three slots let you do is spray more than once:
+
+- **Two different products** — cover weeds one product misses.
+- **The same product twice** — compound it. RIM counts how many slots name a product and
+  raises that product's *survival* to that power.
+
+| Wheat, Topik | Survives | Controlled |
+|---|---|---|
+| once | 0.10 | 90% |
+| twice | 0.10² = 0.01 | 99% |
+| three times | 0.10³ = 0.001 | 99.9% |
+
+Every slot you fill is a pass over the paddock and a cost, so the question the model puts to
+you is whether the extra control is worth the extra spend — not when to go.
+
+> One and two sprays are exact. **This build clips combined control at 99.5%**, so filling all
+> three shows a little less control than the table above. It never shows more. Logged in
+> `INCONSISTENCIES.md`; it goes when the engine rewire lands.
 
 ## What a herbicide does depends on the crop
 
