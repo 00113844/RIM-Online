@@ -297,8 +297,8 @@ def test_the_editor_explains_what_the_three_slots_are() -> None:
     count -- so a second spray of the same thing compounds rather than adds a
     stage. A user cannot infer that from three boxes labelled Spray 1/2/3.
     """
-    from utils.year_editor import FIELD_HELP, GROUP_NOTES
     from rim.herbicides import POST_EMERGENT_FIELDS
+    from utils.help_text import FIELD_HELP, GROUP_NOTES
 
     note = GROUP_NOTES["Post-emergent sprays"]
     assert "not three timings" in note
@@ -313,10 +313,55 @@ def test_the_grid_explains_them_the_same_way() -> None:
     """One string, so the two editors cannot drift apart."""
     import pathlib
 
+    from utils.help_text import FIELD_HELP, POST_EMERGENT_HELP
+
     page = pathlib.Path("pages/2_Strategy.py").read_text(encoding="utf-8")
 
     assert page.count("help=POST_EMERGENT_HELP") == 3
-    assert '_YEAR_FIELD_HELP["post_emergent_1"]' in page
+    assert "from utils.help_text import POST_EMERGENT_HELP" in page
+    assert FIELD_HELP["post_emergent_1"] is POST_EMERGENT_HELP
+
+
+def test_a_page_survives_a_half_updated_deploy() -> None:
+    """Shared copy must not arrive through a module the container may cache.
+
+    Streamlit re-executes page files but keeps imported modules in sys.modules,
+    so a deploy changing a page and a utils/ module together can run the new
+    page against the old module. A page importing a *newly added* name from an
+    existing module then dies at import -- which happened twice on Streamlit
+    Cloud before the copy moved to utils/help_text.py, a module no old container
+    ever imported and so cannot have cached.
+
+    This stands in the stale module the container was actually holding and
+    checks every import in the page still resolves.
+    """
+    import ast
+    import pathlib
+    import sys
+    import types
+
+    stale = types.ModuleType("utils.year_editor")
+    stale.year_editor = lambda *a, **k: None      # all it exported before
+    original = sys.modules.get("utils.year_editor")
+    sys.modules["utils.year_editor"] = stale
+    try:
+        page = pathlib.Path("pages/2_Strategy.py").read_text(encoding="utf-8")
+        failures = []
+        for node in ast.parse(page).body:
+            if not isinstance(node, (ast.Import, ast.ImportFrom)):
+                continue
+            source = ast.unparse(node)
+            try:
+                exec(source, {})
+            except Exception as problem:      # noqa: BLE001 - reported, not raised
+                failures.append(f"{source} -> {type(problem).__name__}: {problem}")
+    finally:
+        if original is not None:
+            sys.modules["utils.year_editor"] = original
+        else:
+            del sys.modules["utils.year_editor"]
+
+    assert failures == []
 
 
 def test_the_compounding_matches_the_workbooks_own_arithmetic() -> None:

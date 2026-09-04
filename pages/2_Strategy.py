@@ -40,7 +40,8 @@ from utils.session import (
 )
 from utils.applicability import neutralise
 from utils.validation import problem_panel, problems
-from utils.year_editor import FIELD_HELP as _YEAR_FIELD_HELP, year_editor
+from utils.help_text import POST_EMERGENT_HELP
+from utils.year_editor import year_editor
 from utils.save_load import save_load_controls
 from utils.theme import (
     inject_uwa_theme,
@@ -51,10 +52,6 @@ from utils.theme import (
     uwa_page_header,
     uwa_sidebar_logo,
 )
-
-# The grid and the year editor explain the three sprays the same way, from one
-# string, so they cannot drift apart.
-POST_EMERGENT_HELP = _YEAR_FIELD_HELP["post_emergent_1"]
 
 st.set_page_config(page_title="Strategy | RIM Online", page_icon="🌾", layout="wide")
 

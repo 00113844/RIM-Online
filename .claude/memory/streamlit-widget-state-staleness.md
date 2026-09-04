@@ -67,9 +67,32 @@ that reads like broken code:
 
     ImportError: cannot import name 'commit_profile_widgets' from 'utils.session'
 
-Seen 2026-09-03 after `3f9cf53`, with the name present on `origin/main` the whole
-time. Check the remote before debugging; if the name is there, reboot the app
-(Manage app -> Reboot) rather than changing anything.
+Seen twice:
+
+- 2026-09-03 after `3f9cf53` -- `commit_profile_widgets` from `utils.session`.
+- 2026-09-04 after `3a0605c` -- `FIELD_HELP` from `utils.year_editor`.
+
+Both times the name was on `origin/main` the whole time. **Check the remote
+before debugging**; if the name is there, the container is stale, not the code.
+
+## The structural fix: put shared names in a *new* module
+
+The failure needs an *existing* module to gain an attribute. A module the old
+container never imported is not in `sys.modules` at all, so it loads from disk
+however stale everything around it is.
+
+So when a page needs to share something with a `utils/` module, put the shared
+thing in its own module rather than adding it to one of them.
+`utils/help_text.py` exists for exactly this: the year editor and the strategy
+grid both take their copy from it, and the page no longer waits for
+`utils.year_editor` to grow an attribute.
+
+`tests/test_control_options.py::test_a_page_survives_a_half_updated_deploy`
+stands in the stale module the container was holding and checks every import in
+the page still resolves. Copy that test rather than rediscovering the failure.
+
+Clearing a container that is already stale still needs a reboot, or a change to
+`requirements.txt`, which forces a cold rebuild rather than a warm restart.
 
 ## Testing it
 
