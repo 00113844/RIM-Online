@@ -105,9 +105,15 @@ the code assumes it is an event.
 
 The uploader hands the same file back on every run, so this re-applies and
 re-runs without end. Nothing raises. The page just re-runs, re-simulating the
-whole ten years each time, until the tab or the server gives out — it took a
-dev server down for memory before it was understood, and reached a user as
-"loading a 10 year strategy non-stop on a loop".
+whole ten years each time, and it reached a user as "loading a 10 year strategy
+non-stop on a loop".
+
+Two dev servers were killed for low memory around the same time and it was
+tempting to blame the loop. That was wrong: the second was killed after the fix,
+having been measured idle, and the machine had ~1.2 GB free of 16 GB with the
+top consumers being a browser, Defender and Outlook. The loop is real and the
+memory pressure was the machine's; do not let a plausible story join two
+independent facts.
 
 Guard on the file's identity, not on its presence: `utils/uploads.py`
 (`is_new_upload` / `mark_handled`) keys off Streamlit's own `file_id`. Mark a
