@@ -3,12 +3,25 @@
 # Developed and tested against Python 3.12 locally; Streamlit Community Cloud
 # currently builds on 3.14. Keep the floors low enough that both resolve.
 #
-# Editing this file also forces Streamlit Cloud to rebuild the environment
-# rather than warm-restart the container. That matters: a warm restart keeps
-# already-imported modules in sys.modules while re-executing page files from
-# disk, so a deploy that changes a page and a utils/ module together can run the
-# new page against the old module and die on import. See TASKS.md and
-# .claude/memory/streamlit-widget-state-staleness.md.
+# ── Cold-rebuild marker ──────────────────────────────────────────────────────
+# Streamlit Cloud warm-restarts on a new commit: it re-executes page files but
+# keeps already-imported modules in sys.modules. A deploy that changes a page
+# and a utils/ module together then runs the NEW page against the OLD module.
+# That has now broken three deploys, in two ways:
+#
+#   ImportError: cannot import name 'FIELD_HELP' from 'utils.year_editor'
+#   TypeError:   save_load_controls() takes 1 positional argument but 2 given
+#
+# A missing name can be dodged by putting shared things in a new module, which
+# cannot have been cached. A changed *signature* cannot: the old function is
+# simply the wrong shape, wherever it lives.
+#
+# Changing this file invalidates the environment and forces a cold rebuild, so
+# every module is imported from disk. **Bump the marker below in the same commit
+# as any change to a function signature, or to a name a page imports, under
+# utils/ or rim/.** See .claude/memory/streamlit-widget-state-staleness.md.
+#
+# build: 2026-09-06.1
 
 # 1.50 is the floor for the `width=` layout argument, which replaced
 # `use_container_width` (removed after 2025-12-31). Developed against 1.56.

@@ -67,10 +67,12 @@ that reads like broken code:
 
     ImportError: cannot import name 'commit_profile_widgets' from 'utils.session'
 
-Seen twice:
+Seen three times, in two shapes:
 
 - 2026-09-03 after `3f9cf53` -- `commit_profile_widgets` from `utils.session`.
 - 2026-09-04 after `3a0605c` -- `FIELD_HELP` from `utils.year_editor`.
+- 2026-09-06 after `9916b83` -- `save_load_controls()` gained a second argument.
+  `TypeError: takes 1 positional argument but 2 were given`.
 
 Both times the name was on `origin/main` the whole time. **Check the remote
 before debugging**; if the name is there, the container is stale, not the code.
@@ -86,6 +88,25 @@ thing in its own module rather than adding it to one of them.
 `utils/help_text.py` exists for exactly this: the year editor and the strategy
 grid both take their copy from it, and the page no longer waits for
 `utils.year_editor` to grow an attribute.
+
+**This only covers a missing name.** A changed *signature* cannot be dodged by
+moving the function -- the cached one is the wrong shape wherever it lives. That
+was the third failure.
+
+## The rule that covers both: bump the build marker
+
+Changing `requirements.txt` makes Cloud rebuild the environment cold rather than
+warm-restart, so every module is imported from disk.
+
+**Bump the `# build:` line in `requirements.txt` in the same commit as any
+change to a signature, or to a name a page imports, under `utils/` or `rim/`.**
+Then `python -m tools.deploy_interface --write`.
+
+It is enforced, not remembered: `tools/deploy_interface.py` fingerprints every
+name the pages import from first-party modules, and
+`tests/test_deploy_interface.py` fails when the fingerprint moves and the marker
+does not -- naming the two steps to fix it. Verified by changing a signature and
+watching the suite catch it.
 
 `tests/test_control_options.py::test_a_page_survives_a_half_updated_deploy`
 stands in the stale module the container was holding and checks every import in
