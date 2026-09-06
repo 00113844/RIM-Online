@@ -22,6 +22,14 @@ from rim import scenario
 from utils.session import export_bytes, import_bundle, strategy_slot_name
 from utils.uploads import is_new_upload, mark_handled
 
+# What the page calls the panel. "Keep this work" said only half of it -- you
+# can load here too, and the box that does it is the one people were missing.
+PANEL_TITLES: dict[str, str] = {
+    scenario.PROFILE_FORMAT: "Save or load a paddock",
+    scenario.STRATEGY_FORMAT: "Save or load a plan",
+    scenario.SAVE_FORMAT: "Save or load everything",
+}
+
 # Per file: the button, what it writes, and what it says it holds.
 _DOWNLOADS: dict[str, dict[str, str]] = {
     scenario.PROFILE_FORMAT: {
@@ -72,11 +80,14 @@ def download_button(kind: str, *, key: str) -> None:
 
 def upload_control(key: str) -> None:
     """One uploader, taking any of the three files."""
+    # Labelled, not collapsed. An unlabelled drop zone is why nobody could tell
+    # this panel loaded anything, let alone that it takes all three files.
     uploaded = st.file_uploader(
-        "Load a saved file",
+        "Load a paddock, a plan, or both",
         type=["json"],
         key=f"{key}_upload",
-        label_visibility="collapsed",
+        help="Takes any RIM file — a .profile.json, a .strategy.json, or a "
+             "full .rim.json — and loads whichever parts it holds.",
     )
     # Once per file, not once per run: the uploader keeps handing the same file
     # back, and rerunning on it would never stop. See utils/uploads.py.
@@ -113,17 +124,21 @@ def save_load_controls(key: str, kind: str = scenario.SAVE_FORMAT) -> None:
         upload_control(key)
 
     if kind == scenario.PROFILE_FORMAT:
-        owned = ("This holds the paddock only. The plan is saved from the "
-                 "Strategy page, and the Export page writes both in one file.")
+        saves = ("**Download** writes the paddock on its own — profile, prices "
+                 "and options. The plan is saved from the Strategy page.")
     elif kind == scenario.STRATEGY_FORMAT:
-        owned = ("This holds the plan only. The paddock is saved from the "
-                 "Paddock profile page, and the Export page writes both in one "
-                 "file.")
+        saves = ("**Download** writes the plan on its own, with your saved "
+                 "slots. The paddock is saved from the Paddock profile page.")
     else:
-        owned = "This holds the paddock and the plan together."
+        saves = "**Download** writes the paddock and the plan together."
 
     st.caption(
-        f"{owned} The box beside it takes any RIM file — paddock, plan or both — "
-        "and loads whichever parts it carries. Slots are kept for this browser "
-        "session only, so save to a file to keep your work."
+        f"{saves} **Load** takes any of the three — paddock, plan, or both — "
+        "so it does not matter which page you are on. The Export page writes "
+        "the pair in one file."
+    )
+
+    st.caption(
+        "Slots live in this browser session only. Closing the tab clears them; "
+        "a file is the only thing that keeps them."
     )

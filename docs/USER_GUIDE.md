@@ -202,12 +202,14 @@ comparison is between plans and nothing else. You get a table on screen, or a
 ## File 1 — the scenario (`.rim.json`)
 
 **Where:** **Export** page → **Download everything**. The two halves are saved from
-the page that owns each: the paddock from **Paddock profile** → *Keep this work*,
-the plan from **Strategy** → *Keep this work*.
+the page that owns each: the paddock from **Paddock profile** → *Save or load a
+paddock*, the plan from **Strategy** → *Save or load a plan*. Those two panels
+load as well as save, and each takes any of the three files.
 
 **Filename:** named for your paddock and dated, e.g. `North-Paddock-2026-09-04.rim.json`.
 
-**To restore:** the same panel, **Load a saved file**. Everything comes back at once.
+**To restore:** either page's **Load a paddock, a plan, or both** box. A full file brings
+everything back at once; a half brings back its half and leaves the other alone.
 
 ### What is inside
 

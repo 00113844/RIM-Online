@@ -335,12 +335,17 @@ it back if the experiment was worse. Name a strategy slot as you save it &mdash;
 beside the picker &mdash; and the name shows in the list, so you can tell six plans apart.
 
 ### Files — permanent, portable
-Both pages have a **Keep this work** panel.
+Each page saves the half it owns, and loads any of them:
+**Paddock profile** → *Save or load a paddock*, **Strategy** → *Save or load a plan*. The
+**Export** page writes the two together.
 
-- **Save to a file** downloads everything as one `.rim.json` — the paddock profile, prices,
-  options, any options you defined yourself, the current ten-year plan, *and* every slot you
-  have filled, with its name.
-- **Load a saved file** restores all of it. Drop the file on the uploader.
+- **Download everything**, on the Export page, writes one `.rim.json` — the paddock profile,
+  prices, options, any options you defined yourself, the current ten-year plan, *and* every
+  slot you have filled, with its name.
+- **Download this paddock** and **Download this plan** write the two halves separately, so a
+  paddock can be handed out and plans built against it sent back.
+- **Load a paddock, a plan, or both** restores whichever parts the file holds. Either page's
+  box takes any of the three, so it does not matter which one you are on.
 
 Files are how you keep a plan between sessions, move it to another computer, or send it to
 a colleague. The file is plain text, so it will still open years from now.
@@ -355,7 +360,9 @@ It does not load back into RIM Online. For that, use the `.rim.json` file above.
 <table class="rim-tbl">
 <thead><tr><th>You want to&hellip;</th><th>Use</th></tr></thead>
 <tbody>
-<tr><td>Stop for the day and carry on tomorrow</td><td><code>.rim.json</code> &mdash; Keep this work</td></tr>
+<tr><td>Stop for the day and carry on tomorrow</td><td><code>.rim.json</code> &mdash; Export page</td></tr>
+<tr><td>Hand out a paddock for others to plan against</td><td><code>.profile.json</code> &mdash; Paddock profile page</td></tr>
+<tr><td>Send back just your plan</td><td><code>.strategy.json</code> &mdash; Strategy page</td></tr>
 <tr><td>Send a colleague something to open in Excel</td><td>Excel &mdash; Export page</td></tr>
 <tr><td>Send a colleague something they can edit in RIM</td><td><code>.rim.json</code></td></tr>
 <tr><td>Chart or analyse the numbers elsewhere</td><td>Excel</td></tr>
@@ -368,8 +375,9 @@ st.markdown("""
 <tbody>
 <tr><td>Try a variation, keep the original</td><td>Save to a strategy slot, then edit freely</td></tr>
 <tr><td>Compare two plans side by side</td><td>Hold as A, edit, Hold as B</td></tr>
-<tr><td>Stop for the day</td><td><b>Save to a file</b> — slots will not survive</td></tr>
-<tr><td>Send a scenario to someone</td><td>Save to a file and email the <code>.rim.json</code></td></tr>
+<tr><td>Stop for the day</td><td><b>Download everything</b> &mdash; slots will not survive otherwise</td></tr>
+<tr><td>Send a scenario to someone</td><td>Email the <code>.rim.json</code></td></tr>
+<tr><td>Have others plan against your paddock</td><td>Send the <code>.profile.json</code>, collect <code>.strategy.json</code></td></tr>
 <tr><td>Start over</td><td>Load the default strategy, or Reset all on the profile page</td></tr>
 </tbody></table>
 """, unsafe_allow_html=True)

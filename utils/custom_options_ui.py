@@ -85,7 +85,8 @@ def custom_options_controls(key: str = "custom_options") -> None:
         "Load an options file",
         type=["json"],
         key=f"{key}_upload",
-        label_visibility="collapsed",
+        help="A JSON file describing your own spring and harvest operations. "
+             "Use the example below as a starting point.",
     )
     # Once per file, not once per run -- see utils/uploads.py.
     if is_new_upload(uploaded, key=key):

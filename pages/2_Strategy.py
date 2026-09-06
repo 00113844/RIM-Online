@@ -43,7 +43,7 @@ from utils.validation import problem_panel, problems
 from utils.help_text import POST_EMERGENT_HELP
 from utils.year_editor import year_editor
 from rim import scenario
-from utils.save_load import save_load_controls
+from utils.save_load import PANEL_TITLES, save_load_controls
 from utils.theme import (
     inject_uwa_theme,
     metric_row,
@@ -290,7 +290,7 @@ else:
 with st.expander("Spring and harvest options of your own"):
     custom_options_controls()
 
-with st.expander("Keep this work"):
+with st.expander(PANEL_TITLES[scenario.STRATEGY_FORMAT]):
     save_load_controls("strategy", scenario.STRATEGY_FORMAT)
     st.page_link("pages/4_How_RIM_Works.py", label="How saving and loading works")
 

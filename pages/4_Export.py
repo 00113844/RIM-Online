@@ -19,19 +19,31 @@ inject_uwa_theme()
 uwa_sidebar_logo()
 
 uwa_page_header(
-    title="Export Results",
-    subtitle="Download a PDF summary report or Excel data tables",
+    title="Export",
+    subtitle="Save the whole scenario, or take the results away as a report "
+             "or a workbook.",
     icon="📥",
 )
 
-st.subheader("Everything in one file")
+st.subheader("Save everything as one file")
 st.caption(
     "The paddock and the plan together, with every filled slot — the file to "
-    "keep if you are keeping one. Each page also saves its own half: the "
-    "paddock from **Paddock profile**, the plan from **Strategy**."
+    "keep if you are keeping one, and the one that loads back complete."
 )
 download_button(scenario.SAVE_FORMAT, key="export_all")
+st.caption(
+    "Saving the halves separately, and **loading any of them**, happens on the "
+    "pages that own them: *Save or load a paddock* on **Paddock profile**, "
+    "*Save or load a plan* on **Strategy**. Either of those boxes takes a full "
+    "file like this one."
+)
 st.divider()
+
+st.subheader("Take the results away")
+st.caption(
+    "A PDF to read, or a workbook holding the plan, the paddock and the yearly "
+    "numbers. Neither loads back into RIM Online — use the file above for that."
+)
 
 current = ensure_current_results()
 a = st.session_state.results_A
@@ -94,7 +106,7 @@ st.download_button(
 st.caption(
     "The workbook carries the inputs as well as the results, so a colleague can "
     "see what was asked for and not just what came out. To move a scenario "
-    "*back* into RIM Online, use the .rim.json file from **Keep this work** on "
+    "*back* into RIM Online, use the .rim.json above, or the halves from "
     "the Strategy or Paddock profile page — Excel is for reading, JSON round-trips."
 )
 

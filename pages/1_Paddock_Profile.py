@@ -18,7 +18,7 @@ from utils.session import (
     save_profile_slot,
 )
 from rim import scenario
-from utils.save_load import save_load_controls
+from utils.save_load import PANEL_TITLES, save_load_controls
 from utils.theme import (
     inject_uwa_theme,
     metric_row,
@@ -111,7 +111,7 @@ st.caption(
     "without touching your slots."
 )
 
-with st.expander("Keep this work"):
+with st.expander(PANEL_TITLES[scenario.PROFILE_FORMAT]):
     save_load_controls("profile", scenario.PROFILE_FORMAT)
     st.page_link("pages/4_How_RIM_Works.py", label="How saving and loading works")
 
