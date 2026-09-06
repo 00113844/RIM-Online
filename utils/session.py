@@ -6,7 +6,7 @@ import streamlit as st
 
 from rim.defaults import DEFAULT_OPTIONS, DEFAULT_PRICES, DEFAULT_PROFILE, build_default_strategy
 from rim.engine import simulate_strategy
-from rim import control_options
+from rim import control_options, scenario
 from rim.herbicides import upgrade_strategy
 
 
@@ -386,8 +386,8 @@ def export_bundle() -> dict:
     """
     commit_profile_widgets()
     return {
-        "format": "rim-online-save",
-        "version": SAVE_FORMAT_VERSION,
+        "format": scenario.SAVE_FORMAT,
+        "version": scenario.SAVE_FORMAT_VERSION,
         "profile": deepcopy(st.session_state.profile_current),
         "prices": deepcopy(st.session_state.prices_current),
         "options": deepcopy(st.session_state.options_current),
@@ -398,58 +398,122 @@ def export_bundle() -> dict:
     }
 
 
-def export_bytes() -> bytes:
+def export_profile_bundle() -> dict:
+    """Just the paddock: profile, prices, options and the profile slots.
+
+    The half a course hands out, or a consultant carries between plans.
+    """
+    commit_profile_widgets()
+    return {
+        "format": scenario.PROFILE_FORMAT,
+        "version": scenario.PROFILE_FORMAT_VERSION,
+        "profile": deepcopy(st.session_state.profile_current),
+        "prices": deepcopy(st.session_state.prices_current),
+        "options": deepcopy(st.session_state.options_current),
+        "profile_slots": deepcopy(st.session_state.profile_slots),
+    }
+
+
+def export_strategy_bundle() -> dict:
+    """Just the plan, and the slots kept beside it.
+
+    The half that comes back: one file per person, whatever paddock it is
+    eventually run against.
+    """
+    return {
+        "format": scenario.STRATEGY_FORMAT,
+        "version": scenario.STRATEGY_FORMAT_VERSION,
+        "strategy": deepcopy(st.session_state.strategy_current),
+        "strategy_slots": deepcopy(st.session_state.strategy_slots),
+        "strategy_slot_names": deepcopy(st.session_state.strategy_slot_names),
+    }
+
+
+BUNDLES = {
+    scenario.SAVE_FORMAT: export_bundle,
+    scenario.PROFILE_FORMAT: export_profile_bundle,
+    scenario.STRATEGY_FORMAT: export_strategy_bundle,
+}
+
+
+def export_bytes(kind: str = scenario.SAVE_FORMAT) -> bytes:
+    """One of the three files, ready to download."""
     import json
-    return json.dumps(export_bundle(), indent=2, default=str).encode("utf-8")
+
+    return json.dumps(BUNDLES[kind](), indent=2, default=str).encode("utf-8")
 
 
-def import_bundle(data: dict) -> tuple[bool, str]:
-    """Restore a saved file. Returns (ok, message) for the caller to show."""
-    if not isinstance(data, dict) or data.get("format") != "rim-online-save":
-        return False, "That is not a RIM Online save file."
-    if int(data.get("version", 0)) > SAVE_FORMAT_VERSION:
-        return False, (
-            f"That file was written by a newer version of RIM Online "
-            f"(format {data['version']}, this build reads {SAVE_FORMAT_VERSION})."
-        )
-
-    for key in ("profile", "prices", "options", "strategy"):
-        if key not in data:
-            return False, f"The file is missing its {key} section."
-
-    st.session_state.profile_current = deepcopy(data["profile"])
-    st.session_state.prices_current = deepcopy(data["prices"])
-    st.session_state.options_current = deepcopy(data["options"])
-    st.session_state.strategy_current = upgrade_strategy(
-        deepcopy(data["strategy"]),
-        control_options.custom_from(st.session_state.options_current),
-    )
+def _apply_profile(data: dict) -> None:
+    for key, target in (("profile", "profile_current"),
+                        ("prices", "prices_current"),
+                        ("options", "options_current")):
+        if key in data:
+            st.session_state[target] = deepcopy(data[key])
 
     # Slot keys come back from JSON as strings.
     if isinstance(data.get("profile_slots"), dict):
         st.session_state.profile_slots = {
             int(k): v for k, v in data["profile_slots"].items()
         }
+    reset_profile_widgets()
+
+
+def _apply_strategy(data: dict) -> None:
+    custom = control_options.custom_from(st.session_state.options_current)
+
+    if "strategy" in data:
+        st.session_state.strategy_current = upgrade_strategy(
+            deepcopy(data["strategy"]), custom
+        )
     if isinstance(data.get("strategy_slots"), dict):
         st.session_state.strategy_slots = {
-            int(k): (upgrade_strategy(
-                v, control_options.custom_from(st.session_state.options_current))
-                if v else v)
+            int(k): (upgrade_strategy(v, custom) if v else v)
             for k, v in data["strategy_slots"].items()
         }
+    # A file saved before slots had names simply has none, and they stay
+    # numbered. Only replace the names when the file carries that section, so
+    # loading a profile does not silently forget them.
+    if "strategy_slot_names" in data:
+        st.session_state.strategy_slot_names = {
+            int(k): str(v) for k, v in (data.get("strategy_slot_names") or {}).items()
+        }
+    reset_editor_widgets()
 
-    # Slot keys come back from JSON as strings here too. A file saved before
-    # slots had names simply has none, and they stay numbered.
-    st.session_state.strategy_slot_names = {
-        int(k): str(v) for k, v in (data.get("strategy_slot_names") or {}).items()
-    }
+
+def import_bundle(data: dict) -> tuple[bool, str]:
+    """Load any of the three files. Returns (ok, message) for the caller.
+
+    A profile file replaces the paddock and leaves the plan alone; a strategy
+    file the other way about; a combined file replaces both. Which one it is
+    comes from its own ``format``, so either uploader takes any of them -- a
+    file dropped in the wrong box still does the right thing, and every
+    ``.rim.json`` saved before the split still loads.
+    """
+    try:
+        kind = scenario.kind_of(data)
+    except scenario.ScenarioError as problem:
+        return False, str(problem)
+
+    if kind in (scenario.PROFILE_FORMAT, scenario.SAVE_FORMAT):
+        _apply_profile(data)
+    # Order matters: the strategy is carried forward against the options that
+    # have just been loaded, so a paddock's own defined options are in hand
+    # before a plan naming them is read.
+    if kind in (scenario.STRATEGY_FORMAT, scenario.SAVE_FORMAT):
+        _apply_strategy(data)
 
     st.session_state.results_current = None
-    reset_editor_widgets()
-    reset_profile_widgets()
-    years = len(st.session_state.strategy_current)
-    message = f"Loaded a {years}-year strategy and its paddock profile."
-    if int(data.get("version", 1)) < SAVE_FORMAT_VERSION:
+
+    if kind == scenario.PROFILE_FORMAT:
+        paddock = str(st.session_state.profile_current.get("paddock_name") or "").strip()
+        message = f"Loaded the paddock profile{f' for {paddock}' if paddock else ''}."
+    elif kind == scenario.STRATEGY_FORMAT:
+        message = f"Loaded a {len(st.session_state.strategy_current)}-year strategy."
+    else:
+        years = len(st.session_state.strategy_current)
+        message = f"Loaded a {years}-year strategy and its paddock profile."
+
+    if int(data.get("version", 1)) < scenario.SAVE_FORMAT_VERSION and kind == scenario.SAVE_FORMAT:
         message += (
             " It was saved against an older vocabulary and has been carried "
             "across to the workbook’s own — check the weed-control columns."

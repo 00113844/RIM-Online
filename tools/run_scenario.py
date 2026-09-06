@@ -11,6 +11,11 @@ app writes.
     python -m tools.run_scenario a.rim.json b.rim.json --format csv
     python -m tools.run_scenario plan.rim.json --options my-options.json
 
+One paddock against many plans -- a class marked against a shared paddock, or one
+farm compared under several programmes::
+
+    python -m tools.run_scenario --paddock north.profile.json         submissions/*.strategy.json --format csv --out marks/
+
 With no file at all it runs the shipped default paddock and plan, which is a
 quick way to see that an install works.
 
@@ -138,17 +143,36 @@ def write(results: dict[str, dict], summaries: list[dict], *,
     raise SystemExit(f"Unknown format {fmt!r}. Choose from {', '.join(FORMATS)}.")
 
 
-def load_all(paths: Sequence[str], options_file: str | None) -> list[Scenario]:
-    """Every scenario named on the command line, or the shipped default."""
+def load_all(paths: Sequence[str], options_file: str | None,
+             paddock_file: str | None = None) -> list[Scenario]:
+    """Every scenario named on the command line, or the shipped default.
+
+    ``paddock_file`` is a profile applied to all of them, so a directory of
+    plans is compared on one paddock rather than on whatever each happens to
+    carry. Sections the paddock file holds win; anything it does not name is
+    left as the plan file had it.
+    """
     from rim import custom_options as custom
 
     overrides = custom.load(options_file) if options_file else None
+    paddock = scenarios.read_payload(paddock_file) if paddock_file else None
+    if paddock is not None:
+        kind = scenarios.kind_of(paddock)
+        if kind == scenarios.STRATEGY_FORMAT:
+            raise ScenarioError(
+                f"--paddock wants a paddock, but {paddock_file} is a strategy "
+                f"file. Pass it as one of the plans instead."
+            )
 
     if not paths:
         payloads = [(scenarios.default().as_save_payload(), "default")]
     else:
         payloads = [(scenarios.read_payload(path), scenarios.name_for(path))
                     for path in paths]
+
+    if paddock is not None:
+        payloads = [(scenarios.merge_payloads(payload, paddock), name)
+                    for payload, name in payloads]
 
     # An options file given here applies to every scenario in the run and
     # replaces anything a file carried, so a comparison is between plans rather
@@ -178,6 +202,9 @@ def build_parser() -> argparse.ArgumentParser:
                         help="table (default), csv, json or excel.")
     parser.add_argument("--options", metavar="FILE",
                         help="A custom options file to apply to every scenario.")
+    parser.add_argument("--paddock", metavar="FILE",
+                        help="A .profile.json to run every plan against, so a "
+                             "set of strategies is compared on one paddock.")
     parser.add_argument("--strict", action="store_true",
                         help="Stop if any plan holds a decision the model ignores.")
     parser.add_argument("--quiet", action="store_true",
@@ -193,7 +220,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         out.mkdir(parents=True, exist_ok=True)
 
     try:
-        loaded = load_all(args.paths, args.options)
+        loaded = load_all(args.paths, args.options, args.paddock)
     except ScenarioError as problem:
         print(f"error: {problem}", file=sys.stderr)
         return 2

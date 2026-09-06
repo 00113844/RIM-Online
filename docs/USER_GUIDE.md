@@ -159,22 +159,51 @@ sound, and exact figures as provisional.
 
 # Part 2 — Your files
 
-## Three formats, and only two of them come back
+## Four formats, and three of them come back
 
-| File | Extension | Direction | What it is for |
+| File | Extension | Direction | What it holds |
 |---|---|---|---|
-| **Scenario** | `.rim.json` | out **and** in | Your whole session. The one that restores your work. |
-| **Options pack** | `.json` | out **and** in | Spring and harvest operations you define yourself. |
+| **Paddock** | `.profile.json` | out **and** in | The paddock: profile, prices, options, profile slots. No plan. |
+| **Plan** | `.strategy.json` | out **and** in | The ten-year plan and your strategy slots. No paddock. |
+| **Everything** | `.rim.json` | out **and** in | Both halves in one file. |
 | **Workbook** | `.xlsx` | out only | Reading and sharing. Does **not** load back. |
 
-> **The short version.** One `.rim.json` holds everything. If you only ever save one file,
-> save that.
+> **The short version.** One `.rim.json` holds everything. If you only ever save
+> one file, save that. The two halves exist so a paddock and a plan can travel
+> separately — one paddock handed out, many plans coming back against it.
+
+**Where each one is:**
+
+| | Download | Upload |
+|---|---|---|
+| Paddock profile page | the paddock | any RIM file |
+| Strategy page | the plan | any RIM file |
+| Export page | everything | — |
+
+**Both uploaders take any of the three.** Drop a paddock file on the Strategy
+page and it loads the paddock and leaves your plan alone; drop a full scenario
+anywhere and it loads both. A file in the "wrong" box still does the right
+thing, and every `.rim.json` saved before the split still opens.
+
+### Working with a shared paddock
+
+Hand out one `.profile.json`. Everyone builds a plan against it and sends back a
+`.strategy.json` — a small file, one plan, nothing of the paddock in it. Then run
+the lot in a single command:
+
+```console
+python -m tools.run_scenario --paddock north.profile.json     submissions/*.strategy.json --format csv --out results/
+```
+
+Every plan is run against the same paddock whatever it was built on, so the
+comparison is between plans and nothing else. You get a table on screen, or a
+`summary.csv` plus one CSV per plan.
 
 ## File 1 — the scenario (`.rim.json`)
 
-**Where:** *Keep this work* → **Save to a file**. The panel is on both the **Paddock profile**
-and the **Strategy** page, and both save the same complete file — it does not matter which one
-you use.
+**Where:** **Export** page → **Download everything**. The two halves are saved from
+the page that owns each: the paddock from **Paddock profile** → *Keep this work*,
+the plan from **Strategy** → *Keep this work*.
 
 **Filename:** named for your paddock and dated, e.g. `North-Paddock-2026-09-04.rim.json`.
 
@@ -334,6 +363,9 @@ validation gate can be sent on.
 |---|---|
 | Stop for the day and carry on tomorrow | `.rim.json` |
 | Send a colleague something they can edit in RIM | `.rim.json` |
+| Hand out a paddock for others to plan against | `.profile.json` |
+| Send back just your plan | `.strategy.json` |
+| Compare many plans on one paddock | `.profile.json` + many `.strategy.json` |
 | Send a colleague something to open in Excel | `.xlsx` |
 | Chart or analyse the numbers elsewhere | `.xlsx` |
 | Reuse your own operations on another paddock | options `.json` |

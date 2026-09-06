@@ -84,7 +84,7 @@ def test_an_old_vocabulary_is_carried_forward_on_read(save_file) -> None:
 
 @pytest.mark.parametrize("payload, expected", [
     ([], "should hold a JSON object"),
-    ({"format": "something-else"}, "not a RIM Online save file"),
+    ({"format": "something-else"}, "not a RIM Online file"),
     ({"format": scenarios.SAVE_FORMAT, "version": 99}, "newer version"),
     ({"format": scenarios.SAVE_FORMAT, "strategy": []}, "non-empty list"),
     ({"format": scenarios.SAVE_FORMAT, "profile": 3}, "should be an object"),

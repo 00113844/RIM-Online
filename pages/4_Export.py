@@ -8,6 +8,8 @@ from datetime import datetime
 import streamlit as st
 
 from utils.export import results_to_pdf_bytes, scenario_to_excel_bytes
+from rim import scenario
+from utils.save_load import download_button
 from utils.session import ensure_current_results, init_state
 from utils.theme import inject_uwa_theme, uwa_page_header, uwa_footer, uwa_sidebar_logo
 
@@ -21,6 +23,15 @@ uwa_page_header(
     subtitle="Download a PDF summary report or Excel data tables",
     icon="📥",
 )
+
+st.subheader("Everything in one file")
+st.caption(
+    "The paddock and the plan together, with every filled slot — the file to "
+    "keep if you are keeping one. Each page also saves its own half: the "
+    "paddock from **Paddock profile**, the plan from **Strategy**."
+)
+download_button(scenario.SAVE_FORMAT, key="export_all")
+st.divider()
 
 current = ensure_current_results()
 a = st.session_state.results_A

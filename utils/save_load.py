@@ -3,6 +3,13 @@
 Slots live in ``st.session_state``, which is per browser session and held in the
 server's memory: close the tab or restart the server and they are gone. A file
 is the only way to keep work, move it between machines, or send it to someone.
+
+**Three files, two uploaders.** A paddock and a plan answer different questions,
+and separating them is what lets one paddock be handed out and thirty plans come
+back against it. So each page offers a download of the thing it owns, the Export
+page offers the two together, and either uploader accepts any of the three --
+a file dropped into the wrong box still does the right thing, and every
+``.rim.json`` written before the split still loads.
 """
 from __future__ import annotations
 
@@ -11,55 +18,112 @@ from datetime import datetime
 
 import streamlit as st
 
-from utils.session import export_bytes, import_bundle
+from rim import scenario
+from utils.session import export_bytes, import_bundle, strategy_slot_name
 from utils.uploads import is_new_upload, mark_handled
 
+# Per file: the button, what it writes, and what it says it holds.
+_DOWNLOADS: dict[str, dict[str, str]] = {
+    scenario.PROFILE_FORMAT: {
+        "label": "Download this paddock",
+        "help": "The paddock profile, prices and options — everything except the "
+                "plan. Hand this out to have several plans built against one "
+                "paddock.",
+    },
+    scenario.STRATEGY_FORMAT: {
+        "label": "Download this plan",
+        "help": "The ten-year plan and your saved strategy slots — no paddock. "
+                "This is the half to send back.",
+    },
+    scenario.SAVE_FORMAT: {
+        "label": "Download everything",
+        "help": "The paddock and the plan in one file, with every filled slot. "
+                "This is what to keep if you are keeping one file.",
+    },
+}
 
-def save_load_controls(key: str) -> None:
-    """A download button, an uploader, and an honest description of both."""
-    paddock = str(st.session_state.profile_current.get("paddock_name") or "").strip()
-    stem = "".join(c if c.isalnum() else "-" for c in paddock).strip("-") or "RIM"
-    filename = f"{stem}-{datetime.now():%Y-%m-%d}.rim.json"
 
+def _stem(kind: str) -> str:
+    """What to call the file, from whatever the user has already named."""
+    if kind == scenario.STRATEGY_FORMAT:
+        chosen = st.session_state.get("strategy_slot_pick")
+        named = strategy_slot_name(chosen) if chosen is not None else ""
+    else:
+        named = ""
+    if not named:
+        named = str(st.session_state.profile_current.get("paddock_name") or "").strip()
+    cleaned = "".join(c if c.isalnum() else "-" for c in named).strip("-")
+    return cleaned or "RIM"
+
+
+def download_button(kind: str, *, key: str) -> None:
+    """One of the three files, offered for download."""
+    spec = _DOWNLOADS[kind]
+    st.download_button(
+        spec["label"],
+        data=export_bytes(kind),
+        file_name=f"{_stem(kind)}-{datetime.now():%Y-%m-%d}{scenario.SUFFIXES[kind]}",
+        mime="application/json",
+        width="stretch",
+        key=f"{key}_download_{kind}",
+        help=spec["help"],
+    )
+
+
+def upload_control(key: str) -> None:
+    """One uploader, taking any of the three files."""
+    uploaded = st.file_uploader(
+        "Load a saved file",
+        type=["json"],
+        key=f"{key}_upload",
+        label_visibility="collapsed",
+    )
+    # Once per file, not once per run: the uploader keeps handing the same file
+    # back, and rerunning on it would never stop. See utils/uploads.py.
+    if not is_new_upload(uploaded, key=key):
+        return
+
+    try:
+        payload = json.loads(uploaded.getvalue().decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        st.error("That file is not readable JSON.")
+        return
+
+    ok, message = import_bundle(payload)
+    if not ok:
+        st.error(message)
+        return
+
+    mark_handled(uploaded, key=key)
+    st.toast(message)
+    st.rerun()
+
+
+def save_load_controls(key: str, kind: str = scenario.SAVE_FORMAT) -> None:
+    """The panel a page shows: its own file to download, and one uploader.
+
+    ``kind`` is the file this page owns. The uploader is not restricted to it --
+    dropping a full scenario onto the Strategy page loads the paddock too, which
+    is what someone doing that meant.
+    """
     save_col, load_col = st.columns(2)
     with save_col:
-        st.download_button(
-            "Save to a file",
-            data=export_bytes(),
-            file_name=filename,
-            mime="application/json",
-            width="stretch",
-            key=f"{key}_download",
-            help="Downloads the paddock profile, prices, options, the current "
-                 "strategy and every filled slot as one file.",
-        )
+        download_button(kind, key=key)
     with load_col:
-        uploaded = st.file_uploader(
-            "Load a saved file",
-            type=["json"],
-            key=f"{key}_upload",
-            label_visibility="collapsed",
-        )
-        # Once per file, not once per run: the uploader keeps handing the same
-        # file back, and rerunning on it would never stop. See utils/uploads.py.
-        if is_new_upload(uploaded, key=key):
-            try:
-                payload = json.loads(uploaded.getvalue().decode("utf-8"))
-            except (UnicodeDecodeError, json.JSONDecodeError):
-                st.error("That file is not readable JSON.")
-            else:
-                ok, message = import_bundle(payload)
-                if ok:
-                    mark_handled(uploaded, key=key)
-                    st.toast(message)
-                    st.rerun()
-                else:
-                    st.error(message)
+        upload_control(key)
+
+    if kind == scenario.PROFILE_FORMAT:
+        owned = ("This holds the paddock only. The plan is saved from the "
+                 "Strategy page, and the Export page writes both in one file.")
+    elif kind == scenario.STRATEGY_FORMAT:
+        owned = ("This holds the plan only. The paddock is saved from the "
+                 "Paddock profile page, and the Export page writes both in one "
+                 "file.")
+    else:
+        owned = "This holds the paddock and the plan together."
 
     st.caption(
-        "Slots are kept for this browser session only — closing the tab or "
-        "restarting the app clears them. Save to a file to keep your work. "
-        "This `.rim.json` is the format that loads back in; the Export page also "
-        "writes an Excel workbook, which is for reading and sharing rather than "
-        "reloading."
+        f"{owned} The box beside it takes any RIM file — paddock, plan or both — "
+        "and loads whichever parts it carries. Slots are kept for this browser "
+        "session only, so save to a file to keep your work."
     )

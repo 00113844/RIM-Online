@@ -17,6 +17,7 @@ from utils.session import (
     reset_profile_bundle,
     save_profile_slot,
 )
+from rim import scenario
 from utils.save_load import save_load_controls
 from utils.theme import (
     inject_uwa_theme,
@@ -111,7 +112,7 @@ st.caption(
 )
 
 with st.expander("Keep this work"):
-    save_load_controls("profile")
+    save_load_controls("profile", scenario.PROFILE_FORMAT)
     st.page_link("pages/4_How_RIM_Works.py", label="How saving and loading works")
 
 
